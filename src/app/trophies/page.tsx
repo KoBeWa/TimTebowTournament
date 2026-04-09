@@ -200,7 +200,7 @@ export default function TrophyRoomPage() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedAch.blunders.map((a, i) => (
-                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4" style={{ borderColor: "var(--color-accent-red)", borderWidth: "1px", opacity: 0.85 }}>
+                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4" style={{ borderColor: "var(--color-red)", borderWidth: "1px", opacity: 0.85 }}>
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-ink">{achievementLabel(a.achievement_key)}</span>
                         <span className="text-text-muted text-xs">{a.season_year}</span>
