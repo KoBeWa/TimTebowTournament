@@ -124,7 +124,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {playoffs.slice(0, 4).map((p) => (
             <div key={p.manager_id} className={`cell p-4 text-center`}>
-              <div className="stat-label">
+              <div className="kicker">
                 {p.final_rank === 1 ? "Champion" : p.final_rank === 2 ? "Runner-Up" : p.final_rank === 3 ? "3rd Place" : "4th Place"}
               </div>
               <div
