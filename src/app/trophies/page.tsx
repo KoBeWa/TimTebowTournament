@@ -107,7 +107,7 @@ export default function TrophyRoomPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="page-header gold-gradient">Trophy Room</h1>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">Trophy Room</h1>
         <p className="text-text-secondary mt-2">Records, Achievements und der ewige Ruhm</p>
       </div>
 
@@ -117,10 +117,11 @@ export default function TrophyRoomPage() {
           <button
             key={t}
             onClick={() => { setTab(t); setSelectedManager(null); }}
-            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors tracking-wide ${
-              tab === t ? "bg-gold text-bg-primary" : "bg-bg-card text-text-secondary hover:text-text-primary border border-border"
+            className={`px-5 py-2.5 transition-colors ${
+              tab === t
+                ? "bg-ink text-cream label-nav border border-ink"
+                : "bg-cream text-text-secondary label-nav border border-border"
             }`}
-            style={{ fontFamily: '"Bebas Neue", Impact, sans-serif', fontSize: "1.1rem", letterSpacing: "0.08em" }}
           >
             {t === "achievements" ? "Achievements" : "Records"}
           </button>
@@ -131,7 +132,7 @@ export default function TrophyRoomPage() {
       {tab === "achievements" && (
         <div className="space-y-8">
           {/* Summary Table */}
-          <div className="card overflow-hidden">
+          <div className="cell overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-left">
@@ -146,19 +147,19 @@ export default function TrophyRoomPage() {
                   <tr
                     key={row.manager}
                     onClick={() => setSelectedManager(selectedManager === row.manager ? null : row.manager)}
-                    className={`border-b border-border/50 cursor-pointer transition-colors ${
-                      selectedManager === row.manager ? "bg-gold/10" : "hover:bg-bg-card-hover"
+                    className={`border-b border-border-light cursor-pointer transition-colors ${
+                      selectedManager === row.manager ? "bg-cream" : ""
                     }`}
                   >
-                    <td className="p-4 font-medium text-text-primary">{row.manager}</td>
+                    <td className="p-4 font-medium text-ink">{row.manager}</td>
                     <td className="p-4 text-center">
-                      <span className="text-accent-green font-semibold">{row.achievements}</span>
+                      <span className="text-ink font-semibold">{row.achievements}</span>
                     </td>
                     <td className="p-4 text-center">
-                      <span className="text-accent-red font-semibold">{row.blunders}</span>
+                      <span className="text-red font-semibold">{row.blunders}</span>
                     </td>
                     <td className="p-4 text-center">
-                      <span className="text-gold font-semibold">{row.total}</span>
+                      <span className="text-ink font-semibold">{row.total}</span>
                     </td>
                   </tr>
                 ))}
@@ -169,24 +170,24 @@ export default function TrophyRoomPage() {
           {/* Manager Detail */}
           {selectedManager && selectedAch && (
             <div className="space-y-6">
-              <h2 className="section-header text-text-primary">
+              <h2 className="section-title text-ink">
                 {selectedManager}&apos;s Achievements
               </h2>
 
               {/* Positive Achievements */}
               <div>
-                <h3 className="text-xl tracking-wide text-accent-green mb-3" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                <h3 className="text-xl tracking-wide text-ink font-semibold mb-3 section-title">
                   Achievements ({selectedAch.positive.length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedAch.positive.map((a, i) => (
-                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="card p-4">
+                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-text-primary">{achievementLabel(a.achievement_key)}</span>
+                        <span className="font-medium text-ink">{achievementLabel(a.achievement_key)}</span>
                         <span className="text-text-muted text-xs">{a.season_year}</span>
                       </div>
                       <div className="text-text-muted text-xs mt-1">{a.description}</div>
-                      {a.value && <div className="text-gold text-xs mt-1 font-mono">Wert: {a.value}</div>}
+                      {a.value && <div className="text-red text-xs mt-1 font-mono">Wert: {a.value}</div>}
                     </div>
                   ))}
                 </div>
@@ -194,18 +195,18 @@ export default function TrophyRoomPage() {
 
               {/* Blunders */}
               <div>
-                <h3 className="text-xl tracking-wide text-accent-red mb-3" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                <h3 className="text-xl tracking-wide text-red mb-3 section-title">
                   Blunders ({selectedAch.blunders.length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedAch.blunders.map((a, i) => (
-                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="card p-4" style={{ borderColor: "var(--color-accent-red)", borderWidth: "1px", opacity: 0.85 }}>
+                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4" style={{ borderColor: "var(--color-red)", borderWidth: "1px", opacity: 0.85 }}>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-text-primary">{achievementLabel(a.achievement_key)}</span>
+                        <span className="font-medium text-ink">{achievementLabel(a.achievement_key)}</span>
                         <span className="text-text-muted text-xs">{a.season_year}</span>
                       </div>
                       <div className="text-text-muted text-xs mt-1">{a.description}</div>
-                      {a.value && <div className="text-accent-red text-xs mt-1 font-mono">Wert: {a.value}</div>}
+                      {a.value && <div className="text-red text-xs mt-1 font-mono">Wert: {a.value}</div>}
                     </div>
                   ))}
                 </div>
@@ -219,7 +220,7 @@ export default function TrophyRoomPage() {
       {tab === "records" && (
         <div className="space-y-8">
           {/* Summary Table */}
-          <div className="card overflow-hidden">
+          <div className="cell overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-left">
@@ -231,13 +232,13 @@ export default function TrophyRoomPage() {
               </thead>
               <tbody>
                 {recSummary.map((row) => (
-                  <tr key={row.manager} className="border-b border-border/50 hover:bg-bg-card-hover transition-colors">
-                    <td className="p-4 font-medium text-text-primary">
-                      <Link href={`/manager/${row.manager}`} className="hover:text-gold transition-colors">{row.manager}</Link>
+                  <tr key={row.manager} className="border-b border-border-light transition-colors">
+                    <td className="p-4 font-medium text-ink">
+                      <Link href={`/manager/${row.manager}`} className="hover:text-red transition-colors">{row.manager}</Link>
                     </td>
-                    <td className="p-4 text-center"><span className="text-accent-green font-semibold">{row.positive}</span></td>
-                    <td className="p-4 text-center"><span className="text-accent-red font-semibold">{row.negative}</span></td>
-                    <td className="p-4 text-center"><span className="text-gold font-semibold">{row.total}</span></td>
+                    <td className="p-4 text-center"><span className="text-ink font-semibold">{row.positive}</span></td>
+                    <td className="p-4 text-center"><span className="text-red font-semibold">{row.negative}</span></td>
+                    <td className="p-4 text-center"><span className="text-ink font-semibold">{row.total}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -246,15 +247,15 @@ export default function TrophyRoomPage() {
 
           {/* All Records List */}
           <div>
-            <h2 className="section-header text-text-primary mb-4">Alle Records</h2>
+            <h2 className="section-title text-ink mb-4">Alle Records</h2>
 
             {/* Group by positive/negative */}
             {[
-              { label: "Positive Records", items: uniqueRecords.filter((r) => !isNegativeRecord(r.record_key)), color: "text-accent-green" },
-              { label: "Negative Records", items: uniqueRecords.filter((r) => isNegativeRecord(r.record_key)), color: "text-accent-red" },
+              { label: "Positive Records", items: uniqueRecords.filter((r) => !isNegativeRecord(r.record_key)), color: "text-ink font-semibold" },
+              { label: "Negative Records", items: uniqueRecords.filter((r) => isNegativeRecord(r.record_key)), color: "text-red" },
             ].map((group) => (
               <div key={group.label} className="mb-6">
-                <h3 className={`text-xl tracking-wide mb-3 ${group.color}`} style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                <h3 className={`text-xl tracking-wide mb-3 section-title ${group.color}`}>
                   {group.label} ({group.items.length})
                 </h3>
                 <div className="space-y-2">
@@ -262,19 +263,19 @@ export default function TrophyRoomPage() {
                     <Link
                       key={r.record_key}
                       href={`/trophies/records/${r.record_key}`}
-                      className="card-hover p-4 flex items-center justify-between group"
+                      className="cell-hover p-4 flex items-center justify-between group"
                     >
                       <div>
-                        <div className="font-medium text-text-primary group-hover:text-gold transition-colors">
+                        <div className="font-medium text-ink group-hover:text-red transition-colors">
                           {r.record_label}
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-gold font-semibold">{r.manager_id}</div>
+                          <div className="text-ink font-semibold">{r.manager_id}</div>
                           <div className="text-text-muted text-xs font-mono">{Number(r.record_value).toFixed(2)}</div>
                         </div>
-                        <span className="text-text-muted group-hover:text-gold transition-colors">→</span>
+                        <span className="text-text-muted group-hover:text-red transition-colors">→</span>
                       </div>
                     </Link>
                   ))}

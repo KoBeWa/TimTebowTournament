@@ -1,28 +1,40 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Playfair_Display, Roboto_Condensed, Inter } from "next/font/google";
 import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  weight: ["700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+});
+
+const robotoCond = Roboto_Condensed({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-roboto-condensed",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "League Legacy | Fantasy Football History",
-  description: "11 Seasons. 8 Managers. One Legacy.",
+  title: "Tim Tebow Tournament | Die offizielle Ligachronik",
+  description: "11 Seasons. 8 Manager. Eine Legende.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="de">
-      <body className={`${dmSans.variable} font-sans`}>
+      <body className={`${playfair.variable} ${robotoCond.variable} ${inter.variable}`}>
         <Navbar />
-        <main className="mx-auto max-w-7xl px-[--spacing-page] py-8">
+        <main className="mx-auto max-w-7xl px-6 py-8">
           {children}
         </main>
       </body>

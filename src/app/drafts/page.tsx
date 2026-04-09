@@ -22,7 +22,8 @@ export default async function DraftsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="page-header gold-gradient">Draft Hall</h1>
+        <div className="kicker">Drafts</div>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">Draft Hall</h1>
         <p className="text-text-secondary mt-2">Jeder Pick, jede Runde, jede Note</p>
       </div>
       <div className="space-y-4">
@@ -30,11 +31,11 @@ export default async function DraftsPage() {
           const seasonPicks = bySeason[season] ?? [];
           const firstRound = seasonPicks.filter((p) => p.round === 1);
           return (
-            <Link key={season} href={`/drafts/${season}`} className="card-hover p-6 flex items-center justify-between group">
+            <Link key={season} href={`/drafts/${season}`} className="cell-hover p-6 flex items-center justify-between group">
               <div className="flex items-center gap-6">
-                <div className="text-4xl text-text-muted group-hover:text-gold transition-colors" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>{season}</div>
+                <div className="display-title text-4xl text-text-muted group-hover:text-red transition-colors">{season}</div>
                 <div>
-                  <div className="text-lg font-semibold text-text-primary">{seasonPicks.length} Picks</div>
+                  <div className="text-lg font-semibold text-ink">{seasonPicks.length} Picks</div>
                   <div className="text-sm text-text-muted">
                     #1 Overall: <span className="text-text-secondary">{firstRound[0]?.player_name ?? "—"}</span> ({firstRound[0]?.manager_id ?? "—"})
                   </div>
@@ -42,7 +43,7 @@ export default async function DraftsPage() {
               </div>
               <div className="hidden sm:flex gap-2 flex-wrap max-w-xs justify-end">
                 {firstRound.slice(0, 4).map((p) => (
-                  <span key={p.player_name} className="badge-gold text-xs">{p.player_name}</span>
+                  <span key={p.player_name} className="label-nav text-xs text-ink border border-border px-2 py-0.5">{p.player_name}</span>
                 ))}
               </div>
             </Link>

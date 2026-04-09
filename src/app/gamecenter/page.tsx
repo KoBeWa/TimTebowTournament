@@ -57,29 +57,30 @@ export default function GamecenterPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="page-header gold-gradient">Gamecenter</h1>
+        <div className="kicker">Gamecenter</div>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">Gamecenter</h1>
         <p className="text-text-secondary mt-2">Jedes Matchup, jeder Punkt, jede Woche</p>
       </div>
 
       {/* Selectors */}
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="stat-label block mb-2">Season</label>
+          <label className="kicker block mb-2">Season</label>
           <div className="flex flex-wrap gap-1">
             {SEASONS.map((s) => (
               <button key={s} onClick={() => setSeason(s)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${s === season ? "bg-gold text-bg-primary font-semibold" : "bg-bg-card text-text-secondary hover:text-text-primary hover:bg-bg-card-hover border border-border"}`}>
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${s === season ? "bg-red text-cream font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
                 {s}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <label className="stat-label block mb-2">Week</label>
+          <label className="kicker block mb-2">Week</label>
           <div className="flex flex-wrap gap-1">
             {weeks.map((w) => (
               <button key={w} onClick={() => setWeek(w)}
-                className={`w-10 h-9 text-sm rounded-lg transition-colors ${w === week ? "bg-gold text-bg-primary font-semibold" : "bg-bg-card text-text-secondary hover:text-text-primary hover:bg-bg-card-hover border border-border"}`}>
+                className={`w-10 h-9 text-sm rounded-lg transition-colors ${w === week ? "bg-red text-cream font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
                 {w}
               </button>
             ))}
@@ -98,30 +99,26 @@ export default function GamecenterPage() {
               <Link
                 key={`${m.manager_a}-${m.manager_b}`}
                 href={`/gamecenter/${season}/${week}?a=${m.manager_a}&b=${m.manager_b}`}
-                className="card-hover p-5 group"
+                className="cell-hover p-5 group"
               >
-                {m.is_playoff && <div className="badge-gold mb-3">Playoff</div>}
+                {m.is_playoff && <div className="label-nav text-xs text-ink border border-border px-2 py-0.5 mb-3">Playoff</div>}
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className={`text-xl tracking-wide ${aWon ? "text-text-primary" : "text-text-secondary"}`}
-                      style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                    <div className={`display-title text-xl tracking-wide ${aWon ? "text-ink" : "text-text-secondary"}`}>
                       {m.manager_a}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 px-4">
-                    <span className={`text-2xl tracking-wide ${aWon ? "text-accent-green" : "text-text-secondary"}`}
-                      style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                    <span className={`display-title text-2xl tracking-wide ${aWon ? "text-ink font-semibold" : "text-text-secondary"}`}>
                       {m.score_a.toFixed(1)}
                     </span>
                     <span className="text-text-muted text-sm">vs</span>
-                    <span className={`text-2xl tracking-wide ${!aWon ? "text-accent-green" : "text-text-secondary"}`}
-                      style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                    <span className={`display-title text-2xl tracking-wide ${!aWon ? "text-ink font-semibold" : "text-text-secondary"}`}>
                       {m.score_b.toFixed(1)}
                     </span>
                   </div>
                   <div className="flex-1 text-right">
-                    <div className={`text-xl tracking-wide ${!aWon ? "text-text-primary" : "text-text-secondary"}`}
-                      style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+                    <div className={`display-title text-xl tracking-wide ${!aWon ? "text-ink" : "text-text-secondary"}`}>
                       {m.manager_b}
                     </div>
                   </div>

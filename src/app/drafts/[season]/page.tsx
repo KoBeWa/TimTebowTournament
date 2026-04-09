@@ -7,7 +7,7 @@ export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
 }
 
-const POS_COLORS: Record<string, string> = { QB: "text-accent-red", RB: "text-accent-green", WR: "text-accent-blue", TE: "text-gold", K: "text-text-secondary", DEF: "text-text-muted" };
+const POS_COLORS: Record<string, string> = { QB: "text-red", RB: "text-ink font-semibold", WR: "text-ink", TE: "text-red", K: "text-text-secondary", DEF: "text-text-muted" };
 
 export default async function DraftDetailPage({ params }: { params: Promise<{ season: string }> }) {
   const { season: seasonStr } = await params;
@@ -23,8 +23,9 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/drafts" className="text-text-muted hover:text-text-primary text-sm transition-colors">← All Drafts</Link>
-        <h1 className="page-header gold-gradient mt-2">{season} Draft</h1>
+        <Link href="/drafts" className="text-text-muted hover:text-ink text-sm transition-colors">← All Drafts</Link>
+        <div className="kicker mt-2">Season</div>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">{season} Draft</h1>
         <p className="text-text-secondary">{picks.length} Picks · {rounds.length} Rounds</p>
       </div>
       <div className="space-y-6">
@@ -32,8 +33,9 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
           const roundPicks = picks.filter((p) => p.round === round);
           return (
             <section key={round}>
-              <h2 className="text-2xl tracking-wide text-text-primary mb-3" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>Round {round}</h2>
-              <div className="card overflow-hidden">
+              <div className="kicker">Round</div>
+              <h2 className="section-title text-ink mb-3">Round {round}</h2>
+              <div className="cell overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-text-muted text-left">
@@ -47,16 +49,16 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
                   </thead>
                   <tbody>
                     {roundPicks.map((p) => (
-                      <tr key={p.overall_pick} className="border-b border-border/50 hover:bg-bg-card-hover transition-colors">
+                      <tr key={p.overall_pick} className="border-b border-border-light transition-colors">
                         <td className="p-3 font-mono text-text-muted">{round}.{String(p.overall_pick - (round - 1) * 8).padStart(2, "0")}</td>
-                        <td className="p-3 font-medium text-text-primary">{p.player_name}</td>
+                        <td className="p-3 font-medium text-ink">{p.player_name}</td>
                         <td className={`p-3 font-semibold ${POS_COLORS[p.position] ?? "text-text-secondary"}`}>{p.position}</td>
                         <td className="p-3">
-                          <Link href={`/manager/${p.manager_id}`} className="text-text-secondary hover:text-gold transition-colors">{p.manager_id}</Link>
+                          <Link href={`/manager/${p.manager_id}`} className="text-text-secondary hover:text-red transition-colors">{p.manager_id}</Link>
                         </td>
                         <td className="p-3 text-right font-mono hidden sm:table-cell">
                           {p.vorp != null ? (
-                            <span className={Number(p.vorp) > 0 ? "text-accent-green" : Number(p.vorp) < 0 ? "text-accent-red" : "text-text-muted"}>
+                            <span className={Number(p.vorp) > 0 ? "text-ink font-semibold" : Number(p.vorp) < 0 ? "text-red" : "text-text-muted"}>
                               {Number(p.vorp) > 0 ? "+" : ""}{Number(p.vorp).toFixed(1)}
                             </span>
                           ) : "—"}

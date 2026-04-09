@@ -77,20 +77,20 @@ function LineupTable({ lineup, label }: { lineup: LineupPlayer[]; label: string 
 
   return (
     <div className="flex-1 min-w-0">
-      <h3 className="text-2xl tracking-wide mb-4 text-text-primary" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+      <h3 className="display-title text-2xl tracking-wide mb-4 text-ink">
         {label}
       </h3>
       <div className="space-y-1">
         {starters.map((p, i) => (
-          <div key={`${p.slot}-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-bg-card hover:bg-bg-card-hover transition-colors">
+          <div key={`${p.slot}-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-cream transition-colors">
             <div className="w-10 text-center">
-              <span className="text-xs font-semibold text-gold bg-gold/10 px-1.5 py-0.5 rounded">{p.slot}</span>
+              <span className="text-xs font-semibold text-red bg-cream px-1.5 py-0.5 rounded">{p.slot}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-text-primary truncate">{p.player_name}</div>
+              <div className="text-sm font-medium text-ink truncate">{p.player_name}</div>
               <StatLine player={p} />
             </div>
-            <div className="text-lg tracking-wide text-text-primary" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+            <div className="display-title text-lg tracking-wide text-ink">
               {Number(p.points).toFixed(1)}
             </div>
           </div>
@@ -98,7 +98,7 @@ function LineupTable({ lineup, label }: { lineup: LineupPlayer[]; label: string 
       </div>
       {bench.length > 0 && (
         <>
-          <div className="stat-label mt-6 mb-2 px-3">Bench</div>
+          <div className="kicker mt-6 mb-2 px-3">Bench</div>
           <div className="space-y-1 opacity-60">
             {bench.map((p, i) => (
               <div key={`bench-${i}`} className="flex items-center gap-3 p-2 px-3 rounded-lg">
@@ -203,27 +203,25 @@ export default function MatchupDetailPage({ params }: { params: Promise<{ season
 
   return (
     <div className="space-y-8">
-      <Link href="/gamecenter" className="text-text-muted hover:text-text-primary text-sm transition-colors">← Gamecenter</Link>
+      <Link href="/gamecenter" className="text-text-muted hover:text-ink text-sm transition-colors">← Gamecenter</Link>
 
-      <div className="card p-8">
+      <div className="cell p-8">
         <div className="flex items-center justify-between text-center">
           <div className="flex-1">
-            <div className="stat-label mb-1">{aWon ? "Winner" : ""}</div>
-            <div className={`text-4xl md:text-5xl tracking-wider ${aWon ? "text-gold" : "text-text-secondary"}`}
-              style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>{matchup.manager_a}</div>
+            <div className="kicker mb-1">{aWon ? "Winner" : ""}</div>
+            <div className={`display-title text-4xl md:text-5xl tracking-wider ${aWon ? "text-red" : "text-text-secondary"}`}>{matchup.manager_a}</div>
           </div>
           <div className="px-6">
-            <div className="text-3xl md:text-4xl tracking-wide" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
-              <span className={aWon ? "text-accent-green" : "text-text-secondary"}>{matchup.score_a.toFixed(1)}</span>
+            <div className="display-title text-3xl md:text-4xl tracking-wide">
+              <span className={aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_a.toFixed(1)}</span>
               <span className="text-text-muted mx-3">-</span>
-              <span className={!aWon ? "text-accent-green" : "text-text-secondary"}>{matchup.score_b.toFixed(1)}</span>
+              <span className={!aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_b.toFixed(1)}</span>
             </div>
-            <div className="stat-label mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
+            <div className="kicker mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
           </div>
           <div className="flex-1">
-            <div className="stat-label mb-1">{!aWon ? "Winner" : ""}</div>
-            <div className={`text-4xl md:text-5xl tracking-wider ${!aWon ? "text-gold" : "text-text-secondary"}`}
-              style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>{matchup.manager_b}</div>
+            <div className="kicker mb-1">{!aWon ? "Winner" : ""}</div>
+            <div className={`display-title text-4xl md:text-5xl tracking-wider ${!aWon ? "text-red" : "text-text-secondary"}`}>{matchup.manager_b}</div>
           </div>
         </div>
       </div>

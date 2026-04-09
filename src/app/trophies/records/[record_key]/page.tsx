@@ -253,10 +253,10 @@ export default async function RecordDetailPage({
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/trophies" className="text-text-muted hover:text-text-primary text-sm transition-colors">← Trophy Room</Link>
-        <h1 className="page-header gold-gradient mt-2">{recordLabel}</h1>
+        <Link href="/trophies" className="text-text-muted hover:text-ink text-sm transition-colors">← Trophy Room</Link>
+        <h1 className="display-title text-4xl md:text-5xl text-ink mt-2">{recordLabel}</h1>
         <div className="flex items-center gap-2 mt-1">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${negative ? "bg-accent-red/10 text-accent-red" : "bg-accent-green/10 text-accent-green"}`}>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${negative ? "bg-accent-red/10 text-red" : "bg-accent-green/10 text-ink font-semibold"}`}>
             {negative ? "Negative Record" : "Positive Record"}
           </span>
           {isMatchupRecord && (
@@ -267,10 +267,10 @@ export default async function RecordDetailPage({
 
       {/* Current Holder */}
       {currentHolder && (
-        <div className="card p-8 text-center" style={{ borderColor: negative ? "var(--color-accent-red)" : "var(--color-gold-dark)", borderWidth: "1px" }}>
-          <div className="stat-label mb-2">Current Record Holder</div>
-          <div className="text-5xl tracking-wider gold-gradient" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>{currentHolder.manager_id}</div>
-          <div className="stat-value text-3xl text-text-primary mt-2">{Number(currentHolder.record_value).toFixed(2)}</div>
+        <div className="cell p-8 text-center" style={{ borderColor: negative ? "var(--color-accent-red)" : "var(--color-gold-dark)", borderWidth: "1px" }}>
+          <div className="kicker mb-2">Current Record Holder</div>
+          <div className="text-5xl tracking-wider text-ink display-title">{currentHolder.manager_id}</div>
+          <div className="display-title text-2xl text-ink mt-2">{Number(currentHolder.record_value).toFixed(2)}</div>
           <div className="text-text-muted text-sm mt-2">
             {formatPeriod(currentHolder.from_year, currentHolder.from_week, currentHolder.to_year, currentHolder.to_week, true)} · {currentHolder.weeks_held} Wochen
           </div>
@@ -279,9 +279,9 @@ export default async function RecordDetailPage({
 
       {/* All-Owner Ranking */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Ranking — Alle Owner</h2>
+        <h2 className="section-title text-ink mb-4">Ranking — Alle Owner</h2>
         {ranking ? (
-          <div className="card overflow-hidden">
+          <div className="cell overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-left">
@@ -296,15 +296,15 @@ export default async function RecordDetailPage({
                 {ranking.map((row, i) => {
                   const isCurrent = currentHolder?.manager_id === row.manager;
                   return (
-                    <tr key={row.manager} className={`border-b border-border/50 hover:bg-bg-card-hover transition-colors ${isCurrent ? "bg-gold/5" : ""}`}>
+                    <tr key={row.manager} className={`border-b border-border-light transition-colors ${isCurrent ? "bg-cream" : ""}`}>
                       <td className="p-4 text-text-muted">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
                       <td className="p-4">
-                        <Link href={`/manager/${row.manager}`} className="font-medium text-text-primary hover:text-gold transition-colors">
+                        <Link href={`/manager/${row.manager}`} className="font-medium text-ink hover:text-red transition-colors">
                           {row.manager}
-                          {isCurrent && <span className="text-gold text-xs ml-2">RECORD</span>}
+                          {isCurrent && <span className="text-red text-xs ml-2">RECORD</span>}
                         </Link>
                       </td>
-                      <td className={`p-4 text-right font-mono ${i === 0 ? "text-gold font-semibold" : "text-text-primary"}`}>
+                      <td className={`p-4 text-right font-mono ${i === 0 ? "text-ink font-semibold" : "text-ink"}`}>
                         {Number.isInteger(row.value) ? row.value : row.value.toFixed(2)}
                       </td>
                       {ranking.some((r) => r.season) && (
@@ -320,7 +320,7 @@ export default async function RecordDetailPage({
             </table>
           </div>
         ) : (
-          <div className="card p-6 text-center text-text-muted">
+          <div className="cell p-6 text-center text-text-muted">
             Ranking für diesen Record-Typ wird noch implementiert.
           </div>
         )}
@@ -328,7 +328,7 @@ export default async function RecordDetailPage({
 
       {/* Timeline */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Record Timeline</h2>
+        <h2 className="section-title text-ink mb-4">Record Timeline</h2>
         <div className="relative">
           {/* Vertical line */}
           <div className="absolute left-[2.25rem] top-0 bottom-0 w-px bg-border" />
@@ -342,14 +342,14 @@ export default async function RecordDetailPage({
                 <div key={entry.id} className="relative flex items-start gap-4 pl-2">
                   {/* Dot on timeline */}
                   <div className={`relative z-10 mt-4 w-5 h-5 rounded-full border-2 flex-shrink-0 ${
-                    entry.is_current ? "bg-gold border-gold" : "bg-bg-card border-border-light"
+                    entry.is_current ? "bg-ink border-ink" : "bg-cream border-border-light"
                   }`} />
 
                   {/* Content card */}
-                  <div className={`card p-4 flex-1 flex items-center justify-between ${entry.is_current ? "border-gold/30" : ""}`}>
+                  <div className={`cell p-4 flex-1 flex items-center justify-between ${entry.is_current ? "border-border" : ""}`}>
                     <div>
                       <Link href={`/manager/${entry.manager_id}`}
-                        className={`font-semibold text-lg hover:text-gold transition-colors ${entry.is_current ? "text-gold" : "text-text-primary"}`}>
+                        className={`font-semibold text-lg hover:text-red transition-colors ${entry.is_current ? "text-ink" : "text-ink"}`}>
                         {entry.manager_id}
                       </Link>
                       <div className="text-text-muted text-sm">{period}</div>
@@ -357,7 +357,7 @@ export default async function RecordDetailPage({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="font-mono text-lg text-text-primary">{Number(entry.record_value).toFixed(2)}</div>
+                      <div className="font-mono text-lg text-ink">{Number(entry.record_value).toFixed(2)}</div>
                       {link && (
                         <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
                           className="text-xs px-2 py-1 rounded bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 transition-colors whitespace-nowrap">
