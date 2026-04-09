@@ -22,6 +22,7 @@ export const SEASONS = Array.from(
 
 export const NAV_ITEMS = [
   { label: "History", href: "/history", icon: "trophy" },
+  { label: "Rankings", href: "/rankings", icon: "bar-chart" },
   { label: "Gamecenter", href: "/gamecenter", icon: "tv" },
   { label: "Drafts", href: "/drafts", icon: "list-ordered" },
   { label: "Transactions", href: "/transactions", icon: "arrow-left-right" },

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
 import Link from "next/link";
+import AllTimeRankings from "./AllTimeRankings";
 
 async function getSeasonResults() {
   const { data } = await supabase
@@ -12,50 +13,42 @@ async function getSeasonResults() {
 }
 
 async function getAllTimeRankings() {
-  const [{ data: results }, { data: eloRaw }] = await Promise.all([
+  const [{ data: standings }, { data: eloData }] = await Promise.all([
     supabase
-      .from("season_results")
-      .select("manager_id, wins, losses, ties, all_play_wins, all_play_losses"),
+      .from("v_alltime_standings")
+      .select("manager_id, reg_wins, reg_losses, reg_ties, allplay_wins, allplay_losses, championships, runner_up, third_place, playoff_appearances, real_po_wins, real_po_losses"),
     supabase
-      .from("v_elo_history")
-      .select("manager_id, elo_after")
-      .order("season_year", { ascending: false })
-      .order("week", { ascending: false }),
+      .from("v_elo_current")
+      .select("manager_id, current_elo, elo_rank")
+      .order("elo_rank", { ascending: true }),
   ]);
 
-  // Latest ELO per manager (first occurrence = most recent due to ordering)
   const eloByManager: Record<string, number> = {};
-  for (const row of eloRaw ?? []) {
-    if (!(row.manager_id in eloByManager)) {
-      eloByManager[row.manager_id] = Math.round(row.elo_after);
-    }
+  for (const row of eloData ?? []) {
+    eloByManager[row.manager_id] = Math.round(Number(row.current_elo));
   }
 
-  // Aggregate career totals per manager
-  const totals: Record<string, { wins: number; losses: number; ties: number; apWins: number; apLosses: number }> = {};
-  for (const r of results ?? []) {
-    if (!totals[r.manager_id]) totals[r.manager_id] = { wins: 0, losses: 0, ties: 0, apWins: 0, apLosses: 0 };
-    totals[r.manager_id].wins += r.wins ?? 0;
-    totals[r.manager_id].losses += r.losses ?? 0;
-    totals[r.manager_id].ties += r.ties ?? 0;
-    totals[r.manager_id].apWins += r.all_play_wins ?? 0;
-    totals[r.manager_id].apLosses += r.all_play_losses ?? 0;
-  }
-
-  return Object.entries(totals)
-    .map(([manager_id, t]) => {
-      const gp = t.wins + t.losses + t.ties;
-      const apGp = t.apWins + t.apLosses;
-      return {
-        manager_id,
-        record: `${t.wins}–${t.losses}${t.ties > 0 ? `–${t.ties}` : ""}`,
-        winPct: gp > 0 ? (t.wins / gp) : 0,
-        apRecord: apGp > 0 ? `${t.apWins}–${t.apLosses}` : "—",
-        apWinPct: apGp > 0 ? (t.apWins / apGp) : 0,
-        elo: eloByManager[manager_id] ?? null,
-      };
-    })
-    .sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0));
+  return (standings ?? []).map((r) => {
+    const gp = (r.reg_wins ?? 0) + (r.reg_losses ?? 0) + (r.reg_ties ?? 0);
+    const apGp = Number(r.allplay_wins ?? 0) + Number(r.allplay_losses ?? 0);
+    const gold = r.championships ?? 0;
+    const silver = r.runner_up ?? 0;
+    const bronze = r.third_place ?? 0;
+    return {
+      manager_id: r.manager_id,
+      record: `${r.reg_wins}–${r.reg_losses}${r.reg_ties > 0 ? `–${r.reg_ties}` : ""}`,
+      winPct: gp > 0 ? r.reg_wins / gp : 0,
+      apRecord: apGp > 0 ? `${r.allplay_wins}–${r.allplay_losses}` : "—",
+      apWinPct: apGp > 0 ? Number(r.allplay_wins) / apGp : 0,
+      elo: eloByManager[r.manager_id] ?? null,
+      playoffAppearances: r.playoff_appearances ?? 0,
+      poRecord: `${r.real_po_wins ?? 0}–${r.real_po_losses ?? 0}`,
+      gold,
+      silver,
+      bronze,
+      medalScore: gold * 8 + silver * 5 + bronze * 2,
+    };
+  });
 }
 
 export default async function HistoryPage() {
@@ -83,51 +76,7 @@ export default async function HistoryPage() {
       </div>
 
       {/* ── ALL-TIME RANKINGS ── */}
-      <div className="mb-10">
-        <div className="kicker mb-3">Alltime Rankings</div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
-                <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
-                <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Manager</th>
-                <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">Record</th>
-                <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">Win%</th>
-                <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">All Play</th>
-                <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">AP Win%</th>
-                <th className="label-nav text-xs text-text-muted text-right py-2">ELO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allTime.map((row, i) => (
-                <tr
-                  key={row.manager_id}
-                  style={{ borderBottom: "1px solid var(--color-border-light)" }}
-                  className="hover:bg-border-light transition-colors"
-                >
-                  <td className="py-3 pr-4 text-text-faint label-nav text-xs">{i + 1}</td>
-                  <td className="py-3 pr-6">
-                    <Link href={`/manager/${row.manager_id}`} className="font-semibold text-ink hover:text-red transition-colors">
-                      {row.manager_id}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-6 text-right font-mono text-ink">{row.record}</td>
-                  <td className="py-3 pr-6 text-right font-mono text-ink">{(row.winPct * 100).toFixed(1)}%</td>
-                  <td className="py-3 pr-6 text-right font-mono text-text-secondary">{row.apRecord}</td>
-                  <td className="py-3 pr-6 text-right font-mono text-text-secondary">
-                    {row.apWinPct > 0 ? `${(row.apWinPct * 100).toFixed(1)}%` : "—"}
-                  </td>
-                  <td className="py-3 text-right">
-                    <span className={`label-nav text-xs ${row.elo !== null && row.elo >= 1500 ? "text-ink font-semibold" : "text-text-secondary"}`}>
-                      {row.elo ?? "—"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AllTimeRankings rows={allTime} />
 
       <div style={{ borderTop: "1px solid var(--color-border)" }}>
         {seasons.map((s) => {
