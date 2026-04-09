@@ -22,10 +22,11 @@ async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
 
   if (careerAgg[recordKey]) {
     const { col, agg } = careerAgg[recordKey];
-    const { data } = await supabase
+    const { data: rawData } = await supabase
       .from("season_results")
       .select(`manager_id, ${col}`);
-    if (!data) return null;
+    if (!rawData) return null;
+    const data = rawData as any[];
     const byMgr: Record<string, number> = {};
     for (const r of data) {
       byMgr[r.manager_id] = (byMgr[r.manager_id] || 0) + Number(r[col] || 0);
@@ -63,10 +64,11 @@ async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
 
   if (seasonBest[recordKey]) {
     const { col, fn } = seasonBest[recordKey];
-    const { data } = await supabase.from("season_results").select(`manager_id, season_year, ${col}`);
-    if (!data) return null;
+    const { data: rawData2 } = await supabase.from("season_results").select(`manager_id, season_year, ${col}`);
+    if (!rawData2) return null;
+    const data2 = rawData2 as any[];
     const byMgr: Record<string, { value: number; season: number }> = {};
-    for (const r of data) {
+    for (const r of data2) {
       const v = Number(r[col] || 0);
       const existing = byMgr[r.manager_id];
       if (!existing || (fn === "max" ? v > existing.value : v < existing.value)) {

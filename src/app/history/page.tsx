@@ -54,7 +54,7 @@ export default async function HistoryPage() {
                 </div>
               </div>
               <div className="hidden sm:flex gap-4 text-sm text-text-secondary">
-                {topThree.map((r, i) => (
+                {topThree.map((r: (typeof results)[number], i: number) => (
                   <div key={r.manager_id} className="text-center">
                     <div className="text-text-muted text-xs">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</div>
                     <div>{r.manager_id}</div>

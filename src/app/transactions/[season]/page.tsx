@@ -39,7 +39,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
           <section key={week}>
             <h2 className="text-2xl tracking-wide text-text-primary mb-3" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>Week {week}</h2>
             <div className="space-y-2">
-              {byWeek[week].map((p, i) => (
+              {byWeek[week].map((p: NonNullable<typeof pickups>[number], i: number) => (
                 <div key={`${p.manager_id}-${p.player_name}-${i}`} className="card p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <Link href={`/manager/${p.manager_id}`} className="font-medium text-text-primary hover:text-gold transition-colors w-20">{p.manager_id}</Link>

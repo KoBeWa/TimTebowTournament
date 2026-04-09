@@ -12,7 +12,7 @@ export default async function TransactionsPage() {
     if (!acc[p.season_year]) acc[p.season_year] = [];
     acc[p.season_year].push(p);
     return acc;
-  }, {} as Record<number, typeof pickups>);
+  }, {} as Record<number, NonNullable<typeof pickups>>);
 
   return (
     <div className="space-y-8">
