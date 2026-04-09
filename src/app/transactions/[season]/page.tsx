@@ -30,21 +30,23 @@ export default async function TransactionDetailPage({ params }: { params: Promis
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/transactions" className="text-text-muted hover:text-text-primary text-sm transition-colors">← All Transactions</Link>
-        <h1 className="page-header gold-gradient mt-2">{season} Transactions</h1>
+        <Link href="/transactions" className="text-text-muted hover:text-ink text-sm transition-colors">← All Transactions</Link>
+        <div className="kicker mt-2">Season</div>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">{season} Transactions</h1>
         <p className="text-text-secondary">{pickups?.length ?? 0} Pickups</p>
       </div>
       <div className="space-y-6">
         {weeks.map((week) => (
           <section key={week}>
-            <h2 className="text-2xl tracking-wide text-text-primary mb-3" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>Week {week}</h2>
+            <div className="kicker">Week</div>
+            <h2 className="section-title text-ink mb-3">Week {week}</h2>
             <div className="space-y-2">
               {byWeek[week].map((p: NonNullable<typeof pickups>[number], i: number) => (
-                <div key={`${p.manager_id}-${p.player_name}-${i}`} className="card p-4 flex items-center justify-between">
+                <div key={`${p.manager_id}-${p.player_name}-${i}`} className="cell p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <Link href={`/manager/${p.manager_id}`} className="font-medium text-text-primary hover:text-gold transition-colors w-20">{p.manager_id}</Link>
+                    <Link href={`/manager/${p.manager_id}`} className="font-medium text-ink hover:text-red transition-colors w-20">{p.manager_id}</Link>
                     <div>
-                      <span className="text-text-primary font-medium">{p.player_name}</span>
+                      <span className="text-ink font-medium">{p.player_name}</span>
                       <span className="text-text-muted text-sm ml-2">{p.position}</span>
                     </div>
                   </div>
@@ -54,7 +56,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
                         Score: {Number(p.pickup_score).toFixed(1)}
                       </span>
                     )}
-                    <span className="text-xs font-semibold px-2 py-1 rounded bg-accent-green/10 text-accent-green">
+                    <span className="text-xs font-semibold px-2 py-1 rounded bg-cream text-ink font-semibold">
                       PICKUP
                     </span>
                   </div>

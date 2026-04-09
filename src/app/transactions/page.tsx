@@ -17,7 +17,8 @@ export default async function TransactionsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="page-header gold-gradient">Transactions</h1>
+        <div className="kicker">Transactions</div>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">Transactions</h1>
         <p className="text-text-secondary mt-2">Waiver Wire Moves & Free Agent Pickups</p>
       </div>
       <div className="space-y-4">
@@ -26,11 +27,11 @@ export default async function TransactionsPage() {
           const counts = sp.reduce((a, p) => { a[p.manager_id] = (a[p.manager_id] || 0) + 1; return a; }, {} as Record<string, number>);
           const mostActive = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
           return (
-            <Link key={season} href={`/transactions/${season}`} className="card-hover p-6 flex items-center justify-between group">
+            <Link key={season} href={`/transactions/${season}`} className="cell-hover p-6 flex items-center justify-between group">
               <div className="flex items-center gap-6">
-                <div className="text-4xl text-text-muted group-hover:text-gold transition-colors" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>{season}</div>
+                <div className="display-title text-4xl text-text-muted group-hover:text-red transition-colors">{season}</div>
                 <div>
-                  <div className="text-lg font-semibold text-text-primary">{sp.length} Pickups</div>
+                  <div className="text-lg font-semibold text-ink">{sp.length} Pickups</div>
                   <div className="text-sm text-text-muted">{mostActive ? `Most Active: ${mostActive[0]} (${mostActive[1]} moves)` : "Keine Daten"}</div>
                 </div>
               </div>
