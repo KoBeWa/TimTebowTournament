@@ -65,22 +65,22 @@ export default function GamecenterPage() {
       {/* Selectors */}
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="stat-label block mb-2">Season</label>
+          <label className="kicker block mb-2">Season</label>
           <div className="flex flex-wrap gap-1">
             {SEASONS.map((s) => (
               <button key={s} onClick={() => setSeason(s)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${s === season ? "bg-gold text-bg-primary font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${s === season ? "bg-red text-cream font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
                 {s}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <label className="stat-label block mb-2">Week</label>
+          <label className="kicker block mb-2">Week</label>
           <div className="flex flex-wrap gap-1">
             {weeks.map((w) => (
               <button key={w} onClick={() => setWeek(w)}
-                className={`w-10 h-9 text-sm rounded-lg transition-colors ${w === week ? "bg-gold text-bg-primary font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
+                className={`w-10 h-9 text-sm rounded-lg transition-colors ${w === week ? "bg-red text-cream font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
                 {w}
               </button>
             ))}

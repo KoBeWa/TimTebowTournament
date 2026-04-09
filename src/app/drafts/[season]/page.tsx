@@ -7,7 +7,7 @@ export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
 }
 
-const POS_COLORS: Record<string, string> = { QB: "text-red", RB: "text-ink font-semibold", WR: "text-accent-blue", TE: "text-red", K: "text-text-secondary", DEF: "text-text-muted" };
+const POS_COLORS: Record<string, string> = { QB: "text-red", RB: "text-ink font-semibold", WR: "text-ink", TE: "text-red", K: "text-text-secondary", DEF: "text-text-muted" };
 
 export default async function DraftDetailPage({ params }: { params: Promise<{ season: string }> }) {
   const { season: seasonStr } = await params;

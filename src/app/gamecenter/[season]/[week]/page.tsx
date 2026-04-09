@@ -98,7 +98,7 @@ function LineupTable({ lineup, label }: { lineup: LineupPlayer[]; label: string 
       </div>
       {bench.length > 0 && (
         <>
-          <div className="stat-label mt-6 mb-2 px-3">Bench</div>
+          <div className="kicker mt-6 mb-2 px-3">Bench</div>
           <div className="space-y-1 opacity-60">
             {bench.map((p, i) => (
               <div key={`bench-${i}`} className="flex items-center gap-3 p-2 px-3 rounded-lg">
@@ -208,7 +208,7 @@ export default function MatchupDetailPage({ params }: { params: Promise<{ season
       <div className="cell p-8">
         <div className="flex items-center justify-between text-center">
           <div className="flex-1">
-            <div className="stat-label mb-1">{aWon ? "Winner" : ""}</div>
+            <div className="kicker mb-1">{aWon ? "Winner" : ""}</div>
             <div className={`display-title text-4xl md:text-5xl tracking-wider ${aWon ? "text-red" : "text-text-secondary"}`}>{matchup.manager_a}</div>
           </div>
           <div className="px-6">
@@ -217,10 +217,10 @@ export default function MatchupDetailPage({ params }: { params: Promise<{ season
               <span className="text-text-muted mx-3">-</span>
               <span className={!aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_b.toFixed(1)}</span>
             </div>
-            <div className="stat-label mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
+            <div className="kicker mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
           </div>
           <div className="flex-1">
-            <div className="stat-label mb-1">{!aWon ? "Winner" : ""}</div>
+            <div className="kicker mb-1">{!aWon ? "Winner" : ""}</div>
             <div className={`display-title text-4xl md:text-5xl tracking-wider ${!aWon ? "text-red" : "text-text-secondary"}`}>{matchup.manager_b}</div>
           </div>
         </div>
