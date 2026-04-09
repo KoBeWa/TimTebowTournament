@@ -40,17 +40,18 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
       <div className="flex items-center justify-between">
         <div>
           {prevSeason && (
-            <Link href={`/history/${prevSeason}`} className="text-text-muted hover:text-text-primary text-sm transition-colors">
+            <Link href={`/history/${prevSeason}`} className="text-text-muted hover:text-ink text-sm transition-colors">
               ← {prevSeason}
             </Link>
           )}
-          <h1 className="page-header gold-gradient">{year} Season</h1>
+          <div className="kicker mb-1">Season</div>
+          <h1 className="display-title text-4xl md:text-5xl text-ink">{year} Season</h1>
           <p className="text-text-secondary mt-1">
             {seasonInfo.total_managers} Teams · {seasonInfo.reg_season_weeks} Weeks · {seasonInfo.playoff_teams} Playoff Teams
           </p>
         </div>
         {nextSeason && (
-          <Link href={`/history/${nextSeason}`} className="text-text-muted hover:text-text-primary text-sm transition-colors">
+          <Link href={`/history/${nextSeason}`} className="text-text-muted hover:text-ink text-sm transition-colors">
             {nextSeason} →
           </Link>
         )}
@@ -58,9 +59,9 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
 
       {/* Champion Banner */}
       {champs && (
-        <div className="card p-8 text-center" style={{ borderColor: "var(--color-gold-dark)" }}>
-          <div className="stat-label mb-2">Champion</div>
-          <div className="text-5xl tracking-wider gold-gradient" style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}>
+        <div className="cell p-8 text-center">
+          <div className="kicker mb-2">Champion</div>
+          <div className="display-title text-5xl text-ink">
             {champs.champion}
           </div>
           <div className="text-text-muted text-sm mt-2">
@@ -71,8 +72,9 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
 
       {/* Standings */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Regular Season Standings</h2>
-        <div className="card overflow-hidden">
+        <div className="kicker mb-1">Standings</div>
+        <h2 className="section-title text-ink mb-4">Regular Season Standings</h2>
+        <div className="cell overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-text-muted text-left">
@@ -87,10 +89,10 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
             </thead>
             <tbody>
               {results.map((r) => (
-                <tr key={r.manager_id} className="border-b border-border/50 hover:bg-bg-card-hover transition-colors">
-                  <td className="p-4 text-text-muted">{r.reg_rank === 1 ? "🏆" : r.reg_rank}</td>
+                <tr key={r.manager_id} className="border-b border-border-light transition-colors">
+                  <td className="p-4 text-text-muted">{r.reg_rank === 1 ? "★" : r.reg_rank}</td>
                   <td className="p-4">
-                    <Link href={`/manager/${r.manager_id}`} className="font-medium text-text-primary hover:text-gold transition-colors">
+                    <Link href={`/manager/${r.manager_id}`} className="font-medium text-ink hover:text-red transition-colors">
                       {r.manager_id}
                     </Link>
                   </td>
@@ -117,16 +119,16 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
 
       {/* Playoffs */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Playoffs</h2>
+        <div className="kicker mb-1">Postseason</div>
+        <h2 className="section-title text-ink mb-4">Playoffs</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {playoffs.slice(0, 4).map((p) => (
-            <div key={p.manager_id} className={`card p-4 text-center ${p.final_rank === 1 ? "border-gold/30" : ""}`}>
+            <div key={p.manager_id} className={`cell p-4 text-center`}>
               <div className="stat-label">
-                {p.final_rank === 1 ? "🏆 Champion" : p.final_rank === 2 ? "🥈 Runner-Up" : p.final_rank === 3 ? "3rd Place" : "4th Place"}
+                {p.final_rank === 1 ? "Champion" : p.final_rank === 2 ? "Runner-Up" : p.final_rank === 3 ? "3rd Place" : "4th Place"}
               </div>
               <div
-                className={`text-2xl tracking-wide mt-1 ${p.final_rank === 1 ? "text-gold" : "text-text-primary"}`}
-                style={{ fontFamily: '"Bebas Neue", Impact, sans-serif' }}
+                className={`section-title text-2xl mt-1 ${p.final_rank === 1 ? "text-red" : "text-ink"}`}
               >
                 {p.manager_id}
               </div>
