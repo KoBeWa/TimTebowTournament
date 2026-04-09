@@ -1,6 +1,6 @@
 export const LEAGUE_NAME = "League Legacy";
 export const LEAGUE_FOUNDED = 2015;
-export const CURRENT_SEASON = 2024;
+export const CURRENT_SEASON = 2025;
 
 export const MANAGERS = [
   "Benni",
