@@ -58,23 +58,23 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="page-header gold-gradient">{name}</h1>
+        <h1 className="display-title text-4xl md:text-5xl text-ink">{name}</h1>
         <p className="text-text-secondary mt-1">{numSeasons} Seasons · {data.championships} Titles · Since 2015</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {statCards.map((s) => (
-          <div key={s.label} className="card p-4 text-center">
-            <div className="stat-value text-text-primary">{s.value}</div>
-            <div className="stat-label mt-1">{s.label}</div>
+          <div key={s.label} className="cell p-4 text-center">
+            <div className="display-title text-2xl text-ink">{s.value}</div>
+            <div className="kicker mt-1">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Season History */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Season History</h2>
-        <div className="card overflow-hidden">
+        <h2 className="section-title text-ink mb-4">Season History</h2>
+        <div className="cell overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-text-muted text-left">
@@ -86,9 +86,9 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
               {data.results.map((s) => {
                 const po = data.playoffs.find((p) => p.season_year === s.season_year);
                 return (
-                  <tr key={s.season_year} className="border-b border-border/50 hover:bg-bg-card-hover transition-colors">
+                  <tr key={s.season_year} className="border-b border-border-light transition-colors">
                     <td className="p-4">
-                      <Link href={`/history/${s.season_year}`} className="text-text-primary hover:text-gold transition-colors font-medium">
+                      <Link href={`/history/${s.season_year}`} className="text-ink hover:text-red transition-colors font-medium">
                         {s.season_year}{po?.final_rank === 1 && " 🏆"}
                       </Link>
                     </td>
@@ -99,7 +99,7 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
                     </td>
                     <td className="p-4 text-right font-mono">{Number(s.points_for).toFixed(1)}</td>
                     <td className="p-4 text-center hidden sm:table-cell">
-                      {po ? <span className={po.final_rank === 1 ? "text-gold font-semibold" : po.final_rank <= 4 ? "text-text-primary" : "text-text-muted"}>#{po.final_rank}</span> : "—"}
+                      {po ? <span className={po.final_rank === 1 ? "text-ink font-semibold" : po.final_rank <= 4 ? "text-ink" : "text-text-muted"}>#{po.final_rank}</span> : "—"}
                     </td>
                   </tr>
                 );
@@ -111,22 +111,22 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
 
       {/* Recent Matchups */}
       <section>
-        <h2 className="section-header text-text-primary mb-4">Letzte Matchups</h2>
+        <h2 className="section-title text-ink mb-4">Letzte Matchups</h2>
         <div className="space-y-2">
           {data.matchups.slice(0, 20).map((m) => {
             const won = m.myScore > m.theirScore;
             return (
-              <div key={`${m.season}-${m.week}`} className="card p-4 flex items-center justify-between">
+              <div key={`${m.season}-${m.week}`} className="cell p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-text-muted text-sm w-20">{m.season} W{m.week}</span>
                   <span className="text-text-secondary text-sm">vs {m.opponent}</span>
-                  {m.is_playoff && <span className="badge-gold text-xs">PO</span>}
+                  {m.is_playoff && <span className="label-nav text-xs text-ink border border-border px-2 py-0.5">PO</span>}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${won ? "bg-accent-green/10 text-accent-green" : "bg-accent-red/10 text-accent-red"}`}>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${won ? "bg-accent-green/10 text-ink font-semibold" : "bg-accent-red/10 text-red"}`}>
                     {won ? "W" : "L"}
                   </span>
-                  <span className="font-mono text-sm text-text-primary">{m.myScore.toFixed(1)}</span>
+                  <span className="font-mono text-sm text-ink">{m.myScore.toFixed(1)}</span>
                   <span className="text-text-muted text-sm">-</span>
                   <span className="font-mono text-sm text-text-secondary">{m.theirScore.toFixed(1)}</span>
                 </div>
