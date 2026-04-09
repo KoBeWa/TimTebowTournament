@@ -18,7 +18,7 @@ async function getAllTimeRankings() {
       .select("manager_id, wins, losses, ties, all_play_wins, all_play_losses"),
     supabase
       .from("v_elo_history")
-      .select("manager_id, elo")
+      .select("manager_id, elo_after")
       .order("season_year", { ascending: false })
       .order("week", { ascending: false }),
   ]);
@@ -27,7 +27,7 @@ async function getAllTimeRankings() {
   const eloByManager: Record<string, number> = {};
   for (const row of eloRaw ?? []) {
     if (!(row.manager_id in eloByManager)) {
-      eloByManager[row.manager_id] = Math.round(row.elo);
+      eloByManager[row.manager_id] = Math.round(row.elo_after);
     }
   }
 
