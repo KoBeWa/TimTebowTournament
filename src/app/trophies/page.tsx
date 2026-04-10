@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { MANAGERS } from "@/lib/constants";
-import { isBlunder, isNegativeRecord, achievementLabel } from "@/lib/classifications";
+import { isBlunder, isNegativeRecord } from "@/lib/classifications";
 import Link from "next/link";
 
 type Tab = "achievements" | "records";
@@ -26,34 +26,51 @@ interface RecordHolder {
   from_year: number;
 }
 
+function RecordPills({ labels, negative }: { labels: string[]; negative?: boolean }) {
+  if (labels.length === 0) return <span className="text-text-faint text-xs">—</span>;
+  return (
+    <div className="flex flex-col gap-1">
+      {labels.map((l) => (
+        <span key={l} className="label-nav text-xs px-1.5 py-0.5 rounded leading-snug"
+          style={{
+            background: negative ? "rgba(150,35,35,0.08)" : "rgba(26,26,26,0.06)",
+            color: negative ? "var(--color-red)" : "var(--color-text-muted)",
+          }}>
+          {l}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function TrophyRoomPage() {
   const [tab, setTab] = useState<Tab>("achievements");
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [records, setRecords] = useState<RecordHolder[]>([]);
-  const [selectedManager, setSelectedManager] = useState<string | null>(null);
+  const [allTimeline, setAllTimeline] = useState<RecordHolder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetch() {
+    async function fetchData() {
       setLoading(true);
-      const [{ data: ach }, { data: rec }] = await Promise.all([
+      const [{ data: ach }, { data: current }, { data: all }] = await Promise.all([
         supabase.from("achievements").select("*").order("season_year", { ascending: false }),
         supabase.from("record_timeline").select("*").eq("is_current", true).order("record_label"),
+        supabase.from("record_timeline").select("record_key,record_label,manager_id,record_value,is_current,from_year"),
       ]);
       setAchievements(ach ?? []);
-      setRecords(rec ?? []);
+      setRecords(current ?? []);
+      setAllTimeline(all ?? []);
       setLoading(false);
     }
-    fetch();
+    fetchData();
   }, []);
 
   if (loading) return <div className="text-text-muted text-center py-20">Lade Trophy Room...</div>;
 
   // === ACHIEVEMENTS TAB DATA ===
   const achByManager: Record<string, { positive: Achievement[]; blunders: Achievement[] }> = {};
-  for (const m of MANAGERS) {
-    achByManager[m] = { positive: [], blunders: [] };
-  }
+  for (const m of MANAGERS) achByManager[m] = { positive: [], blunders: [] };
   for (const a of achievements) {
     if (!achByManager[a.manager_id]) achByManager[a.manager_id] = { positive: [], blunders: [] };
     if (isBlunder(a.achievement_key)) {
@@ -63,18 +80,22 @@ export default function TrophyRoomPage() {
     }
   }
 
-  const achSummary = MANAGERS.map((m) => ({
-    manager: m,
-    achievements: achByManager[m]?.positive.length ?? 0,
-    blunders: achByManager[m]?.blunders.length ?? 0,
-    total: (achByManager[m]?.positive.length ?? 0) + (achByManager[m]?.blunders.length ?? 0),
-  })).sort((a, b) => b.achievements - a.achievements);
+  const achSummary = MANAGERS.map((m) => {
+    const pos = achByManager[m]?.positive ?? [];
+    const blu = achByManager[m]?.blunders ?? [];
+    return {
+      manager: m,
+      achievementTypes: new Set(pos.map(a => a.achievement_key)).size,
+      achievementTotal: pos.length,
+      blunderTypes:     new Set(blu.map(a => a.achievement_key)).size,
+      blunderTotal:     blu.length,
+      total:            pos.length + blu.length,
+    };
+  }).sort((a, b) => b.achievementTotal - a.achievementTotal);
 
   // === RECORDS TAB DATA ===
   const recByManager: Record<string, { positive: RecordHolder[]; negative: RecordHolder[] }> = {};
-  for (const m of MANAGERS) {
-    recByManager[m] = { positive: [], negative: [] };
-  }
+  for (const m of MANAGERS) recByManager[m] = { positive: [], negative: [] };
   for (const r of records) {
     if (!recByManager[r.manager_id]) recByManager[r.manager_id] = { positive: [], negative: [] };
     if (isNegativeRecord(r.record_key)) {
@@ -84,25 +105,65 @@ export default function TrophyRoomPage() {
     }
   }
 
-  // Count unique record_keys per manager (some records might have duplicate entries)
-  function countUnique(arr: RecordHolder[]) {
-    return new Set(arr.map((r) => r.record_key)).size;
+  function uniqueByKey(arr: RecordHolder[]) {
+    return Array.from(new Map(arr.map((r) => [r.record_key, r])).values());
   }
 
-  const recSummary = MANAGERS.map((m) => ({
-    manager: m,
-    positive: countUnique(recByManager[m]?.positive ?? []),
-    negative: countUnique(recByManager[m]?.negative ?? []),
-    total: countUnique([...(recByManager[m]?.positive ?? []), ...(recByManager[m]?.negative ?? [])]),
-  })).sort((a, b) => b.positive - a.positive);
+  // Per-record all-time rankings: best value per manager, then ranked
+  const allTimeRank: Record<string, { manager: string; rank: number; label: string; isNeg: boolean }[]> = {};
+  {
+    const byKey: Record<string, RecordHolder[]> = {};
+    for (const r of allTimeline) (byKey[r.record_key] ??= []).push(r);
 
-  // Unique record list for browse
+    for (const [key, entries] of Object.entries(byKey)) {
+      const neg = isNegativeRecord(key);
+      const label = entries[0].record_label;
+      const best: Record<string, number> = {};
+      for (const e of entries) {
+        const v = Number(e.record_value);
+        if (best[e.manager_id] === undefined || (neg ? v < best[e.manager_id] : v > best[e.manager_id]))
+          best[e.manager_id] = v;
+      }
+      const sorted = Object.entries(best)
+        .sort(([, a], [, b]) => neg ? a - b : b - a)
+        .map(([manager], i) => ({ manager, rank: i + 1, label, isNeg: neg }));
+      allTimeRank[key] = sorted;
+    }
+  }
+
+  // Top-3 entries per manager (rank ≤ 3, grouped by positive/negative)
+  const managerRankings: Record<string, { pos: string[]; neg: string[]; all: string[] }> = {};
+  for (const m of MANAGERS) managerRankings[m] = { pos: [], neg: [], all: [] };
+  for (const entries of Object.values(allTimeRank)) {
+    for (const { manager, rank, label, isNeg } of entries) {
+      if (rank > 3) continue;
+      const suffix = rank === 1 ? "" : rank === 2 ? " (2.)" : " (3.)";
+      const item = label + suffix;
+      if (!managerRankings[manager]) managerRankings[manager] = { pos: [], neg: [], all: [] };
+      if (isNeg) managerRankings[manager].neg.push(item);
+      else       managerRankings[manager].pos.push(item);
+      managerRankings[manager].all.push(item);
+    }
+  }
+
+  const recSummary = MANAGERS.map((m) => {
+    const pos  = uniqueByKey(recByManager[m]?.positive ?? []);
+    const neg  = uniqueByKey(recByManager[m]?.negative ?? []);
+    const all  = uniqueByKey([...(recByManager[m]?.positive ?? []), ...(recByManager[m]?.negative ?? [])]);
+    return {
+      manager:  m,
+      positive: pos.length,
+      posTop3:  managerRankings[m]?.pos.length ?? 0,
+      negative: neg.length,
+      negTop3:  managerRankings[m]?.neg.length ?? 0,
+      total:    all.length,
+      allTop3:  managerRankings[m]?.all.length ?? 0,
+    };
+  }).sort((a, b) => b.positive - a.positive);
+
   const uniqueRecords = Array.from(
     new Map(records.map((r) => [r.record_key, r])).values()
   ).sort((a, b) => a.record_label.localeCompare(b.record_label));
-
-  // Selected manager detail
-  const selectedAch = selectedManager ? achByManager[selectedManager] : null;
 
   return (
     <div className="space-y-8">
@@ -116,7 +177,7 @@ export default function TrophyRoomPage() {
         {(["achievements", "records"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setSelectedManager(null); }}
+            onClick={() => setTab(t)}
             className={`px-5 py-2.5 transition-colors ${
               tab === t
                 ? "bg-ink text-cream label-nav border border-ink"
@@ -130,126 +191,87 @@ export default function TrophyRoomPage() {
 
       {/* ============ ACHIEVEMENTS TAB ============ */}
       {tab === "achievements" && (
-        <div className="space-y-8">
-          {/* Summary Table */}
-          <div className="cell overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-text-muted text-left">
-                  <th className="p-4">Member</th>
-                  <th className="p-4 text-center">Achievements</th>
-                  <th className="p-4 text-center">Blunders</th>
-                  <th className="p-4 text-center">Total Badges</th>
+        <div className="cell overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-text-muted text-left">
+                <th className="p-4 label-nav text-xs">Owner</th>
+                <th className="p-4 label-nav text-xs text-center">Achievements</th>
+                <th className="p-4 label-nav text-xs text-center"># Total</th>
+                <th className="p-4 label-nav text-xs text-center">Blunders</th>
+                <th className="p-4 label-nav text-xs text-center"># Total</th>
+                <th className="p-4 label-nav text-xs text-center">Total Badges</th>
+              </tr>
+            </thead>
+            <tbody>
+              {achSummary.map((row) => (
+                <tr key={row.manager} className="border-b border-border-light transition-colors hover:bg-cream/60">
+                  <td className="p-4">
+                    <Link
+                      href={`/trophies/${encodeURIComponent(row.manager)}`}
+                      className="font-medium text-ink hover:text-red transition-colors"
+                    >
+                      {row.manager}
+                    </Link>
+                  </td>
+                  <td className="p-4 text-center font-semibold text-ink font-mono">
+                    {row.achievementTypes}
+                  </td>
+                  <td className="p-4 text-center font-mono text-text-muted text-xs">
+                    {row.achievementTotal}
+                  </td>
+                  <td className="p-4 text-center font-semibold font-mono" style={{ color: "var(--color-red)" }}>
+                    {row.blunderTypes}
+                  </td>
+                  <td className="p-4 text-center font-mono text-text-muted text-xs">
+                    {row.blunderTotal}
+                  </td>
+                  <td className="p-4 text-center font-semibold text-ink font-mono">
+                    {row.total}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {achSummary.map((row) => (
-                  <tr
-                    key={row.manager}
-                    onClick={() => setSelectedManager(selectedManager === row.manager ? null : row.manager)}
-                    className={`border-b border-border-light cursor-pointer transition-colors ${
-                      selectedManager === row.manager ? "bg-cream" : ""
-                    }`}
-                  >
-                    <td className="p-4 font-medium text-ink">{row.manager}</td>
-                    <td className="p-4 text-center">
-                      <span className="text-ink font-semibold">{row.achievements}</span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <span className="text-red font-semibold">{row.blunders}</span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <span className="text-ink font-semibold">{row.total}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Manager Detail */}
-          {selectedManager && selectedAch && (
-            <div className="space-y-6">
-              <h2 className="section-title text-ink">
-                {selectedManager}&apos;s Achievements
-              </h2>
-
-              {/* Positive Achievements */}
-              <div>
-                <h3 className="text-xl tracking-wide text-ink font-semibold mb-3 section-title">
-                  Achievements ({selectedAch.positive.length})
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {selectedAch.positive.map((a, i) => (
-                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-ink">{achievementLabel(a.achievement_key)}</span>
-                        <span className="text-text-muted text-xs">{a.season_year}</span>
-                      </div>
-                      <div className="text-text-muted text-xs mt-1">{a.description}</div>
-                      {a.value && <div className="text-red text-xs mt-1 font-mono">Wert: {a.value}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Blunders */}
-              <div>
-                <h3 className="text-xl tracking-wide text-red mb-3 section-title">
-                  Blunders ({selectedAch.blunders.length})
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {selectedAch.blunders.map((a, i) => (
-                    <div key={`${a.achievement_key}-${a.season_year}-${i}`} className="cell p-4" style={{ borderColor: "var(--color-red)", borderWidth: "1px", opacity: 0.85 }}>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-ink">{achievementLabel(a.achievement_key)}</span>
-                        <span className="text-text-muted text-xs">{a.season_year}</span>
-                      </div>
-                      <div className="text-text-muted text-xs mt-1">{a.description}</div>
-                      {a.value && <div className="text-red text-xs mt-1 font-mono">Wert: {a.value}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* ============ RECORDS TAB ============ */}
       {tab === "records" && (
         <div className="space-y-8">
-          {/* Summary Table */}
           <div className="cell overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-left">
-                  <th className="p-4">Member</th>
-                  <th className="p-4 text-center">Positive Held</th>
-                  <th className="p-4 text-center">Negative Held</th>
-                  <th className="p-4 text-center">Total Held</th>
+                  <th className="p-4 label-nav text-xs">Owner</th>
+                  <th className="p-4 label-nav text-xs text-center">Positive Held</th>
+                  <th className="p-4 label-nav text-xs">Top 3</th>
+                  <th className="p-4 label-nav text-xs text-center">Negative Held</th>
+                  <th className="p-4 label-nav text-xs">Top 3</th>
+                  <th className="p-4 label-nav text-xs text-center">Total Held</th>
+                  <th className="p-4 label-nav text-xs">Top 3</th>
                 </tr>
               </thead>
               <tbody>
                 {recSummary.map((row) => (
-                  <tr key={row.manager} className="border-b border-border-light transition-colors">
+                  <tr key={row.manager} className="border-b border-border-light transition-colors align-top">
                     <td className="p-4 font-medium text-ink">
                       <Link href={`/manager/${row.manager}`} className="hover:text-red transition-colors">{row.manager}</Link>
                     </td>
-                    <td className="p-4 text-center"><span className="text-ink font-semibold">{row.positive}</span></td>
-                    <td className="p-4 text-center"><span className="text-red font-semibold">{row.negative}</span></td>
-                    <td className="p-4 text-center"><span className="text-ink font-semibold">{row.total}</span></td>
+                    <td className="p-4 text-center font-semibold text-ink">{row.positive}</td>
+                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.posTop3}</td>
+                    <td className="p-4 text-center font-semibold" style={{ color: "var(--color-red)" }}>{row.negative}</td>
+                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.negTop3}</td>
+                    <td className="p-4 text-center font-semibold text-ink">{row.total}</td>
+                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.allTop3}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* All Records List */}
           <div>
             <h2 className="section-title text-ink mb-4">Alle Records</h2>
-
-            {/* Group by positive/negative */}
             {[
               { label: "Positive Records", items: uniqueRecords.filter((r) => !isNegativeRecord(r.record_key)), color: "text-ink font-semibold" },
               { label: "Negative Records", items: uniqueRecords.filter((r) => isNegativeRecord(r.record_key)), color: "text-red" },
@@ -265,10 +287,8 @@ export default function TrophyRoomPage() {
                       href={`/trophies/records/${r.record_key}`}
                       className="cell-hover p-4 flex items-center justify-between group"
                     >
-                      <div>
-                        <div className="font-medium text-ink group-hover:text-red transition-colors">
-                          {r.record_label}
-                        </div>
+                      <div className="font-medium text-ink group-hover:text-red transition-colors">
+                        {r.record_label}
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
