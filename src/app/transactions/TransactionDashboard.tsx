@@ -243,7 +243,7 @@ function TeamChart({ data, mode }: {
 // ── Ranking table ────────────────────────────────────────────────────────────
 function RankingTable({ rows, label }: { rows: { team: string; value: number }[]; label: string }) {
   return (
-    <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+    <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
       <thead>
         <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
@@ -261,14 +261,14 @@ function RankingTable({ rows, label }: { rows: { team: string; value: number }[]
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
 // ── Waiver move table ────────────────────────────────────────────────────────
 function WaiverTable({ rows, best }: { rows: VTxRow[]; best: boolean }) {
   return (
-    <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+    <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
       <thead>
         <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
@@ -295,7 +295,7 @@ function WaiverTable({ rows, best }: { rows: VTxRow[]; best: boolean }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 

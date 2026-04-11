@@ -534,25 +534,25 @@ export default function MatchupDetailPage({
       <Link href="/gamecenter" className="text-text-muted hover:text-ink text-sm transition-colors">← Gamecenter</Link>
 
       {/* Score header */}
-      <div className="cell p-8">
+      <div className="cell p-4 sm:p-8">
         <div className="flex items-center justify-between text-center">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="kicker mb-1">{aWon ? "Winner" : ""}</div>
-            <div className={`display-title text-4xl md:text-5xl tracking-wider ${aWon ? "text-red" : "text-text-secondary"}`}>
+            <div className={`display-title text-xl sm:text-4xl md:text-5xl tracking-wider truncate ${aWon ? "text-red" : "text-text-secondary"}`}>
               {matchup.manager_a}
             </div>
           </div>
-          <div className="px-6">
-            <div className="display-title text-3xl md:text-4xl tracking-wide">
+          <div className="px-2 sm:px-6 shrink-0">
+            <div className="display-title text-lg sm:text-3xl md:text-4xl tracking-wide whitespace-nowrap">
               <span className={aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_a.toFixed(1)}</span>
-              <span className="text-text-muted mx-3">–</span>
+              <span className="text-text-muted mx-2">–</span>
               <span className={!aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_b.toFixed(1)}</span>
             </div>
             <div className="kicker mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="kicker mb-1">{!aWon ? "Winner" : ""}</div>
-            <div className={`display-title text-4xl md:text-5xl tracking-wider ${!aWon ? "text-red" : "text-text-secondary"}`}>
+            <div className={`display-title text-xl sm:text-4xl md:text-5xl tracking-wider truncate ${!aWon ? "text-red" : "text-text-secondary"}`}>
               {matchup.manager_b}
             </div>
           </div>

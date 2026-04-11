@@ -68,7 +68,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
         {/* Owner rankings */}
         <div>
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Owner Rankings</div>
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">#</th>
@@ -92,13 +92,13 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Top 5 */}
         <div>
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Top 5 Picks</div>
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
@@ -122,13 +122,13 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         {/* Worst 5 */}
         <div>
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Worst 5 Picks</div>
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
@@ -152,7 +152,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
       </div>

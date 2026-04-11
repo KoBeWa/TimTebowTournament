@@ -66,7 +66,7 @@ export default async function HomePage() {
       {/* ── MASTHEAD ── */}
       <header
         style={{ borderBottom: "1px solid #1a1a1a" }}
-        className="grid grid-cols-3 items-center py-6 mb-0"
+        className="grid grid-cols-3 items-center py-4 mb-0"
       >
         <div className="label-nav text-xs text-text-faint">
           <div>Est. {LEAGUE_FOUNDED}</div>
@@ -122,7 +122,7 @@ export default async function HomePage() {
           >
             <div className="kicker mb-2">Champion {latestSeason.year}</div>
 
-            <div className="display-title text-5xl md:text-7xl text-ink leading-none mb-4">
+            <div className="display-title text-3xl sm:text-5xl md:text-7xl text-ink leading-none mb-4">
               {latestSeason.champion}
             </div>
 
@@ -138,7 +138,7 @@ export default async function HomePage() {
 
                 {/* 4-cell stat grid */}
                 <div
-                  className="grid grid-cols-4"
+                  className="grid grid-cols-2 sm:grid-cols-4"
                   style={{ borderTop: "1px solid #1a1a1a", borderLeft: "1px solid #1a1a1a" }}
                 >
                   {[
@@ -215,7 +215,7 @@ export default async function HomePage() {
 
       {/* ── STATS BAR ── */}
       <div
-        className="grid grid-cols-4"
+        className="grid grid-cols-2 sm:grid-cols-4"
         style={{ borderTop: "3px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}
       >
         {[

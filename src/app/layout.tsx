@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="de">
       <body className={`${playfair.variable} ${robotoCond.variable} ${inter.variable}`}>
         <Navbar />
-        <main className="mx-auto max-w-7xl px-6 py-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
           {children}
         </main>
       </body>

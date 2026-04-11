@@ -52,7 +52,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div style={{ borderTop: "1px solid #1a1a1a" }} className="md:hidden bg-cream px-6 py-3">
+        <div style={{ borderTop: "1px solid #1a1a1a" }} className="md:hidden bg-cream px-6 py-3 max-h-[calc(100vh-2.25rem)] overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (

@@ -100,7 +100,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
             value={season}
             onChange={(e) => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
             className="label-nav text-xs px-3 py-2 bg-cream border border-border text-ink"
-            style={{ minWidth: "180px" }}
+            style={{ minWidth: "140px" }}
           >
             <option value="all">All Time</option>
             {SEASONS.slice().reverse().map((s) => (
@@ -114,7 +114,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
             value={manager}
             onChange={(e) => setManager(e.target.value)}
             className="label-nav text-xs px-3 py-2 bg-cream border border-border text-ink"
-            style={{ minWidth: "160px" }}
+            style={{ minWidth: "120px" }}
           >
             <option value="all">Overall</option>
             {MANAGERS.map((m) => (

@@ -63,12 +63,12 @@ export default function HeadToHeadPage() {
 
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
         <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
-          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-48 focus:border-red focus:outline-none">
+          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-full sm:w-48 focus:border-red focus:outline-none">
           {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
         </select>
         <span className="text-3xl text-red tracking-wider display-title">VS</span>
         <select value={m2} onChange={(e) => setM2(e.target.value as ManagerId)}
-          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-48 focus:border-red focus:outline-none">
+          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-full sm:w-48 focus:border-red focus:outline-none">
           {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m1}>{m}</option>)}
         </select>
       </div>

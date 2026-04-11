@@ -191,7 +191,7 @@ export default function TrophyRoomPage() {
 
       {/* ============ ACHIEVEMENTS TAB ============ */}
       {tab === "achievements" && (
-        <div className="cell overflow-hidden">
+        <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-text-muted text-left">
@@ -239,7 +239,7 @@ export default function TrophyRoomPage() {
       {/* ============ RECORDS TAB ============ */}
       {tab === "records" && (
         <div className="space-y-8">
-          <div className="cell overflow-hidden">
+          <div className="cell overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-left">

@@ -180,7 +180,7 @@ export default async function DraftsPage() {
       </div>
 
       {/* ── Header stats ── */}
-      <div className="grid grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {[
           { label: "Ø Pick Value", value: sign(avgPickValue), sub: "pro einzelnem Pick" },
           { label: "Ø Team Value", value: sign(avgTeamValue), sub: "pro Draft & Owner" },
