@@ -18,6 +18,7 @@ async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
     total_points: { col: "points_for", agg: "sum" },
     total_opp_points: { col: "points_against", agg: "sum" },
     most_transactions: { col: "moves", agg: "sum" },
+    most_trades: { col: "trades", agg: "sum" },
   };
 
   if (careerAgg[recordKey]) {
@@ -60,6 +61,8 @@ async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
     most_season_wins: { col: "wins", fn: "max" },
     most_season_losses: { col: "losses", fn: "max" },
     best_lineup_efficiency: { col: "lineup_efficiency", fn: "max" },
+    best_trade_season_count: { col: "trades", fn: "max" },
+    best_moves_season: { col: "moves", fn: "max" },
   };
 
   if (seasonBest[recordKey]) {
@@ -164,7 +167,45 @@ async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
     return Object.entries(counts).map(([m, v]) => ({ manager: m, value: v }));
   }
 
-  // No handler for this record type
+  // --- v_streaks handler ---
+  const streakCols: Record<string, string> = {
+    win_streak: "longest_win_streak",
+    loss_streak: "longest_loss_streak",
+    high_score_streak: "longest_high_score_streak",
+    high_score_drought: "longest_high_score_drought",
+    top_half_streak: "longest_top_half_streak",
+    top_half_drought: "longest_top_half_drought",
+    playoff_appearance_streak: "longest_playoff_streak",
+    playoff_appearance_drought: "longest_playoff_drought",
+    championship_streak: "longest_champ_streak",
+    championship_drought: "longest_champ_drought",
+  };
+  if (streakCols[recordKey]) {
+    const col = streakCols[recordKey];
+    const { data } = await supabase.from("v_streaks").select(`manager_id, ${col}`);
+    if (!data) return null;
+    return (data as any[]).map((r) => ({ manager: r.manager_id, value: Number(r[col] || 0) }));
+  }
+
+  // --- Fallback: read per-manager best from record_timeline ---
+  // Used for all snapshot-based records (streaks computed via SQL, position points, fun facts, etc.)
+  {
+    const { data: tl } = await supabase
+      .from("record_timeline")
+      .select("manager_id, record_value")
+      .eq("record_key", recordKey);
+    if (tl && tl.length > 0) {
+      const byMgr: Record<string, number> = {};
+      for (const row of tl) {
+        const v = Number(row.record_value);
+        if (!(row.manager_id in byMgr) || v > byMgr[row.manager_id]) {
+          byMgr[row.manager_id] = v;
+        }
+      }
+      return Object.entries(byMgr).map(([m, v]) => ({ manager: m, value: v }));
+    }
+  }
+
   return null;
 }
 

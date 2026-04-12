@@ -90,6 +90,28 @@ export const NEGATIVE_RECORD_KEYS = new Set([
   "worst_wr_draft_season",
   "worst_score_pct",
   "worst_scores",
+  // Streaks & Droughts (droughts are negative)
+  "loss_streak",
+  "high_score_drought",
+  "top_half_drought",
+  "playoff_appearance_drought",
+  "championship_drought",
+  "top_score_drought",
+  "winning_record_drought",
+  "title_game_drought",
+  "medal_drought",
+  "loss_start_streak",
+  // Fun Facts (negative)
+  "most_weeks_last_place",
+  "most_h2h_losses",
+  "fewest_h2h_wins",
+  "worst_playoff_win_pct",
+  "worst_ppg",
+  "fewest_points_in_win",
+  "fewest_bench_points_season",
+  "highest_season_opp_pts_share",
+  "lowest_avg_draft_pos",
+  "fewest_playoff_appearances",
 ]);
 
 export function isBlunder(achievementKey: string): boolean {
