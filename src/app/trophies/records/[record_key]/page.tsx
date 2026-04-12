@@ -1,212 +1,17 @@
 import { supabase } from "@/lib/supabase";
 import { isNegativeRecord } from "@/lib/classifications";
-import { MANAGERS } from "@/lib/constants";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-// ============================================================
-// RECORD → SQL MAPPING for all-owner rankings
-// ============================================================
+type RankingRow = { manager: string; value: number };
 
-type RankingRow = { manager: string; value: number; season?: number; week?: number };
-
-async function computeRanking(recordKey: string): Promise<RankingRow[] | null> {
-  // --- Career aggregates from season_results ---
-  const careerAgg: Record<string, { col: string; agg: "sum" | "max" | "min" }> = {
-    total_wins: { col: "wins", agg: "sum" },
-    total_losses: { col: "losses", agg: "sum" },
-    total_points: { col: "points_for", agg: "sum" },
-    total_opp_points: { col: "points_against", agg: "sum" },
-    most_transactions: { col: "moves", agg: "sum" },
-    most_trades: { col: "trades", agg: "sum" },
-  };
-
-  if (careerAgg[recordKey]) {
-    const { col, agg } = careerAgg[recordKey];
-    const { data: rawData } = await supabase
-      .from("season_results")
-      .select(`manager_id, ${col}`);
-    if (!rawData) return null;
-    const data = rawData as any[];
-    const byMgr: Record<string, number> = {};
-    for (const r of data) {
-      byMgr[r.manager_id] = (byMgr[r.manager_id] || 0) + Number(r[col] || 0);
-    }
-    return Object.entries(byMgr).map(([m, v]) => ({ manager: m, value: v }));
-  }
-
-  // --- Win percentage ---
-  if (recordKey === "win_pct") {
-    const { data } = await supabase.from("season_results").select("manager_id, wins, losses, ties");
-    if (!data) return null;
-    const byMgr: Record<string, { w: number; l: number; t: number }> = {};
-    for (const r of data) {
-      if (!byMgr[r.manager_id]) byMgr[r.manager_id] = { w: 0, l: 0, t: 0 };
-      byMgr[r.manager_id].w += r.wins || 0;
-      byMgr[r.manager_id].l += r.losses || 0;
-      byMgr[r.manager_id].t += r.ties || 0;
-    }
-    return Object.entries(byMgr).map(([m, s]) => ({
-      manager: m,
-      value: (s.w / (s.w + s.l + s.t)) * 100,
-    }));
-  }
-
-  // --- Season bests from season_results ---
-  const seasonBest: Record<string, { col: string; fn: "max" | "min" }> = {
-    most_season_points: { col: "points_for", fn: "max" },
-    fewest_season_points: { col: "points_for", fn: "min" },
-    most_season_opp_points: { col: "points_against", fn: "max" },
-    fewest_season_opp_pts: { col: "points_against", fn: "min" },
-    most_season_wins: { col: "wins", fn: "max" },
-    most_season_losses: { col: "losses", fn: "max" },
-    best_lineup_efficiency: { col: "lineup_efficiency", fn: "max" },
-    best_trade_season_count: { col: "trades", fn: "max" },
-    best_moves_season: { col: "moves", fn: "max" },
-  };
-
-  if (seasonBest[recordKey]) {
-    const { col, fn } = seasonBest[recordKey];
-    const { data: rawData2 } = await supabase.from("season_results").select(`manager_id, season_year, ${col}`);
-    if (!rawData2) return null;
-    const data2 = rawData2 as any[];
-    const byMgr: Record<string, { value: number; season: number }> = {};
-    for (const r of data2) {
-      const v = Number(r[col] || 0);
-      const existing = byMgr[r.manager_id];
-      if (!existing || (fn === "max" ? v > existing.value : v < existing.value)) {
-        byMgr[r.manager_id] = { value: v, season: r.season_year };
-      }
-    }
-    return Object.entries(byMgr).map(([m, d]) => ({ manager: m, value: d.value, season: d.season }));
-  }
-
-  // --- Matchup records from weekly_matchups ---
-  const matchupQueries = [
-    "most_matchup_points", "fewest_matchup_points",
-    "biggest_blowout", "narrowest_win",
-    "highest_combined_score", "lowest_combined_score",
-    "most_playoff_matchup_pts", "fewest_playoff_matchup_pts",
-    "biggest_playoff_blowout",
-  ];
-
-  if (matchupQueries.includes(recordKey)) {
-    const isPlayoff = recordKey.includes("playoff");
-    let query = supabase.from("weekly_matchups").select("season_year, week, manager_a, score_a, manager_b, score_b, is_playoff");
-    if (isPlayoff) query = query.eq("is_playoff", true);
-    const { data } = await query;
-    if (!data) return null;
-
-    // Flatten to per-manager view
-    const perManager: Record<string, { value: number; season: number; week: number }> = {};
-
-    for (const m of data) {
-      const sa = Number(m.score_a);
-      const sb = Number(m.score_b);
-
-      const entries: { mgr: string; val: number }[] = [];
-
-      if (recordKey.includes("combined")) {
-        const combined = sa + sb;
-        entries.push({ mgr: m.manager_a, val: combined }, { mgr: m.manager_b, val: combined });
-      } else if (recordKey.includes("blowout") || recordKey.includes("narrowest")) {
-        const diff = Math.abs(sa - sb);
-        const isBlowout = recordKey.includes("blowout");
-        // For blowout: winner gets credit. For narrowest: also winner
-        const winner = sa > sb ? m.manager_a : m.manager_b;
-        entries.push({ mgr: winner, val: isBlowout ? diff : diff });
-        // Give all managers a chance to appear
-        const loser = sa > sb ? m.manager_b : m.manager_a;
-        entries.push({ mgr: loser, val: isBlowout ? -1 : 999 }); // placeholder
-      } else {
-        // Score records
-        entries.push({ mgr: m.manager_a, val: sa }, { mgr: m.manager_b, val: sb });
-      }
-
-      const isMax = ["most_matchup_points", "biggest_blowout", "highest_combined_score", "most_playoff_matchup_pts", "biggest_playoff_blowout"].includes(recordKey);
-
-      for (const e of entries) {
-        const existing = perManager[e.mgr];
-        if (!existing || (isMax ? e.val > existing.value : e.val < existing.value)) {
-          perManager[e.mgr] = { value: e.val, season: m.season_year, week: m.week };
-        }
-      }
-    }
-
-    // Filter out placeholders
-    return Object.entries(perManager)
-      .filter(([, d]) => d.value !== -1 && d.value !== 999)
-      .map(([m, d]) => ({ manager: m, value: d.value, season: d.season, week: d.week }));
-  }
-
-  // --- Championship counts ---
-  if (recordKey === "championships" || recordKey === "reg_season_titles" || recordKey === "season_ap_titles" || recordKey === "season_pts_titles") {
-    const { data: playoffs } = await supabase.from("playoff_results").select("manager_id, final_rank");
-    const { data: results } = await supabase.from("season_results").select("manager_id, reg_rank");
-    if (!playoffs || !results) return null;
-
-    const counts: Record<string, number> = {};
-    for (const m of MANAGERS) counts[m] = 0;
-
-    if (recordKey === "championships") {
-      for (const p of playoffs) if (p.final_rank === 1) counts[p.manager_id] = (counts[p.manager_id] || 0) + 1;
-    } else if (recordKey === "reg_season_titles") {
-      for (const r of results) if (r.reg_rank === 1) counts[r.manager_id] = (counts[r.manager_id] || 0) + 1;
-    }
-
-    return Object.entries(counts).map(([m, v]) => ({ manager: m, value: v }));
-  }
-
-  // --- Playoff appearances ---
-  if (recordKey === "playoff_appearances") {
-    const { data } = await supabase.from("playoff_results").select("manager_id, seed");
-    if (!data) return null;
-    const counts: Record<string, number> = {};
-    for (const m of MANAGERS) counts[m] = 0;
-    for (const r of data) if (r.seed <= 4) counts[r.manager_id] = (counts[r.manager_id] || 0) + 1;
-    return Object.entries(counts).map(([m, v]) => ({ manager: m, value: v }));
-  }
-
-  // --- v_streaks handler ---
-  const streakCols: Record<string, string> = {
-    win_streak: "longest_win_streak",
-    loss_streak: "longest_loss_streak",
-    high_score_streak: "longest_high_score_streak",
-    high_score_drought: "longest_high_score_drought",
-    top_half_streak: "longest_top_half_streak",
-    top_half_drought: "longest_top_half_drought",
-    playoff_appearance_streak: "longest_playoff_streak",
-    playoff_appearance_drought: "longest_playoff_drought",
-    championship_streak: "longest_champ_streak",
-    championship_drought: "longest_champ_drought",
-  };
-  if (streakCols[recordKey]) {
-    const col = streakCols[recordKey];
-    const { data } = await supabase.from("v_streaks").select(`manager_id, ${col}`);
-    if (!data) return null;
-    return (data as any[]).map((r) => ({ manager: r.manager_id, value: Number(r[col] || 0) }));
-  }
-
-  // --- Fallback: read per-manager best from record_timeline ---
-  // Used for all snapshot-based records (streaks computed via SQL, position points, fun facts, etc.)
-  {
-    const { data: tl } = await supabase
-      .from("record_timeline")
-      .select("manager_id, record_value")
-      .eq("record_key", recordKey);
-    if (tl && tl.length > 0) {
-      const byMgr: Record<string, number> = {};
-      for (const row of tl) {
-        const v = Number(row.record_value);
-        if (!(row.manager_id in byMgr) || v > byMgr[row.manager_id]) {
-          byMgr[row.manager_id] = v;
-        }
-      }
-      return Object.entries(byMgr).map(([m, v]) => ({ manager: m, value: v }));
-    }
-  }
-
-  return null;
+async function getOwnerRanking(recordKey: string): Promise<RankingRow[] | null> {
+  const { data } = await supabase
+    .from("record_owner_values")
+    .select("manager_id, current_value")
+    .eq("record_key", recordKey);
+  if (!data || data.length === 0) return null;
+  return data.map((r) => ({ manager: r.manager_id, value: Number(r.current_value ?? 0) }));
 }
 
 // ============================================================
@@ -261,8 +66,7 @@ export default async function RecordDetailPage({
   const negative = isNegativeRecord(record_key);
   const isMatchupRecord = MATCHUP_RECORDS.has(record_key);
 
-  // Compute all-owner ranking from raw data
-  const rawRanking = await computeRanking(record_key);
+  const rawRanking = await getOwnerRanking(record_key);
   const ranking = rawRanking
     ? rawRanking.sort((a, b) => negative ? a.value - b.value : b.value - a.value)
     : null;
@@ -328,32 +132,25 @@ export default async function RecordDetailPage({
                 <tr className="border-b border-border text-text-muted text-left">
                   <th className="p-4 w-12">#</th>
                   <th className="p-4">Manager</th>
-                  <th className="p-4 text-right">Value</th>
-                  {ranking.some((r) => r.season) && <th className="p-4 text-right">Season</th>}
-                  {ranking.some((r) => r.week) && <th className="p-4 text-right">Week</th>}
+                  <th className="p-4 text-right">Wert</th>
                 </tr>
               </thead>
               <tbody>
                 {ranking.map((row, i) => {
                   const isCurrent = currentHolder?.manager_id === row.manager;
+                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
                   return (
                     <tr key={row.manager} className={`border-b border-border-light transition-colors ${isCurrent ? "bg-cream" : ""}`}>
-                      <td className="p-4 text-text-muted">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
+                      <td className="p-4 label-nav text-xs text-text-muted">{medal}</td>
                       <td className="p-4">
                         <Link href={`/manager/${row.manager}`} className="font-medium text-ink hover:text-red transition-colors">
                           {row.manager}
                           {isCurrent && <span className="text-red text-xs ml-2">RECORD</span>}
                         </Link>
                       </td>
-                      <td className={`p-4 text-right font-mono ${i === 0 ? "text-ink font-semibold" : "text-ink"}`}>
+                      <td className={`p-4 text-right font-mono text-sm ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
                         {Number.isInteger(row.value) ? row.value : row.value.toFixed(2)}
                       </td>
-                      {ranking.some((r) => r.season) && (
-                        <td className="p-4 text-right text-text-muted">{row.season ?? "—"}</td>
-                      )}
-                      {ranking.some((r) => r.week) && (
-                        <td className="p-4 text-right text-text-muted">{row.week ? `W${row.week}` : "—"}</td>
-                      )}
                     </tr>
                   );
                 })}

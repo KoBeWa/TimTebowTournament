@@ -140,6 +140,35 @@ export const NEGATIVE_RECORD_KEYS = new Set([
   "coach_score_perfect_drought",
   // Milestone negatives
   "toiletbowl_finishes",
+  // Playoff top-seed failures (losing as #1 seed = negative)
+  "top_seed_losses_total",
+  "top_seed_losses_semifinal",
+  "top_seed_losses_final",
+  // Matchup margin negatives
+  "largest_margin_defeat",
+  // H2H and bench negatives
+  "fewest_h2h_points",
+  "fewest_bench_week_points",
+  "fewest_bench_all_points",
+  // Consistency/Volatility negatives
+  "least_consistent_team",
+  "least_consistent_season",
+  "lowest_median_score",
+  "most_weeks_below_avg",
+  "most_weeks_below_median_season",
+  // Luck negatives
+  "most_unlucky_season",
+  "most_losses_above_avg",
+  // Variance negatives
+  "most_sub80_games",
+  // Playoff without title
+  "most_playoff_appearances_no_title",
+  // Lineup negatives
+  "most_bench_pts_in_loss",
+  // Schedule negatives
+  "most_games_vs_top_scorer",
+  // Dominant season negatives
+  "worst_champion_record",
 ]);
 
 export function isBlunder(achievementKey: string): boolean {
