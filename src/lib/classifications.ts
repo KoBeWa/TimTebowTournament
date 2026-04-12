@@ -134,6 +134,12 @@ export const NEGATIVE_RECORD_KEYS = new Set([
   // Transaction negatives
   "worst_waivers",
   "worst_manager_season",
+  "worst_trade_value",
+  "worst_trade_season_value",
+  // Coach score perfect game drought (longer = worse)
+  "coach_score_perfect_drought",
+  // Milestone negatives
+  "toiletbowl_finishes",
 ]);
 
 export function isBlunder(achievementKey: string): boolean {
