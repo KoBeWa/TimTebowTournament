@@ -112,6 +112,28 @@ export const NEGATIVE_RECORD_KEYS = new Set([
   "highest_season_opp_pts_share",
   "lowest_avg_draft_pos",
   "fewest_playoff_appearances",
+  // Coach Score (worst = negative)
+  "coach_score_worst_alltime",
+  "coach_score_season_worst",
+  // Optimal points missed (more missed = worse)
+  "optimal_pts_missed_all",
+  "optimal_pts_missed_season",
+  // Position avg pts worst (lower avg = negative)
+  "qb_avg_pts_worst",
+  "rb_avg_pts_worst",
+  "wr_avg_pts_worst",
+  "te_avg_pts_worst",
+  "k_avg_pts_worst",
+  "dst_avg_pts_worst",
+  "qb_avg_pts_season_worst",
+  "rb_avg_pts_season_worst",
+  "wr_avg_pts_season_worst",
+  "te_avg_pts_season_worst",
+  "k_avg_pts_season_worst",
+  "dst_avg_pts_season_worst",
+  // Transaction negatives
+  "worst_waivers",
+  "worst_manager_season",
 ]);
 
 export function isBlunder(achievementKey: string): boolean {
