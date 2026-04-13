@@ -47,20 +47,17 @@ export default function TrophyRoomPage() {
   const [tab, setTab] = useState<Tab>("achievements");
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [records, setRecords] = useState<RecordHolder[]>([]);
-  const [allTimeline, setAllTimeline] = useState<RecordHolder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [{ data: ach }, { data: current }, { data: all }] = await Promise.all([
+      const [{ data: ach }, { data: current }] = await Promise.all([
         supabase.from("achievements").select("*").order("season_year", { ascending: false }),
         supabase.from("record_timeline").select("*").eq("is_current", true).order("record_label"),
-        supabase.from("record_timeline").select("record_key,record_label,manager_id,record_value,is_current,from_year"),
       ]);
       setAchievements(ach ?? []);
       setRecords(current ?? []);
-      setAllTimeline(all ?? []);
       setLoading(false);
     }
     fetchData();
@@ -109,56 +106,11 @@ export default function TrophyRoomPage() {
     return Array.from(new Map(arr.map((r) => [r.record_key, r])).values());
   }
 
-  // Per-record all-time rankings: best value per manager, then ranked
-  const allTimeRank: Record<string, { manager: string; rank: number; label: string; isNeg: boolean }[]> = {};
-  {
-    const byKey: Record<string, RecordHolder[]> = {};
-    for (const r of allTimeline) (byKey[r.record_key] ??= []).push(r);
-
-    for (const [key, entries] of Object.entries(byKey)) {
-      const neg = isNegativeRecord(key);
-      const label = entries[0].record_label;
-      const best: Record<string, number> = {};
-      for (const e of entries) {
-        const v = Number(e.record_value);
-        if (best[e.manager_id] === undefined || (neg ? v < best[e.manager_id] : v > best[e.manager_id]))
-          best[e.manager_id] = v;
-      }
-      const sorted = Object.entries(best)
-        .sort(([, a], [, b]) => neg ? a - b : b - a)
-        .map(([manager], i) => ({ manager, rank: i + 1, label, isNeg: neg }));
-      allTimeRank[key] = sorted;
-    }
-  }
-
-  // Top-3 entries per manager (rank ≤ 3, grouped by positive/negative)
-  const managerRankings: Record<string, { pos: string[]; neg: string[]; all: string[] }> = {};
-  for (const m of MANAGERS) managerRankings[m] = { pos: [], neg: [], all: [] };
-  for (const entries of Object.values(allTimeRank)) {
-    for (const { manager, rank, label, isNeg } of entries) {
-      if (rank > 3) continue;
-      const suffix = rank === 1 ? "" : rank === 2 ? " (2.)" : " (3.)";
-      const item = label + suffix;
-      if (!managerRankings[manager]) managerRankings[manager] = { pos: [], neg: [], all: [] };
-      if (isNeg) managerRankings[manager].neg.push(item);
-      else       managerRankings[manager].pos.push(item);
-      managerRankings[manager].all.push(item);
-    }
-  }
-
   const recSummary = MANAGERS.map((m) => {
-    const pos  = uniqueByKey(recByManager[m]?.positive ?? []);
-    const neg  = uniqueByKey(recByManager[m]?.negative ?? []);
-    const all  = uniqueByKey([...(recByManager[m]?.positive ?? []), ...(recByManager[m]?.negative ?? [])]);
-    return {
-      manager:  m,
-      positive: pos.length,
-      posTop3:  managerRankings[m]?.pos.length ?? 0,
-      negative: neg.length,
-      negTop3:  managerRankings[m]?.neg.length ?? 0,
-      total:    all.length,
-      allTop3:  managerRankings[m]?.all.length ?? 0,
-    };
+    const pos = uniqueByKey(recByManager[m]?.positive ?? []);
+    const neg = uniqueByKey(recByManager[m]?.negative ?? []);
+    const all = uniqueByKey([...(recByManager[m]?.positive ?? []), ...(recByManager[m]?.negative ?? [])]);
+    return { manager: m, positive: pos.length, negative: neg.length, total: all.length };
   }).sort((a, b) => b.positive - a.positive);
 
   const uniqueRecords = Array.from(
@@ -245,11 +197,8 @@ export default function TrophyRoomPage() {
                 <tr className="border-b border-border text-text-muted text-left">
                   <th className="p-4 label-nav text-xs">Owner</th>
                   <th className="p-4 label-nav text-xs text-center">Positive Held</th>
-                  <th className="p-4 label-nav text-xs">Top 3</th>
                   <th className="p-4 label-nav text-xs text-center">Negative Held</th>
-                  <th className="p-4 label-nav text-xs">Top 3</th>
                   <th className="p-4 label-nav text-xs text-center">Total Held</th>
-                  <th className="p-4 label-nav text-xs">Top 3</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,50 +208,26 @@ export default function TrophyRoomPage() {
                       <Link href={`/manager/${row.manager}`} className="hover:text-red transition-colors">{row.manager}</Link>
                     </td>
                     <td className="p-4 text-center font-semibold text-ink">{row.positive}</td>
-                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.posTop3}</td>
                     <td className="p-4 text-center font-semibold" style={{ color: "var(--color-red)" }}>{row.negative}</td>
-                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.negTop3}</td>
                     <td className="p-4 text-center font-semibold text-ink">{row.total}</td>
-                    <td className="p-4 text-center font-mono text-text-muted text-xs">{row.allTop3}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div>
-            <h2 className="section-title text-ink mb-4">Alle Records</h2>
-            {[
-              { label: "Positive Records", items: uniqueRecords.filter((r) => !isNegativeRecord(r.record_key)), color: "text-ink font-semibold" },
-              { label: "Negative Records", items: uniqueRecords.filter((r) => isNegativeRecord(r.record_key)), color: "text-red" },
-            ].map((group) => (
-              <div key={group.label} className="mb-6">
-                <h3 className={`text-xl tracking-wide mb-3 section-title ${group.color}`}>
-                  {group.label} ({group.items.length})
-                </h3>
-                <div className="space-y-2">
-                  {group.items.map((r) => (
-                    <Link
-                      key={r.record_key}
-                      href={`/trophies/records/${r.record_key}`}
-                      className="cell-hover p-4 flex items-center justify-between group"
-                    >
-                      <div className="font-medium text-ink group-hover:text-red transition-colors">
-                        {r.record_label}
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="text-ink font-semibold">{r.manager_id}</div>
-                          <div className="text-text-muted text-xs font-mono">{Number(r.record_value).toFixed(2)}</div>
-                        </div>
-                        <span className="text-text-muted group-hover:text-red transition-colors">→</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+          <Link
+            href="/trophies/records"
+            className="cell-hover p-5 flex items-center justify-between group"
+          >
+            <div>
+              <div className="font-semibold text-ink group-hover:text-red transition-colors">Alle Records durchsuchen</div>
+              <div className="text-text-muted text-sm mt-0.5">
+                {uniqueRecords.length} Records in 8 Kategorien
               </div>
-            ))}
-          </div>
+            </div>
+            <span className="text-text-muted group-hover:text-red transition-colors text-lg">→</span>
+          </Link>
         </div>
       )}
     </div>
