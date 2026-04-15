@@ -1,7 +1,7 @@
 export const LEAGUE_NAME = "League Legacy";
 export const LEAGUE_FOUNDED = 2015;
 export const CURRENT_SEASON = 2025;
-
+ 
 export const MANAGERS = [
   "Benni",
   "Erik",
@@ -12,14 +12,14 @@ export const MANAGERS = [
   "Simi",
   "Tommy",
 ] as const;
-
+ 
 export type ManagerId = (typeof MANAGERS)[number];
-
+ 
 export const SEASONS = Array.from(
   { length: CURRENT_SEASON - LEAGUE_FOUNDED + 1 },
   (_, i) => LEAGUE_FOUNDED + i
 );
-
+ 
 export const NAV_ITEMS = [
   { label: "History", href: "/history", icon: "trophy" },
   { label: "Rankings", href: "/rankings", icon: "bar-chart" },
@@ -28,4 +28,6 @@ export const NAV_ITEMS = [
   { label: "Transactions", href: "/transactions", icon: "arrow-left-right" },
   { label: "Head to Head", href: "/h2h", icon: "swords" },
   { label: "Trophy Room", href: "/trophies", icon: "award" },
+  { label: "Mock Draft", href: "/mock-draft", icon: "target" },
 ] as const;
+ 
