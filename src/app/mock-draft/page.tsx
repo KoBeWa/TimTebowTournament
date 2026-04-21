@@ -7,6 +7,7 @@ export interface DraftSlot {
   pick_number: number;
   team_abbr: string;
   team_name: string;
+  team_logo: string | null;
   conference: string;
   note: string | null;
   needs: { position: string; priority: number }[];
@@ -17,7 +18,37 @@ export interface Prospect {
   player_name: string;
   position: string;
   college: string;
-  consensus_rank: number;
+  consensus_rank: string | null;
+  headshot_url: string | null;
+  college_logo_url: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  hometown: string | null;
+  college_class: string | null;
+  height: string | null;
+  weight: string | null;
+  arm_length: string | null;
+  hand_size: string | null;
+  wingspan: string | null;
+  forty_yard_dash: string | null;
+  ten_yard_split: string | null;
+  twenty_yard_shuttle: string | null;
+  three_cone_drill: string | null;
+  broad_jump: string | null;
+  vertical_jump: string | null;
+  bench_press: string | null;
+  draft_grade: string | null;
+  draft_projection: string | null;
+  nfl_comparison: string | null;
+  overview: string | null;
+  strengths: string | null;
+  weaknesses: string | null;
+  bio: string | null;
+  sources_tell_us: string | null;
+  athleticism_score: string | null;
+  production_score: string | null;
+  position_group: string | null;
+  notes: string | null;
 }
 
 export interface MockDraftSummary {
@@ -41,14 +72,14 @@ async function getData() {
       .from("nfl_draft_order_2026")
       .select("pick_number, team_abbr, note")
       .order("pick_number"),
-    supabase.from("nfl_teams_draft").select("team_abbr, team_name, conference"),
+    supabase.from("nfl_teams_draft").select("team_abbr, team_name, conference, logo_url"),
     supabase
       .from("nfl_team_needs")
       .select("team_abbr, position, priority")
       .order("priority"),
     supabase
       .from("mock_draft_prospects")
-      .select("id, player_name, position, college, consensus_rank")
+      .select("*")
       .order("consensus_rank"),
     supabase
       .from("mock_drafts")
@@ -73,6 +104,7 @@ async function getData() {
       pick_number: o.pick_number,
       team_abbr: o.team_abbr,
       team_name: team?.team_name ?? o.team_abbr,
+      team_logo: team?.logo_url ?? null,
       conference: team?.conference ?? "",
       note: o.note,
       needs: needsMap.get(o.team_abbr) ?? [],
