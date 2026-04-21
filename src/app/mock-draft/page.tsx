@@ -79,8 +79,7 @@ async function getData() {
       .order("priority"),
     supabase
       .from("mock_draft_prospects")
-      .select("*")
-      .order("consensus_rank"),
+      .select("*"),
     supabase
       .from("mock_drafts")
       .select("id, manager_id, is_locked, updated_at")
@@ -128,9 +127,16 @@ async function getData() {
     picks: picksByMock.get(m.id) ?? [],
   }));
 
+  // Sort prospects numerically by consensus_rank
+  const sortedProspects = (prospects ?? []).sort((a, b) => {
+    const ra = parseFloat(String(a.consensus_rank ?? "9999").replace(",", "."));
+    const rb = parseFloat(String(b.consensus_rank ?? "9999").replace(",", "."));
+    return ra - rb;
+  });
+
   return {
     slots,
-    prospects: (prospects ?? []) as Prospect[],
+    prospects: sortedProspects as Prospect[],
     mocks: mockSummaries,
   };
 }
