@@ -7,9 +7,9 @@ import type { DraftSlot, Prospect, MockDraftSummary } from "./page";
 // ── Helpers ──────────────────────────────────────────────────────────
 const POS_COLORS: Record<string, string> = {
   QB: "#c0392b", RB: "#2563eb", WR: "#16a34a", TE: "#7c3aed",
-  OT: "#d97706", IOL: "#d97706", OL: "#d97706", EDGE: "#0891b2",
-  DL: "#475569", LB: "#be185d", CB: "#ea580c", S: "#4f46e5", DB: "#4f46e5",
-  K: "#666", P: "#666", LS: "#666", FB: "#666", SPEC: "#666",
+  OT: "#d97706", IOL: "#d97706", OL: "#d97706", T: "#d97706", EDGE: "#0891b2",
+  DL: "#475569", DT: "#475569", LB: "#be185d", CB: "#ea580c", S: "#4f46e5", SAF: "#4f46e5", DB: "#4f46e5",
+  C: "#d97706", G: "#d97706", K: "#666", P: "#666", LS: "#666", FB: "#666", SPEC: "#666",
 };
 function posColor(pos: string) { return POS_COLORS[pos] ?? "#666"; }
 
@@ -321,6 +321,7 @@ export default function MockDraftApp({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const countdown = useCountdown();
+  const effectiveLocked = isLocked || countdown.expired;
   const prospectMap = useMemo(() => new Map(prospects.map((p) => [p.id, p])), [prospects]);
   const pickedIds = useMemo(() => new Set(Object.values(picks)), [picks]);
   const positions = useMemo(() => {
@@ -361,7 +362,7 @@ export default function MockDraftApp({
 
   // ── Save pick ──────────────────────────────────────────────────────
   const savePick = useCallback(async (pickNumber: number, prospectId: number) => {
-    if (!mockId || isLocked) return;
+    if (!mockId || effectiveLocked) return;
     setSaving(true);
     const { error } = await supabase.from("mock_draft_picks").upsert(
       { mock_draft_id: mockId, pick_number: pickNumber, prospect_id: prospectId },
@@ -384,16 +385,16 @@ export default function MockDraftApp({
     for (let i = 1; i < pickNumber; i++) {
       if (!newPicks[i]) { setActivePick(i); setMobilePanel("board"); return; }
     }
-  }, [mockId, isLocked, picks]);
+  }, [mockId, effectiveLocked, picks]);
 
   // ── Remove pick ────────────────────────────────────────────────────
   const removePick = useCallback(async (pickNumber: number) => {
-    if (!mockId || isLocked) return;
+    if (!mockId || effectiveLocked) return;
     await supabase.from("mock_draft_picks").delete()
       .eq("mock_draft_id", mockId).eq("pick_number", pickNumber);
     setPicks((prev) => { const next = { ...prev }; delete next[pickNumber]; return next; });
     setActivePick(pickNumber);
-  }, [mockId, isLocked]);
+  }, [mockId, effectiveLocked]);
 
   // ── Refresh mocks ──────────────────────────────────────────────────
   const refreshMocks = useCallback(async () => {
@@ -492,7 +493,7 @@ export default function MockDraftApp({
             <div className="flex items-center gap-2 min-w-0">
               <span className="display-title text-lg sm:text-xl text-ink truncate">{userName}</span>
               <span className="label-nav text-text-muted flex-shrink-0" style={{ fontSize: "10px" }}>{filledCount}/32</span>
-              {isLocked && (
+              {effectiveLocked && (
                 <span className="label-nav text-xs px-2 py-0.5 flex-shrink-0"
                   style={{ background: "rgba(192,57,43,0.1)", color: "#c0392b" }}>LOCKED</span>
               )}
@@ -640,7 +641,7 @@ export default function MockDraftApp({
                             <span className="text-xs text-text-muted">{p.college}</span>
                           </div>
                         </div>
-                        {!isLocked && (
+                        {!effectiveLocked && (
                           <button onClick={() => removePick(activeSlot.pick_number)}
                             className="label-nav text-xs text-red hover:underline flex-shrink-0">×</button>
                         )}
@@ -650,7 +651,7 @@ export default function MockDraftApp({
                 </div>
 
                 {/* Search + Filter */}
-                {!isLocked && (
+                {!effectiveLocked && (
                   <div className="px-3 sm:px-5 py-2 border-b border-border-light flex flex-col sm:flex-row gap-2"
                     style={{ position: "sticky", top: 0, background: "var(--color-cream)", zIndex: 10 }}>
                     <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -675,7 +676,7 @@ export default function MockDraftApp({
                 <div>
                   {filteredProspects.map((p) => {
                     const isPicked = pickedIds.has(p.id);
-                    const isNeed = activeSlot?.needs.some((n) => n.position === p.position);
+                    const isNeed = activeSlot?.needs.some((n) => n.position === p.position_group);
                     return (
                       <div key={p.id}
                         className="flex items-center gap-2.5 px-3 sm:px-4 py-2 border-b border-border-light transition-colors hover:bg-gray-50"
@@ -719,7 +720,7 @@ export default function MockDraftApp({
                         </button>
 
                         {/* Action */}
-                        {!isLocked && !isPicked && (
+                        {!effectiveLocked && !isPicked && (
                           <button onClick={(e) => { e.stopPropagation(); savePick(activePick, p.id); }} disabled={saving}
                             className="label-nav text-xs px-3 py-1.5 flex-shrink-0 transition-colors hover:bg-ink hover:text-cream active:bg-ink active:text-cream"
                             style={{ border: "1px solid #1a1a1a", color: "#1a1a1a" }}>PICK</button>
