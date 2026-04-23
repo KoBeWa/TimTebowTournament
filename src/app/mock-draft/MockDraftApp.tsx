@@ -858,8 +858,15 @@ export default function MockDraftApp({
           ) : (
             <div className="space-y-3">
               {mocks.map((mock) => (
-                <MockCard key={mock.id} mock={mock} slots={slots} prospectMap={prospectMap}
-                  onProspectClick={(p) => setDetailProspect(p)} draftLocked={effectiveLocked} />
+                <MockCard
+                  key={mock.id}
+                  mock={mock}
+                  slots={slots}
+                  prospectMap={prospectMap}
+                  onProspectClick={(p) => setDetailProspect(p)}
+                  draftLocked={effectiveLocked}
+                  actualResultByPick={actualResultByPick} // 👈 NEU
+                />
               ))}
             </div>
           )}
@@ -1024,10 +1031,20 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
     </div>
   );
 }
-function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
-  mock: MockDraftSummary; slots: DraftSlot[]; prospectMap: Map<number, Prospect>;
+function MockCard({
+  mock,
+  slots,
+  prospectMap,
+  onProspectClick,
+  draftLocked,
+  actualResultByPick,
+}: {
+  mock: MockDraftSummary;
+  slots: DraftSlot[];
+  prospectMap: Map<number, Prospect>;
   onProspectClick: (p: Prospect) => void;
   draftLocked: boolean;
+  actualResultByPick: Map<number, DraftResult>; // 👈 NEU
 }) {
   const [expanded, setExpanded] = useState(false);
   const pickMap = useMemo(() => {
@@ -1040,9 +1057,6 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
   const lastUpdate = new Date(mock.updated_at).toLocaleDateString("de-DE", {
     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
-
-  // Before draft is locked: only show every 5th pick clearly
-  const isPickVisible = (pickNumber: number) => draftLocked || pickNumber % 5 === 0;
 
   return (
     <div className="cell">
@@ -1084,30 +1098,82 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
                   <span className="label-nav text-xs text-text-secondary font-semibold w-5 flex-shrink-0">{slot.team_abbr.slice(0,2)}</span>
                 )}
                 {prospect ? (
-                  visible ? (
-                    /* Visible pick — fully shown */
-                    <button onClick={() => onProspectClick(prospect)}
-                      className="flex items-center gap-2 flex-1 min-w-0 text-left hover:underline">
-                      {headshotSrc(prospect.headshot_url) && (
-                        <img src={headshotSrc(prospect.headshot_url)!} alt=""
-                          className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-border" />
-                      )}
-                      <span className="text-sm font-medium text-ink truncate">{prospect.player_name}</span>
-                      <span className="label-nav text-xs font-semibold flex-shrink-0" style={{ color: posColor(prospect.position) }}>{prospect.position}</span>
-                      {prospect.college_logo_url && (
-                        <img src={prospect.college_logo_url} alt="" className="w-3.5 h-3.5 object-contain flex-shrink-0 hidden sm:block" />
-                      )}
-                      <span className="text-text-muted truncate hidden sm:inline" style={{ fontSize: "10px" }}>{prospect.college}</span>
-                    </button>
-                  ) : (
-                    /* Hidden pick — blurred */
-                    <div className="flex items-center gap-2 flex-1 min-w-0 select-none"
-                      style={{ filter: "blur(6px)", WebkitFilter: "blur(6px)", pointerEvents: "none" }}>
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0" />
-                      <span className="text-sm font-medium text-ink">Spielername</span>
-                      <span className="label-nav text-xs font-semibold text-text-muted">POS</span>
-                    </div>
-                  )
+                  {(() => {
+                    const prospect = pickMap[slot.pick_number]
+                      ? prospectMap.get(pickMap[slot.pick_number])
+                      : null;
+                  
+                    const actual = actualResultByPick.get(slot.pick_number);
+                    const actualProspect = actual?.prospect_id
+                      ? prospectMap.get(actual.prospect_id)
+                      : null;
+                  
+                    if (!prospect) {
+                      return <span className="text-xs text-text-faint">—</span>;
+                    }
+                  
+                    const isExact = actual?.prospect_id === prospect.id;
+                  
+                    const samePos =
+                      actual?.position &&
+                      (actual.position === prospect.position ||
+                        actual.position === prospect.position_group);
+                  
+                    return (
+                      <div
+                        className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
+                        style={{
+                          background: isExact
+                            ? "rgba(22,163,74,0.10)"
+                            : samePos
+                            ? "rgba(124,58,237,0.08)"
+                            : undefined
+                        }}
+                      >
+                        {/* USER PICK */}
+                        <button
+                          onClick={() => onProspectClick(prospect)}
+                          className="flex items-center gap-2 text-left hover:underline"
+                        >
+                          {headshotSrc(prospect.headshot_url) && (
+                            <img
+                              src={headshotSrc(prospect.headshot_url)!}
+                              className="w-6 h-6 rounded-full object-cover border border-border"
+                            />
+                          )}
+                  
+                          <span className="text-sm font-medium text-ink truncate">
+                            {prospect.player_name}
+                          </span>
+                  
+                          <span
+                            className="label-nav text-xs font-semibold"
+                            style={{ color: posColor(prospect.position) }}
+                          >
+                            {prospect.position}
+                          </span>
+                        </button>
+                  
+                        {/* REAL PICK */}
+                        {actualProspect && (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] text-text-faint">→</span>
+                  
+                            <span className="text-xs text-text-muted truncate">
+                              {actualProspect.player_name}
+                            </span>
+                  
+                            <span
+                              className="text-[9px]"
+                              style={{ color: posColor(actualProspect.position) }}
+                            >
+                              {actualProspect.position}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 ) : (
                   <span className="text-xs text-text-faint">—</span>
                 )}
