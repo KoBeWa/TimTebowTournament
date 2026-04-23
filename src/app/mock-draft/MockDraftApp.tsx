@@ -334,7 +334,7 @@ export default function MockDraftApp({
   const hasResults = draftResults.length > 0;
 
   // ── Scoring calculation ────────────────────────────────────────────
-  // Map: prospect_id → actual pick number (where that prospect was really drafted)
+  // Map: prospect_id → actual pick number (where that prospect was really drafted.)
   const actualPickByProspect = useMemo(() => {
     const m = new Map<number, number>();
     for (const r of draftResults) {
