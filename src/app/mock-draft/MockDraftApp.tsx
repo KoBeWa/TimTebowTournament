@@ -364,31 +364,78 @@ export default function MockDraftApp({
       const prospect = prospectMap.get(mp.prospect_id);
       const actualAtPick = actualResultByPick.get(mp.pick_number);
       const actualPickOfProspect = actualPickByProspect.get(mp.prospect_id);
-
-      // Exact match: prospect drafted at same pick
+  
+      const samePosition =
+        actualAtPick?.position &&
+        prospect?.position_group &&
+        (actualAtPick.position === prospect.position_group ||
+          actualAtPick.position === prospect.position);
+  
+      // ✅ Exakter Pick
       if (actualPickOfProspect === mp.pick_number) {
-        return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 100, reason: "Exakter Pick" };
+        return {
+          pick_number: mp.pick_number,
+          prospect_id: mp.prospect_id,
+          prospect,
+          actual: actualAtPick,
+          points: 110,
+          reason: "Exakter Pick + Position richtig",
+        };
       }
-
-      // Prospect drafted but off by some picks
+  
+      // 🔄 Spieler wurde gedraftet, aber anderer Pick
       if (actualPickOfProspect !== undefined) {
         const diff = Math.abs(actualPickOfProspect - mp.pick_number);
+  
+        // 1 daneben
         if (diff === 1) {
-          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 50, reason: `1 Pick daneben (#${actualPickOfProspect})` };
+          return {
+            pick_number: mp.pick_number,
+            prospect_id: mp.prospect_id,
+            prospect,
+            actual: actualAtPick,
+            points: samePosition ? 60 : 50,
+            reason: samePosition
+              ? `1 Pick daneben + Position (#${actualPickOfProspect})`
+              : `1 Pick daneben (#${actualPickOfProspect})`,
+          };
         }
+  
+        // 2–5 daneben
         if (diff >= 2 && diff <= 5) {
-          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 20, reason: `${diff} Picks daneben (#${actualPickOfProspect})` };
+          return {
+            pick_number: mp.pick_number,
+            prospect_id: mp.prospect_id,
+            prospect,
+            actual: actualAtPick,
+            points: samePosition ? 30 : 20,
+            reason: samePosition
+              ? `${diff} Picks daneben + Position (#${actualPickOfProspect})`
+              : `${diff} Picks daneben (#${actualPickOfProspect})`,
+          };
         }
       }
-
-      // Wrong player but correct position group
-      if (actualAtPick?.position && prospect?.position_group) {
-        if (actualAtPick.position === prospect.position_group || actualAtPick.position === prospect.position) {
-          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 10, reason: "Position richtig" };
-        }
+  
+      // 🎯 Nur Position korrekt
+      if (samePosition) {
+        return {
+          pick_number: mp.pick_number,
+          prospect_id: mp.prospect_id,
+          prospect,
+          actual: actualAtPick,
+          points: 10,
+          reason: "Position richtig",
+        };
       }
-
-      return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 0, reason: "—" };
+  
+      return {
+        pick_number: mp.pick_number,
+        prospect_id: mp.prospect_id,
+        prospect,
+        actual: actualAtPick,
+        points: 0,
+        reason: "—",
+      };
     }).sort((a, b) => a.pick_number - b.pick_number);
   }
 
@@ -859,9 +906,11 @@ export default function MockDraftApp({
             <div className="kicker text-xs mb-3">Punktesystem</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { pts: 100, label: "Exakter Pick", color: "#16a34a" },
-                { pts: 50, label: "1 Pick daneben", color: "#2563eb" },
-                { pts: 20, label: "2–5 Picks daneben", color: "#d97706" },
+                { pts: 110, label: "Exakter Pick + Position", color: "#16a34a" },
+                { pts: 60, label: "1 daneben + Position", color: "#2563eb" },
+                { pts: 50, label: "1 daneben", color: "#3b82f6" },
+                { pts: 30, label: "2–5 daneben + Position", color: "#d97706" },
+                { pts: 20, label: "2–5 daneben", color: "#f59e0b" },
                 { pts: 10, label: "Position richtig", color: "#7c3aed" },
               ].map(({ pts, label, color }) => (
                 <div key={pts} className="flex items-center gap-2 p-2 border border-border">
