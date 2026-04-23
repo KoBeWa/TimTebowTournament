@@ -779,7 +779,7 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
   });
 
   // Before draft is locked: only show every 5th pick clearly
-  const isPickVisible = () => true;
+  const isPickVisible = (_pickNumber: number) => true;
 
   return (
     <div className="cell">
@@ -801,12 +801,6 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
 
       {expanded && (
         <div className="border-t border-border">
-          {!draftLocked && (
-            <div className="px-3 sm:px-4 py-2 border-b border-border text-xs text-text-muted"
-              style={{ background: "rgba(26,26,26,0.03)" }}>
-              Picks werden erst nach Draft-Start vollständig sichtbar. Vorschau: jeder 5. Pick.
-            </div>
-          )}
           {slots.map((slot) => {
             const prospect = pickMap[slot.pick_number] ? prospectMap.get(pickMap[slot.pick_number]) : null;
             const visible = isPickVisible(slot.pick_number);
