@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import type { DraftSlot, Prospect, MockDraftSummary } from "./page";
+import type { DraftSlot, Prospect, MockDraftSummary, DraftResult } from "./page";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const POS_COLORS: Record<string, string> = {
@@ -53,7 +53,7 @@ function useCountdown() {
 }
 
 type PickMap = Record<number, number>;
-type View = "edit" | "overview";
+type View = "edit" | "overview" | "scoring";
 type MobilePanel = "picks" | "board";
 type DetailTab = "overview" | "combine" | "grades";
 
@@ -299,11 +299,12 @@ function ProspectDetailModal({
 // ═══════════════════════════════════════════════════════════════════════
 
 export default function MockDraftApp({
-  slots, prospects, initialMocks,
+  slots, prospects, initialMocks, draftResults,
 }: {
   slots: DraftSlot[];
   prospects: Prospect[];
   initialMocks: MockDraftSummary[];
+  draftResults: DraftResult[];
 }) {
   const [view, setView] = useState<View>("edit");
   const [userName, setUserName] = useState("");
@@ -329,6 +330,67 @@ export default function MockDraftApp({
     const set = new Set(prospects.map((p) => p.position));
     return posOrder.filter(p => set.has(p));
   }, [prospects]);
+
+  const hasResults = draftResults.length > 0;
+
+  // ── Scoring calculation ────────────────────────────────────────────
+  // Map: prospect_id → actual pick number (where that prospect was really drafted)
+  const actualPickByProspect = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const r of draftResults) {
+      if (r.prospect_id) m.set(r.prospect_id, r.pick_number);
+    }
+    return m;
+  }, [draftResults]);
+
+  // Map: pick_number → actual result
+  const actualResultByPick = useMemo(() => {
+    const m = new Map<number, DraftResult>();
+    for (const r of draftResults) m.set(r.pick_number, r);
+    return m;
+  }, [draftResults]);
+
+  type PickScore = {
+    pick_number: number;
+    prospect_id: number;
+    prospect: Prospect | undefined;
+    actual: DraftResult | undefined;
+    points: number;
+    reason: string;
+  };
+
+  function scoreMock(mockPicks: { pick_number: number; prospect_id: number }[]): PickScore[] {
+    return mockPicks.map((mp) => {
+      const prospect = prospectMap.get(mp.prospect_id);
+      const actualAtPick = actualResultByPick.get(mp.pick_number);
+      const actualPickOfProspect = actualPickByProspect.get(mp.prospect_id);
+
+      // Exact match: prospect drafted at same pick
+      if (actualPickOfProspect === mp.pick_number) {
+        return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 100, reason: "Exakter Pick" };
+      }
+
+      // Prospect drafted but off by some picks
+      if (actualPickOfProspect !== undefined) {
+        const diff = Math.abs(actualPickOfProspect - mp.pick_number);
+        if (diff === 1) {
+          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 50, reason: `1 Pick daneben (#${actualPickOfProspect})` };
+        }
+        if (diff >= 2 && diff <= 5) {
+          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 20, reason: `${diff} Picks daneben (#${actualPickOfProspect})` };
+        }
+      }
+
+      // Wrong player but correct position group
+      if (actualAtPick?.position && prospect?.position_group) {
+        if (actualAtPick.position === prospect.position_group || actualAtPick.position === prospect.position) {
+          return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 10, reason: "Position richtig" };
+        }
+      }
+
+      return { pick_number: mp.pick_number, prospect_id: mp.prospect_id, prospect, actual: actualAtPick, points: 0, reason: "—" };
+    }).sort((a, b) => a.pick_number - b.pick_number);
+  }
 
   // ── Enter mock ─────────────────────────────────────────────────────
   const enterMock = useCallback(async () => {
@@ -413,7 +475,7 @@ export default function MockDraftApp({
     })));
   }, []);
 
-  useEffect(() => { if (view === "overview") refreshMocks(); }, [view, refreshMocks]);
+  useEffect(() => { if (view === "overview" || view === "scoring") refreshMocks(); }, [view, refreshMocks]);
 
   // ── Filtered prospects ─────────────────────────────────────────────
   const filteredProspects = useMemo(() => {
@@ -449,15 +511,15 @@ export default function MockDraftApp({
 
       {/* ── Tabs ── */}
       <div className="flex gap-2 mb-4 sm:mb-6">
-        {(["edit", "overview"] as View[]).map((v) => (
+        {(["edit", "overview", ...(hasResults ? ["scoring"] : [])] as View[]).map((v) => (
           <button key={v} onClick={() => setView(v)}
             className="label-nav text-xs px-4 sm:px-5 py-2 sm:py-2.5 transition-colors"
             style={{
-              background: view === v ? "#1a1a1a" : "transparent",
-              color: view === v ? "#f2ede4" : "var(--color-text-muted)",
-              border: "1px solid var(--color-border)",
+              background: view === v ? (v === "scoring" ? "#c0392b" : "#1a1a1a") : "transparent",
+              color: view === v ? "#f2ede4" : (v === "scoring" ? "#c0392b" : "var(--color-text-muted)"),
+              border: v === "scoring" ? "1px solid #c0392b" : "1px solid var(--color-border)",
             }}>
-            {v === "edit" ? "Mein Mock" : `Alle Mocks (${mocks.length})`}
+            {v === "edit" ? "Mein Mock" : v === "overview" ? `Alle Mocks (${mocks.length})` : "Scoring"}
           </button>
         ))}
       </div>
@@ -756,11 +818,163 @@ export default function MockDraftApp({
           )}
         </div>
       )}
+
+      {/* ═══ SCORING ═══ */}
+      {view === "scoring" && hasResults && (
+        <div>
+          {/* Leaderboard */}
+          <div className="cell mb-6">
+            <div className="px-4 sm:px-5 py-3 border-b border-border" style={{ background: "rgba(192,57,43,0.05)" }}>
+              <div className="kicker text-xs" style={{ color: "#c0392b" }}>Leaderboard</div>
+            </div>
+            {(() => {
+              const scored = mocks
+                .filter(m => m.picks.length > 0)
+                .map(m => {
+                  const scores = scoreMock(m.picks);
+                  const total = scores.reduce((sum, s) => sum + s.points, 0);
+                  const exact = scores.filter(s => s.points === 100).length;
+                  const close = scores.filter(s => s.points === 50).length;
+                  const near = scores.filter(s => s.points === 20).length;
+                  const posMatch = scores.filter(s => s.points === 10).length;
+                  return { mock: m, scores, total, exact, close, near, posMatch };
+                })
+                .sort((a, b) => b.total - a.total);
+
+              return scored.length === 0 ? (
+                <div className="p-6 text-center text-sm text-text-muted">Keine Mocks zum Bewerten.</div>
+              ) : (
+                <div>
+                  {scored.map((entry, rank) => (
+                    <ScoringCard key={entry.mock.id} entry={entry} rank={rank + 1}
+                      slots={slots} prospectMap={prospectMap} onProspectClick={(p) => setDetailProspect(p)} />
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Scoring Legend */}
+          <div className="cell p-4 sm:p-5">
+            <div className="kicker text-xs mb-3">Punktesystem</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { pts: 100, label: "Exakter Pick", color: "#16a34a" },
+                { pts: 50, label: "1 Pick daneben", color: "#2563eb" },
+                { pts: 20, label: "2–5 Picks daneben", color: "#d97706" },
+                { pts: 10, label: "Position richtig", color: "#7c3aed" },
+              ].map(({ pts, label, color }) => (
+                <div key={pts} className="flex items-center gap-2 p-2 border border-border">
+                  <span className="label-nav text-sm font-bold" style={{ color }}>{pts}</span>
+                  <span className="text-xs text-text-muted">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Mock Card ────────────────────────────────────────────────────────
+// ── Scoring Card ─────────────────────────────────────────────────────
+function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
+  entry: {
+    mock: MockDraftSummary;
+    scores: { pick_number: number; prospect_id: number; prospect: Prospect | undefined; actual: DraftResult | undefined; points: number; reason: string }[];
+    total: number; exact: number; close: number; near: number; posMatch: number;
+  };
+  rank: number;
+  slots: DraftSlot[];
+  prospectMap: Map<number, Prospect>;
+  onProspectClick: (p: Prospect) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const pointsColor = (pts: number) =>
+    pts === 100 ? "#16a34a" : pts === 50 ? "#2563eb" : pts === 20 ? "#d97706" : pts === 10 ? "#7c3aed" : "var(--color-text-faint)";
+
+  return (
+    <div className="border-b border-border-light">
+      <button onClick={() => setExpanded(!expanded)}
+        className="w-full text-left px-4 sm:px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+        {/* Rank */}
+        <span className="display-title text-2xl w-8 text-right flex-shrink-0"
+          style={{ color: rank <= 3 ? "#c0392b" : "var(--color-text-faint)" }}>
+          {rank}
+        </span>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-ink text-sm sm:text-base truncate">{entry.mock.manager_id}</span>
+            <span className="label-nav text-text-muted flex-shrink-0" style={{ fontSize: "10px" }}>
+              {entry.mock.picks.length}/32 Picks
+            </span>
+          </div>
+          <div className="flex gap-2 sm:gap-3 mt-0.5 flex-wrap">
+            {entry.exact > 0 && <span className="label-nav text-xs" style={{ color: "#16a34a" }}>{entry.exact}× exakt</span>}
+            {entry.close > 0 && <span className="label-nav text-xs" style={{ color: "#2563eb" }}>{entry.close}× 1 daneben</span>}
+            {entry.near > 0 && <span className="label-nav text-xs" style={{ color: "#d97706" }}>{entry.near}× 2-5 daneben</span>}
+            {entry.posMatch > 0 && <span className="label-nav text-xs" style={{ color: "#7c3aed" }}>{entry.posMatch}× Position</span>}
+          </div>
+        </div>
+        {/* Score */}
+        <div className="text-right flex-shrink-0">
+          <div className="display-title text-2xl sm:text-3xl" style={{ color: "#c0392b" }}>{entry.total}</div>
+          <div className="label-nav text-text-faint" style={{ fontSize: "9px" }}>PUNKTE</div>
+        </div>
+        <span className="text-text-muted text-sm flex-shrink-0">{expanded ? "▲" : "▼"}</span>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border-light">
+          {entry.scores.map((s) => {
+            const slot = slots.find(sl => sl.pick_number === s.pick_number);
+            return (
+              <div key={s.pick_number}
+                className="flex items-center gap-2 px-4 sm:px-5 py-2 border-b border-border-light"
+                style={{ background: s.points > 0 ? `${pointsColor(s.points)}08` : undefined }}>
+                {/* Pick # */}
+                <span className="font-mono text-xs text-text-faint w-5 text-right flex-shrink-0">{s.pick_number}</span>
+                {/* Team logo */}
+                {slot?.team_logo ? (
+                  <img src={slot.team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
+                ) : (
+                  <span className="label-nav text-xs text-text-secondary font-semibold w-5 flex-shrink-0">
+                    {slot?.team_abbr?.slice(0, 2)}
+                  </span>
+                )}
+                {/* User's pick */}
+                {s.prospect ? (
+                  <button onClick={() => onProspectClick(s.prospect!)}
+                    className="flex items-center gap-1.5 flex-1 min-w-0 text-left hover:underline">
+                    {headshotSrc(s.prospect.headshot_url) && (
+                      <img src={headshotSrc(s.prospect.headshot_url)!} alt=""
+                        className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-border" />
+                    )}
+                    <span className="text-sm font-medium text-ink truncate">{s.prospect.player_name}</span>
+                    <span className="label-nav text-xs font-semibold flex-shrink-0"
+                      style={{ color: posColor(s.prospect.position) }}>{s.prospect.position}</span>
+                  </button>
+                ) : (
+                  <span className="flex-1 text-xs text-text-faint">—</span>
+                )}
+                {/* Points + reason */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs text-text-muted hidden sm:inline">{s.reason}</span>
+                  <span className="label-nav text-xs font-bold w-8 text-right"
+                    style={{ color: pointsColor(s.points) }}>
+                    {s.points > 0 ? `+${s.points}` : "0"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
   mock: MockDraftSummary; slots: DraftSlot[]; prospectMap: Map<number, Prospect>;
   onProspectClick: (p: Prospect) => void;
@@ -779,7 +993,7 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
   });
 
   // Before draft is locked: only show every 5th pick clearly
-  const isPickVisible = (_pickNumber: number) => true;
+  const isPickVisible = (pickNumber: number) => draftLocked || pickNumber % 5 === 0;
 
   return (
     <div className="cell">
@@ -801,6 +1015,12 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
 
       {expanded && (
         <div className="border-t border-border">
+          {!draftLocked && (
+            <div className="px-3 sm:px-4 py-2 border-b border-border text-xs text-text-muted"
+              style={{ background: "rgba(26,26,26,0.03)" }}>
+              Picks werden erst nach Draft-Start vollständig sichtbar. Vorschau: jeder 5. Pick.
+            </div>
+          )}
           {slots.map((slot) => {
             const prospect = pickMap[slot.pick_number] ? prospectMap.get(pickMap[slot.pick_number]) : null;
             const visible = isPickVisible(slot.pick_number);
