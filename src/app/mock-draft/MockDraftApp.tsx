@@ -1085,90 +1085,92 @@ function MockCard({
             </div>
           )}
           {slots.map((slot) => {
-            const prospect = pickMap[slot.pick_number] ? prospectMap.get(pickMap[slot.pick_number]) : null;
-            const visible = isPickVisible(slot.pick_number);
+            const prospect = pickMap[slot.pick_number]
+              ? prospectMap.get(pickMap[slot.pick_number])
+              : null;
+          
+            const actual = actualResultByPick.get(slot.pick_number);
+            const actualProspect = actual?.prospect_id
+              ? prospectMap.get(actual.prospect_id)
+              : null;
+          
+            const isExact = actual?.prospect_id === prospect?.id;
+          
+            const samePos =
+              actual?.position &&
+              prospect &&
+              (actual.position === prospect.position ||
+                actual.position === prospect.position_group);
+          
             return (
-              <div key={slot.pick_number}
+              <div
+                key={slot.pick_number}
                 className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-border-light"
-                style={{ position: "relative" }}>
-                <span className="font-mono text-xs text-text-faint w-5 text-right flex-shrink-0">{slot.pick_number}</span>
+              >
+                <span className="font-mono text-xs text-text-faint w-5 text-right flex-shrink-0">
+                  {slot.pick_number}
+                </span>
+          
                 {slot.team_logo ? (
-                  <img src={slot.team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
+                  <img src={slot.team_logo} className="w-5 h-5 object-contain" />
                 ) : (
-                  <span className="label-nav text-xs text-text-secondary font-semibold w-5 flex-shrink-0">{slot.team_abbr.slice(0,2)}</span>
+                  <span className="label-nav text-xs">
+                    {slot.team_abbr.slice(0, 2)}
+                  </span>
                 )}
-                {(() => {
-                  const prospect = pickMap[slot.pick_number]
-                    ? prospectMap.get(pickMap[slot.pick_number])
-                    : null;
-                
-                  const actual = actualResultByPick.get(slot.pick_number);
-                  const actualProspect = actual?.prospect_id
-                    ? prospectMap.get(actual.prospect_id)
-                    : null;
-                
-                  if (!prospect) {
-                    return <span className="text-xs text-text-faint">—</span>;
-                  }
-                
-                  const isExact = actual?.prospect_id === prospect.id;
-                
-                  const samePos =
-                    actual?.position &&
-                    (actual.position === prospect.position ||
-                      actual.position === prospect.position_group);
-                
-                  return (
-                    <div
-                      className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
-                      style={{
-                        background: isExact
-                          ? "rgba(22,163,74,0.10)"
-                          : samePos
-                          ? "rgba(124,58,237,0.08)"
-                          : undefined
-                      }}
+          
+                {!prospect ? (
+                  <span className="text-xs text-text-faint">—</span>
+                ) : (
+                  <div
+                    className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
+                    style={{
+                      background: isExact
+                        ? "rgba(22,163,74,0.10)"
+                        : samePos
+                        ? "rgba(124,58,237,0.08)"
+                        : undefined,
+                    }}
+                  >
+                    <button
+                      onClick={() => onProspectClick(prospect)}
+                      className="flex items-center gap-2 text-left hover:underline"
                     >
-                      <button
-                        onClick={() => onProspectClick(prospect)}
-                        className="flex items-center gap-2 text-left hover:underline"
-                      >
-                        {headshotSrc(prospect.headshot_url) && (
-                          <img
-                            src={headshotSrc(prospect.headshot_url)!}
-                            className="w-6 h-6 rounded-full object-cover border border-border"
-                          />
-                        )}
-                
-                        <span className="text-sm font-medium text-ink truncate">
-                          {prospect.player_name}
-                        </span>
-                
-                        <span
-                          className="label-nav text-xs font-semibold"
-                          style={{ color: posColor(prospect.position) }}
-                        >
-                          {prospect.position}
-                        </span>
-                      </button>
-                
-                      {actualProspect && (
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[9px] text-text-faint">→</span>
-                          <span className="text-xs text-text-muted truncate">
-                            {actualProspect.player_name}
-                          </span>
-                          <span
-                            className="text-[9px]"
-                            style={{ color: posColor(actualProspect.position) }}
-                          >
-                            {actualProspect.position}
-                          </span>
-                        </div>
+                      {headshotSrc(prospect.headshot_url) && (
+                        <img
+                          src={headshotSrc(prospect.headshot_url)!}
+                          className="w-6 h-6 rounded-full object-cover border border-border"
+                        />
                       )}
-                    </div>
-                  );
-                })()}
+          
+                      <span className="text-sm font-medium text-ink truncate">
+                        {prospect.player_name}
+                      </span>
+          
+                      <span
+                        className="label-nav text-xs font-semibold"
+                        style={{ color: posColor(prospect.position) }}
+                      >
+                        {prospect.position}
+                      </span>
+                    </button>
+          
+                    {actualProspect && (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[9px] text-text-faint">→</span>
+                        <span className="text-xs text-text-muted truncate">
+                          {actualProspect.player_name}
+                        </span>
+                        <span
+                          className="text-[9px]"
+                          style={{ color: posColor(actualProspect.position) }}
+                        >
+                          {actualProspect.position}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
