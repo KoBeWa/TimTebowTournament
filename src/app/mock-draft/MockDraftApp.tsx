@@ -1097,83 +1097,78 @@ function MockCard({
                 ) : (
                   <span className="label-nav text-xs text-text-secondary font-semibold w-5 flex-shrink-0">{slot.team_abbr.slice(0,2)}</span>
                 )}
-                {prospect ? (
-                  {(() => {
-                    const prospect = pickMap[slot.pick_number]
-                      ? prospectMap.get(pickMap[slot.pick_number])
-                      : null;
-                  
-                    const actual = actualResultByPick.get(slot.pick_number);
-                    const actualProspect = actual?.prospect_id
-                      ? prospectMap.get(actual.prospect_id)
-                      : null;
-                  
-                    if (!prospect) {
-                      return <span className="text-xs text-text-faint">—</span>;
-                    }
-                  
-                    const isExact = actual?.prospect_id === prospect.id;
-                  
-                    const samePos =
-                      actual?.position &&
-                      (actual.position === prospect.position ||
-                        actual.position === prospect.position_group);
-                  
-                    return (
-                      <div
-                        className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
-                        style={{
-                          background: isExact
-                            ? "rgba(22,163,74,0.10)"
-                            : samePos
-                            ? "rgba(124,58,237,0.08)"
-                            : undefined
-                        }}
+                {(() => {
+                  const prospect = pickMap[slot.pick_number]
+                    ? prospectMap.get(pickMap[slot.pick_number])
+                    : null;
+                
+                  const actual = actualResultByPick.get(slot.pick_number);
+                  const actualProspect = actual?.prospect_id
+                    ? prospectMap.get(actual.prospect_id)
+                    : null;
+                
+                  if (!prospect) {
+                    return <span className="text-xs text-text-faint">—</span>;
+                  }
+                
+                  const isExact = actual?.prospect_id === prospect.id;
+                
+                  const samePos =
+                    actual?.position &&
+                    (actual.position === prospect.position ||
+                      actual.position === prospect.position_group);
+                
+                  return (
+                    <div
+                      className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
+                      style={{
+                        background: isExact
+                          ? "rgba(22,163,74,0.10)"
+                          : samePos
+                          ? "rgba(124,58,237,0.08)"
+                          : undefined
+                      }}
+                    >
+                      <button
+                        onClick={() => onProspectClick(prospect)}
+                        className="flex items-center gap-2 text-left hover:underline"
                       >
-                        {/* USER PICK */}
-                        <button
-                          onClick={() => onProspectClick(prospect)}
-                          className="flex items-center gap-2 text-left hover:underline"
-                        >
-                          {headshotSrc(prospect.headshot_url) && (
-                            <img
-                              src={headshotSrc(prospect.headshot_url)!}
-                              className="w-6 h-6 rounded-full object-cover border border-border"
-                            />
-                          )}
-                  
-                          <span className="text-sm font-medium text-ink truncate">
-                            {prospect.player_name}
-                          </span>
-                  
-                          <span
-                            className="label-nav text-xs font-semibold"
-                            style={{ color: posColor(prospect.position) }}
-                          >
-                            {prospect.position}
-                          </span>
-                        </button>
-                  
-                        {/* REAL PICK */}
-                        {actualProspect && (
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] text-text-faint">→</span>
-                  
-                            <span className="text-xs text-text-muted truncate">
-                              {actualProspect.player_name}
-                            </span>
-                  
-                            <span
-                              className="text-[9px]"
-                              style={{ color: posColor(actualProspect.position) }}
-                            >
-                              {actualProspect.position}
-                            </span>
-                          </div>
+                        {headshotSrc(prospect.headshot_url) && (
+                          <img
+                            src={headshotSrc(prospect.headshot_url)!}
+                            className="w-6 h-6 rounded-full object-cover border border-border"
+                          />
                         )}
-                      </div>
-                    );
-                  })()}
+                
+                        <span className="text-sm font-medium text-ink truncate">
+                          {prospect.player_name}
+                        </span>
+                
+                        <span
+                          className="label-nav text-xs font-semibold"
+                          style={{ color: posColor(prospect.position) }}
+                        >
+                          {prospect.position}
+                        </span>
+                      </button>
+                
+                      {actualProspect && (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[9px] text-text-faint">→</span>
+                          <span className="text-xs text-text-muted truncate">
+                            {actualProspect.player_name}
+                          </span>
+                          <span
+                            className="text-[9px]"
+                            style={{ color: posColor(actualProspect.position) }}
+                          >
+                            {actualProspect.position}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 ) : (
                   <span className="text-xs text-text-faint">—</span>
                 )}
