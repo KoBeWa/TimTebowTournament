@@ -1169,9 +1169,6 @@ function MockCard({
                     </div>
                   );
                 })()}
-                ) : (
-                  <span className="text-xs text-text-faint">—</span>
-                )}
               </div>
             );
           })}
