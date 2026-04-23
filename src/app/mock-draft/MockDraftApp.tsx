@@ -779,7 +779,7 @@ function MockCard({ mock, slots, prospectMap, onProspectClick, draftLocked }: {
   });
 
   // Before draft is locked: only show every 5th pick clearly
-  const isPickVisible = (pickNumber: number) => draftLocked || pickNumber % 5 === 0;
+  const isPickVisible = () => true;
 
   return (
     <div className="cell">
