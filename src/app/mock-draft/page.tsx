@@ -51,6 +51,14 @@ export interface Prospect {
   notes: string | null;
 }
 
+export interface DraftResult {
+  pick_number: number;
+  team_abbr: string;
+  prospect_id: number | null;
+  player_name: string;
+  position: string | null;
+}
+
 export interface MockDraftSummary {
   id: number;
   manager_id: string;
@@ -67,6 +75,7 @@ async function getData() {
     { data: prospects },
     { data: mocks },
     { data: allPicks },
+    { data: draftResults },
   ] = await Promise.all([
     supabase
       .from("nfl_draft_order_2026")
@@ -86,6 +95,7 @@ async function getData() {
       .eq("draft_year", 2026)
       .order("updated_at", { ascending: false }),
     supabase.from("mock_draft_picks").select("mock_draft_id, pick_number, prospect_id"),
+    supabase.from("nfl_draft_results_2026").select("*").order("pick_number"),
   ]);
 
   const teamMap = new Map(
@@ -138,11 +148,12 @@ async function getData() {
     slots,
     prospects: sortedProspects as Prospect[],
     mocks: mockSummaries,
+    draftResults: (draftResults ?? []) as DraftResult[],
   };
 }
 
 export default async function MockDraftPage() {
-  const { slots, prospects, mocks } = await getData();
+  const { slots, prospects, mocks, draftResults } = await getData();
 
   return (
     <div>
@@ -159,7 +170,7 @@ export default async function MockDraftPage() {
         </p>
       </div>
 
-      <MockDraftApp slots={slots} prospects={prospects} initialMocks={mocks} />
+      <MockDraftApp slots={slots} prospects={prospects} initialMocks={mocks} draftResults={draftResults} />
     </div>
   );
 }
