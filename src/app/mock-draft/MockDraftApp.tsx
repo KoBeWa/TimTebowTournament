@@ -6,12 +6,12 @@ import type { DraftSlot, Prospect, MockDraftSummary, DraftResult } from "./page"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const POS_COLORS: Record<string, string> = {
-  QB: "#c0392b", RB: "#2563eb", WR: "#16a34a", TE: "#7c3aed",
-  OT: "#d97706", IOL: "#d97706", OL: "#d97706", T: "#d97706", EDGE: "#0891b2",
-  DL: "#475569", DT: "#475569", LB: "#be185d", CB: "#ea580c", S: "#4f46e5", SAF: "#4f46e5", DB: "#4f46e5",
-  C: "#d97706", G: "#d97706", K: "#666", P: "#666", LS: "#666", FB: "#666", SPEC: "#666",
+  QB: "#f87171", RB: "#60a5fa", WR: "#4ade80", TE: "#a78bfa",
+  OT: "#fbbf24", IOL: "#fbbf24", OL: "#fbbf24", T: "#fbbf24", EDGE: "#22d3ee",
+  DL: "#94a3b8", DT: "#94a3b8", LB: "#f472b6", CB: "#fb923c", S: "#818cf8", SAF: "#818cf8", DB: "#818cf8",
+  C: "#fbbf24", G: "#fbbf24", K: "var(--color-text-muted)", P: "var(--color-text-muted)", LS: "var(--color-text-muted)", FB: "var(--color-text-muted)", SPEC: "var(--color-text-muted)",
 };
-function posColor(pos: string) { return POS_COLORS[pos] ?? "#666"; }
+function posColor(pos: string) { return POS_COLORS[pos] ?? "var(--color-text-muted)"; }
 
 function parseNum(val: string | null | undefined): number | null {
   if (!val) return null;
@@ -109,7 +109,7 @@ function ProspectDetailModal({
         <div className="sticky top-0 z-10 border-b border-border" style={{ background: "var(--color-cream)" }}>
           <div className="flex items-start gap-4 p-4 sm:p-5">
             {/* Headshot */}
-            <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-100 border border-border overflow-hidden"
+            <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-surface-2 border border-border overflow-hidden"
               style={{ borderRadius: "4px" }}>
               {headshotSrc(prospect.headshot_url) ? (
                 <img src={headshotSrc(prospect.headshot_url)!} alt={prospect.player_name}
@@ -174,8 +174,8 @@ function ProspectDetailModal({
               <button key={t} onClick={() => setTab(t)}
                 className="flex-1 label-nav text-xs py-2.5 text-center transition-colors"
                 style={{
-                  borderBottom: tab === t ? "2px solid #1a1a1a" : "2px solid transparent",
-                  color: tab === t ? "#1a1a1a" : "var(--color-text-muted)",
+                  borderBottom: tab === t ? "2px solid var(--color-border-strong)" : "2px solid transparent",
+                  color: tab === t ? "var(--color-ink)" : "var(--color-text-muted)",
                   fontWeight: tab === t ? 700 : 400,
                 }}>
                 {t === "overview" ? "Überblick" : t === "combine" ? "Combine" : "Grades"}
@@ -197,20 +197,20 @@ function ProspectDetailModal({
                 </div>
               )}
               {prospect.sources_tell_us && (
-                <div className="p-3 border border-border" style={{ background: "rgba(26,26,26,0.03)" }}>
+                <div className="p-3 border border-border" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <div className="label-nav text-text-faint mb-1" style={{ fontSize: "9px" }}>SOURCES TELL US</div>
                   <p className="text-sm text-text-secondary italic">{prospect.sources_tell_us}</p>
                 </div>
               )}
               {prospect.strengths && (
                 <div>
-                  <div className="kicker text-xs mb-1" style={{ color: "#16a34a" }}>Stärken</div>
+                  <div className="kicker text-xs mb-1" style={{ color: "#4ade80" }}>Stärken</div>
                   {bulletList(prospect.strengths)}
                 </div>
               )}
               {prospect.weaknesses && (
                 <div>
-                  <div className="kicker text-xs mb-1" style={{ color: "#c0392b" }}>Schwächen</div>
+                  <div className="kicker text-xs mb-1" style={{ color: "var(--color-red)" }}>Schwächen</div>
                   {bulletList(prospect.weaknesses)}
                 </div>
               )}
@@ -262,11 +262,11 @@ function ProspectDetailModal({
                     <span className="label-nav text-xs text-text-muted">{label}</span>
                     <span className="font-bold text-ink text-sm">{value?.toFixed(1) ?? "—"}</span>
                   </div>
-                  <div className="h-2 bg-gray-200 w-full" style={{ borderRadius: "2px" }}>
+                  <div className="h-2 bg-surface-3 w-full" style={{ borderRadius: "2px" }}>
                     {value && (
                       <div className="h-full transition-all" style={{
                         width: `${Math.min((value / max) * 100, 100)}%`,
-                        background: value >= 80 ? "#16a34a" : value >= 60 ? "#d97706" : "#c0392b",
+                        background: value >= 80 ? "#4ade80" : value >= 60 ? "#fbbf24" : "var(--color-red)",
                         borderRadius: "2px",
                       }} />
                     )}
@@ -275,13 +275,13 @@ function ProspectDetailModal({
               ))}
 
               {prospect.draft_projection && (
-                <div className="mt-4 p-3 border border-border" style={{ background: "rgba(26,26,26,0.03)" }}>
+                <div className="mt-4 p-3 border border-border" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <div className="label-nav text-text-faint mb-1" style={{ fontSize: "9px" }}>DRAFT PROJECTION</div>
                   <div className="text-sm font-semibold text-ink">{prospect.draft_projection}</div>
                 </div>
               )}
               {prospect.nfl_comparison && (
-                <div className="p-3 border border-border" style={{ background: "rgba(26,26,26,0.03)" }}>
+                <div className="p-3 border border-border" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <div className="label-nav text-text-faint mb-1" style={{ fontSize: "9px" }}>NFL COMPARISON</div>
                   <div className="text-sm font-semibold text-ink">{prospect.nfl_comparison}</div>
                 </div>
@@ -547,7 +547,7 @@ export default function MockDraftApp({
       )}
 
       {/* ── Countdown ── */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6 py-2.5 sm:py-3 px-3 sm:px-4" style={{ background: "#c0392b" }}>
+      <div className="flex items-center justify-between mb-4 sm:mb-6 py-2.5 sm:py-3 px-3 sm:px-4" style={{ background: "var(--color-red)" }}>
         <div className="label-nav text-white" style={{ fontSize: "10px" }}>
           {countdown.expired ? "DER DRAFT HAT BEGONNEN!" : (
             <><span className="hidden sm:inline">DRAFT IN </span>{countdown.days}T {countdown.hours}H {countdown.minutes}M {countdown.seconds}S</>
@@ -562,9 +562,9 @@ export default function MockDraftApp({
           <button key={v} onClick={() => setView(v)}
             className="label-nav text-xs px-4 sm:px-5 py-2 sm:py-2.5 transition-colors"
             style={{
-              background: view === v ? (v === "scoring" ? "#c0392b" : "#1a1a1a") : "transparent",
-              color: view === v ? "#f2ede4" : (v === "scoring" ? "#c0392b" : "var(--color-text-muted)"),
-              border: v === "scoring" ? "1px solid #c0392b" : "1px solid var(--color-border)",
+              background: view === v ? (v === "scoring" ? "var(--color-red)" : "var(--color-ink)") : "transparent",
+              color: view === v ? "var(--color-cream)" : (v === "scoring" ? "var(--color-red)" : "var(--color-text-muted)"),
+              border: v === "scoring" ? "1px solid var(--color-red)" : "1px solid var(--color-border)",
             }}>
             {v === "edit" ? "Mein Mock" : v === "overview" ? `Alle Mocks (${mocks.length})` : "Scoring"}
           </button>
@@ -586,8 +586,8 @@ export default function MockDraftApp({
           <button onClick={enterMock} disabled={!userName.trim()}
             className="mt-4 w-full label-nav text-xs px-6 py-3 transition-colors"
             style={{
-              background: userName.trim() ? "#1a1a1a" : "var(--color-border)",
-              color: userName.trim() ? "#f2ede4" : "var(--color-text-muted)",
+              background: userName.trim() ? "var(--color-ink)" : "var(--color-border)",
+              color: userName.trim() ? "var(--color-cream)" : "var(--color-text-muted)",
             }}>
             Mock Draft starten →
           </button>
@@ -604,7 +604,7 @@ export default function MockDraftApp({
               <span className="label-nav text-text-muted flex-shrink-0" style={{ fontSize: "10px" }}>{filledCount}/32</span>
               {effectiveLocked && (
                 <span className="label-nav text-xs px-2 py-0.5 flex-shrink-0"
-                  style={{ background: "rgba(192,57,43,0.1)", color: "#c0392b" }}>LOCKED</span>
+                  style={{ background: "rgba(192,57,43,0.1)", color: "var(--color-red)" }}>LOCKED</span>
               )}
             </div>
             <button onClick={() => { setEntered(false); setMockId(null); setPicks({}); setUserName(""); }}
@@ -617,8 +617,8 @@ export default function MockDraftApp({
               <button key={p} onClick={() => setMobilePanel(p)}
                 className="label-nav text-xs flex-1 py-2 transition-colors text-center"
                 style={{
-                  background: mobilePanel === p ? "#1a1a1a" : "transparent",
-                  color: mobilePanel === p ? "#f2ede4" : "var(--color-text-muted)",
+                  background: mobilePanel === p ? "var(--color-ink)" : "transparent",
+                  color: mobilePanel === p ? "var(--color-cream)" : "var(--color-text-muted)",
                   border: "1px solid var(--color-border)",
                 }}>
                 {p === "board" ? "Pick auswählen" : `Picks (${filledCount}/32)`}
@@ -639,10 +639,10 @@ export default function MockDraftApp({
                   <button key={slot.pick_number}
                     onClick={() => { setActivePick(slot.pick_number); setMobilePanel("board"); }}
                     className="w-full text-left px-2.5 py-2 border-b border-border-light transition-colors"
-                    style={{ background: isActive ? "#1a1a1a" : prospect ? "rgba(26,26,26,0.03)" : "transparent" }}>
+                    style={{ background: isActive ? "var(--color-ink)" : prospect ? "rgba(255,255,255,0.03)" : "transparent" }}>
                     <div className="flex items-center gap-2">
                       <span className="label-nav w-5 text-right flex-shrink-0"
-                        style={{ fontSize: "10px", color: isActive ? "#f2ede4" : "var(--color-text-faint)" }}>
+                        style={{ fontSize: "10px", color: isActive ? "var(--color-cream)" : "var(--color-text-faint)" }}>
                         {slot.pick_number}
                       </span>
                       {/* Team logo */}
@@ -651,7 +651,7 @@ export default function MockDraftApp({
                           className="w-5 h-5 object-contain flex-shrink-0" />
                       ) : (
                         <span className="label-nav text-xs w-5 flex-shrink-0 text-center"
-                          style={{ color: isActive ? "#c0392b" : "var(--color-text-secondary)", fontWeight: 700 }}>
+                          style={{ color: isActive ? "var(--color-red)" : "var(--color-text-secondary)", fontWeight: 700 }}>
                           {slot.team_abbr.slice(0, 2)}
                         </span>
                       )}
@@ -664,7 +664,7 @@ export default function MockDraftApp({
                           )}
                           <div className="min-w-0">
                             <span className="text-xs font-medium truncate block"
-                              style={{ color: isActive ? "#f2ede4" : "#1a1a1a" }}>{prospect.player_name}</span>
+                              style={{ color: isActive ? "var(--color-cream)" : "var(--color-ink)" }}>{prospect.player_name}</span>
                             <span className="text-xs block truncate"
                               style={{ color: isActive ? "rgba(255,255,255,0.5)" : posColor(prospect.position), fontSize: "10px" }}>
                               {prospect.position} · {prospect.college}
@@ -695,7 +695,7 @@ export default function MockDraftApp({
               {activeSlot && (<>
 
                 {/* On the Clock */}
-                <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-border" style={{ background: "rgba(26,26,26,0.04)" }}>
+                <div className="px-3 sm:px-5 py-3 sm:py-4 border-b border-border" style={{ background: "rgba(255,255,255,0.04)" }}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       {activeSlot.team_logo && (
@@ -737,7 +737,7 @@ export default function MockDraftApp({
                     const p = prospectMap.get(picks[activeSlot.pick_number]);
                     return p ? (
                       <div className="mt-2.5 flex items-center gap-3 p-2.5"
-                        style={{ border: "1px solid #1a1a1a", background: "rgba(26,26,26,0.06)" }}>
+                        style={{ border: "1px solid var(--color-border-strong)", background: "rgba(255,255,255,0.06)" }}>
                         {headshotSrc(p.headshot_url) && (
                           <img src={headshotSrc(p.headshot_url)!} alt=""
                             className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-border" />
@@ -769,8 +769,8 @@ export default function MockDraftApp({
                     <div className="flex gap-1 flex-wrap overflow-x-auto">
                       <button onClick={() => setPosFilter(null)}
                         className="label-nav px-2 py-1 transition-colors flex-shrink-0"
-                        style={{ fontSize: "10px", background: !posFilter ? "#1a1a1a" : "transparent",
-                          color: !posFilter ? "#f2ede4" : "var(--color-text-muted)", border: "1px solid var(--color-border)" }}>ALLE</button>
+                        style={{ fontSize: "10px", background: !posFilter ? "var(--color-ink)" : "transparent",
+                          color: !posFilter ? "var(--color-cream)" : "var(--color-text-muted)", border: "1px solid var(--color-border)" }}>ALLE</button>
                       {positions.map((pos) => (
                         <button key={pos} onClick={() => setPosFilter(posFilter === pos ? null : pos)}
                           className="label-nav px-1.5 py-1 transition-colors flex-shrink-0"
@@ -788,14 +788,14 @@ export default function MockDraftApp({
                     const isNeed = activeSlot?.needs.some((n) => n.position === p.position_group);
                     return (
                       <div key={p.id}
-                        className="flex items-center gap-2.5 px-3 sm:px-4 py-2 border-b border-border-light transition-colors hover:bg-gray-50"
+                        className="flex items-center gap-2.5 px-3 sm:px-4 py-2 border-b border-border-light transition-colors hover:bg-surface-2"
                         style={{ opacity: isPicked ? 0.3 : 1, background: isNeed && !isPicked ? `${posColor(p.position)}06` : undefined }}>
                         {/* Rank */}
                         <span className="font-mono text-xs text-text-faint w-6 text-right flex-shrink-0">{p.consensus_rank}</span>
                         
                         {/* Headshot - clickable */}
                         <button onClick={() => !isPicked && setDetailProspect(p)}
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex-shrink-0 border border-border bg-gray-100 hover:border-ink transition-colors"
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex-shrink-0 border border-border bg-surface-2 hover:border-ink transition-colors"
                           disabled={isPicked}>
                           {headshotSrc(p.headshot_url) ? (
                             <img src={headshotSrc(p.headshot_url)!} alt="" className="w-full h-full object-cover" />
@@ -832,7 +832,7 @@ export default function MockDraftApp({
                         {!effectiveLocked && !isPicked && (
                           <button onClick={(e) => { e.stopPropagation(); savePick(activePick, p.id); }} disabled={saving}
                             className="label-nav text-xs px-3 py-1.5 flex-shrink-0 transition-colors hover:bg-ink hover:text-cream active:bg-ink active:text-cream"
-                            style={{ border: "1px solid #1a1a1a", color: "#1a1a1a" }}>PICK</button>
+                            style={{ border: "1px solid var(--color-border-strong)", color: "var(--color-ink)" }}>PICK</button>
                         )}
                         {isPicked && <span className="label-nav text-xs text-text-faint flex-shrink-0">✓</span>}
                       </div>
@@ -852,7 +852,7 @@ export default function MockDraftApp({
             <div className="cell p-8 sm:p-12 text-center">
               <div className="text-text-muted text-sm">Noch keine Mock Drafts erstellt.</div>
               <button onClick={() => setView("edit")}
-                className="mt-4 label-nav text-xs px-5 py-2.5" style={{ background: "#1a1a1a", color: "#f2ede4" }}>
+                className="mt-4 label-nav text-xs px-5 py-2.5" style={{ background: "var(--color-ink)", color: "var(--color-cream)" }}>
                 Ersten Mock Draft erstellen →</button>
             </div>
           ) : (
@@ -879,7 +879,7 @@ export default function MockDraftApp({
           {/* Leaderboard */}
           <div className="cell mb-6">
             <div className="px-4 sm:px-5 py-3 border-b border-border" style={{ background: "rgba(192,57,43,0.05)" }}>
-              <div className="kicker text-xs" style={{ color: "#c0392b" }}>Leaderboard</div>
+              <div className="kicker text-xs" style={{ color: "var(--color-red)" }}>Leaderboard</div>
             </div>
             {(() => {
               const scored = mocks
@@ -913,12 +913,12 @@ export default function MockDraftApp({
             <div className="kicker text-xs mb-3">Punktesystem</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { pts: 110, label: "Exakter Pick + Position", color: "#16a34a" },
-                { pts: 60, label: "1 daneben + Position", color: "#2563eb" },
-                { pts: 50, label: "1 daneben", color: "#3b82f6" },
-                { pts: 30, label: "2–5 daneben + Position", color: "#d97706" },
-                { pts: 20, label: "2–5 daneben", color: "#f59e0b" },
-                { pts: 10, label: "Position richtig", color: "#7c3aed" },
+                { pts: 110, label: "Exakter Pick + Position", color: "#4ade80" },
+                { pts: 60, label: "1 daneben + Position", color: "#60a5fa" },
+                { pts: 50, label: "1 daneben", color: "#93c5fd" },
+                { pts: 30, label: "2–5 daneben + Position", color: "#fbbf24" },
+                { pts: 20, label: "2–5 daneben", color: "#fcd34d" },
+                { pts: 10, label: "Position richtig", color: "#a78bfa" },
               ].map(({ pts, label, color }) => (
                 <div key={pts} className="flex items-center gap-2 p-2 border border-border">
                   <span className="label-nav text-sm font-bold" style={{ color }}>{pts}</span>
@@ -948,15 +948,15 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
   const [expanded, setExpanded] = useState(false);
 
   const pointsColor = (pts: number) =>
-    pts === 100 ? "#16a34a" : pts === 50 ? "#2563eb" : pts === 20 ? "#d97706" : pts === 10 ? "#7c3aed" : "var(--color-text-faint)";
+    pts === 100 ? "#4ade80" : pts === 50 ? "#60a5fa" : pts === 20 ? "#fbbf24" : pts === 10 ? "#a78bfa" : "var(--color-text-faint)";
 
   return (
     <div className="border-b border-border-light">
       <button onClick={() => setExpanded(!expanded)}
-        className="w-full text-left px-4 sm:px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+        className="w-full text-left px-4 sm:px-5 py-3 flex items-center gap-3 hover:bg-surface-2 transition-colors">
         {/* Rank */}
         <span className="display-title text-2xl w-8 text-right flex-shrink-0"
-          style={{ color: rank <= 3 ? "#c0392b" : "var(--color-text-faint)" }}>
+          style={{ color: rank <= 3 ? "var(--color-red)" : "var(--color-text-faint)" }}>
           {rank}
         </span>
         {/* Info */}
@@ -968,15 +968,15 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
             </span>
           </div>
           <div className="flex gap-2 sm:gap-3 mt-0.5 flex-wrap">
-            {entry.exact > 0 && <span className="label-nav text-xs" style={{ color: "#16a34a" }}>{entry.exact}× exakt</span>}
-            {entry.close > 0 && <span className="label-nav text-xs" style={{ color: "#2563eb" }}>{entry.close}× 1 daneben</span>}
-            {entry.near > 0 && <span className="label-nav text-xs" style={{ color: "#d97706" }}>{entry.near}× 2-5 daneben</span>}
-            {entry.posMatch > 0 && <span className="label-nav text-xs" style={{ color: "#7c3aed" }}>{entry.posMatch}× Position</span>}
+            {entry.exact > 0 && <span className="label-nav text-xs" style={{ color: "#4ade80" }}>{entry.exact}× exakt</span>}
+            {entry.close > 0 && <span className="label-nav text-xs" style={{ color: "#60a5fa" }}>{entry.close}× 1 daneben</span>}
+            {entry.near > 0 && <span className="label-nav text-xs" style={{ color: "#fbbf24" }}>{entry.near}× 2-5 daneben</span>}
+            {entry.posMatch > 0 && <span className="label-nav text-xs" style={{ color: "#a78bfa" }}>{entry.posMatch}× Position</span>}
           </div>
         </div>
         {/* Score */}
         <div className="text-right flex-shrink-0">
-          <div className="display-title text-2xl sm:text-3xl" style={{ color: "#c0392b" }}>{entry.total}</div>
+          <div className="display-title text-2xl sm:text-3xl" style={{ color: "var(--color-red)" }}>{entry.total}</div>
           <div className="label-nav text-text-faint" style={{ fontSize: "9px" }}>PUNKTE</div>
         </div>
         <span className="text-text-muted text-sm flex-shrink-0">{expanded ? "▲" : "▼"}</span>
@@ -1070,7 +1070,7 @@ function MockCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           {mock.is_locked && (
             <span className="label-nav text-xs px-2 py-0.5"
-              style={{ background: "rgba(192,57,43,0.1)", color: "#c0392b" }}>LOCKED</span>
+              style={{ background: "rgba(192,57,43,0.1)", color: "var(--color-red)" }}>LOCKED</span>
           )}
           <span className="text-text-muted text-sm">{expanded ? "▲" : "▼"}</span>
         </div>
@@ -1080,7 +1080,7 @@ function MockCard({
         <div className="border-t border-border">
           {!draftLocked && (
             <div className="px-3 sm:px-4 py-2 border-b border-border text-xs text-text-muted"
-              style={{ background: "rgba(26,26,26,0.03)" }}>
+              style={{ background: "rgba(255,255,255,0.03)" }}>
               Picks werden erst nach Draft-Start vollständig sichtbar. Vorschau: jeder 5. Pick.
             </div>
           )}

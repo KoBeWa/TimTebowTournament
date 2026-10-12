@@ -1,90 +1,181 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — dark "sports app" theme.
+ * Token names are kept from the previous editorial theme so existing
+ * utility classes keep working: `cream` = page background, `ink` = primary
+ * text, `red` = brand accent.
+ */
 @theme {
-  --color-cream: #f2ede4;
-  --color-ink: #1a1a1a;
-  --color-red: #c0392b;
-  --color-border: #d5cfca;
-  --color-border-light: #e8e2d8;
-  --color-text-secondary: #555555;
-  --color-text-muted: #666666;
-  --color-text-faint: #777777;
+  --color-cream: #0a101d;
+  --color-surface: #111a2c;
+  --color-surface-2: #17223a;
+  --color-surface-3: #1f2c48;
+  --color-ink: #eef2fa;
+  --color-red: #ff5b3a;
+  --color-red-soft: #ff8a70;
+  --color-gold: #f5b83d;
+  --color-gold-dark: #f5b83d;
+  --color-silver: #b8c2d4;
+  --color-bronze: #d08a52;
+  --color-border: #22304d;
+  --color-border-light: #1a2540;
+  --color-border-strong: #33456b;
+  --color-text-secondary: #b6c0d4;
+  --color-text-muted: #8d99b2;
+  --color-text-faint: #6c7893;
+  --color-positive: #34d399;
+  --color-negative: #f87171;
+  --color-accent-green: #34d399;
+  --color-accent-red: #f87171;
+  --color-accent-blue: #60a5fa;
+
+  --radius-card: 14px;
 }
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; color-scheme: dark; }
 
   body {
     background-color: var(--color-cream);
+    background-image:
+      radial-gradient(1200px 500px at 85% -10%, rgba(255, 91, 58, 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, rgba(96, 165, 250, 0.08), transparent 60%);
+    background-attachment: fixed;
     color: var(--color-ink);
     font-family: var(--font-inter), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
   }
 
   h1, h2, h3 {
-    font-family: var(--font-playfair), Georgia, serif;
-    font-style: italic;
+    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
   }
+
+  ::selection { background: rgba(255, 91, 58, 0.35); color: #fff; }
+
+  a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-red);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Form controls inherit the dark theme */
+  select, input, textarea {
+    background-color: var(--color-surface-2);
+    color: var(--color-ink);
+    border-color: var(--color-border);
+    border-radius: 10px;
+  }
+  select option { background-color: var(--color-surface); color: var(--color-ink); }
+
+  table th { font-weight: 600; }
+
+  button { border-radius: 10px; cursor: pointer; }
+
+  td.font-mono { white-space: nowrap; }
 }
 
-/* Kicker label — red Roboto Condensed uppercase above sections */
-.kicker {
-  font-family: var(--font-roboto-condensed), Arial Narrow, sans-serif;
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-red);
-}
+@layer components {
+  /* Small accent label above headlines */
+  .kicker {
+    font-family: var(--font-display), var(--font-inter), sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-red);
+  }
 
-/* Large italic Playfair headline */
-.display-title {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-style: italic;
-  font-weight: 900;
-}
+  /* Large headline / big numbers */
+  .display-title {
+    font-family: var(--font-display), var(--font-inter), sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.005em;
+    line-height: 1.05;
+  }
 
-/* Medium italic Playfair section header */
-.section-title {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 1.5rem;
-}
+  /* Section header */
+  .section-title {
+    font-family: var(--font-display), var(--font-inter), sans-serif;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: 0.01em;
+  }
 
-/* Roboto Condensed uppercase nav/label text */
-.label-nav {
-  font-family: var(--font-roboto-condensed), Arial Narrow, sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
+  /* Condensed uppercase label text */
+  .label-nav {
+    font-family: var(--font-display), var(--font-inter), sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 
-/* Bordered cell — square corners, 1px border, no shadow */
-.cell {
-  border: 1px solid var(--color-border);
-  background-color: var(--color-cream);
-}
+  /* Card */
+  .cell {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-card);
+  }
 
-/* Hoverable bordered cell */
-.cell-hover {
-  border: 1px solid var(--color-border);
-  background-color: var(--color-cream);
-  transition: border-color 0.15s ease;
-  display: block;
-}
-.cell-hover:hover {
-  border-color: var(--color-ink);
-}
+  /* Clickable card */
+  .cell-hover {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-card);
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+    display: block;
+  }
+  .cell-hover:hover {
+    border-color: var(--color-border-strong);
+    background-color: var(--color-surface-2);
+  }
 
-/* Win / Loss / Tie indicators */
-.win { color: var(--color-ink); font-weight: 600; }
-.loss { color: var(--color-red); }
-.tie { color: var(--color-text-muted); }
+  /* Cards inside a list share a container — avoid double rounding */
+  .list-card {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+  .list-card > .cell-hover {
+    border-radius: 0;
+    border-width: 0 0 1px 0;
+    border-color: var(--color-border-light);
+  }
+  .list-card > .cell-hover:last-child { border-bottom: 0; }
+
+  /* Pill / chip */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  /* Tables: wrap in a card and get subtle row hover */
+  table tbody tr { transition: background-color 0.12s ease; }
+  table tbody tr:hover { background-color: rgba(255, 255, 255, 0.025); }
+
+  /* Win / Loss / Tie indicators */
+  .win { color: var(--color-positive); font-weight: 600; }
+  .loss { color: var(--color-negative); }
+  .tie { color: var(--color-text-muted); }
+}
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-cream); }
-::-webkit-scrollbar-thumb { background: var(--color-border); }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }

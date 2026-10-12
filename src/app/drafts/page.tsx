@@ -87,7 +87,7 @@ function draftNumber(yr: number) {
 }
 
 const POS_COLORS: Record<string, string> = {
-  QB: "#c0392b", RB: "#2980b9", WR: "#27ae60", TE: "#8e44ad", K: "#e67e22", DST: "#7f8c8d", DEF: "#7f8c8d",
+  QB: "#f87171", RB: "#60a5fa", WR: "#34d399", TE: "#c084fc", K: "#fb923c", DST: "#94a3b8", DEF: "#94a3b8",
 };
 
 export default async function DraftsPage() {
@@ -173,7 +173,7 @@ export default async function DraftsPage() {
   return (
     <div>
       {/* ── Page header ── */}
-      <div className="mb-8" style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: "1rem" }}>
+      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
         <div className="kicker mb-1">Statistiken</div>
         <h1 className="display-title text-4xl md:text-5xl text-ink">Draft Hall</h1>
         <p className="text-text-muted mt-1 text-sm">Jeder Pick, jede Runde, jede Note</p>
@@ -204,7 +204,7 @@ export default async function DraftsPage() {
             <div className="kicker mb-3">{title}</div>
             <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+                <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                   <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
                   <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Spieler</th>
                   <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Owner</th>
@@ -226,7 +226,7 @@ export default async function DraftsPage() {
                     </td>
                     <td
                       className="py-2.5 text-right font-mono text-sm font-semibold"
-                      style={{ color: dir === "best" ? "#1a1a1a" : "rgb(150,35,35)" }}
+                      style={{ color: dir === "best" ? "var(--color-positive)" : "var(--color-negative)" }}
                     >
                       {sign(p.grade4)}
                     </td>
@@ -243,7 +243,7 @@ export default async function DraftsPage() {
         <div className="kicker mb-3">All-Time Draft Rankings</div>
         <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+            <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
               <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
               <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Owner</th>
               <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">Ø Grade</th>
@@ -276,8 +276,8 @@ export default async function DraftsPage() {
       {/* ── Best / Worst 3 drafts ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         {[
-          { title: "Best Drafts All Time", list: bestDrafts, color: "#1a1a1a" },
-          { title: "Worst Drafts All Time", list: worstDrafts, color: "rgb(150,35,35)" },
+          { title: "Best Drafts All Time", list: bestDrafts, color: "var(--color-positive)" },
+          { title: "Worst Drafts All Time", list: worstDrafts, color: "var(--color-negative)" },
         ].map(({ title, list, color }) => (
           <div key={title}>
             <div className="kicker mb-3">{title}</div>
@@ -305,14 +305,14 @@ export default async function DraftsPage() {
       </div>
 
       {/* ── Position Rankings ── */}
-      <div className="mb-12" style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }}>
+      <div className="mb-12" style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }}>
         <div className="kicker mb-1">Positions</div>
         <h2 className="display-title text-2xl text-ink mb-6">Positions-Rankings</h2>
         <PositionStats data={positionData} />
       </div>
 
       {/* ── Interactive pick browser ── */}
-      <div style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }}>
+      <div style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }}>
         <div className="kicker mb-1">Pick Browser</div>
         <h2 className="display-title text-2xl text-ink mb-6">Alle Picks durchsuchen</h2>
         <DraftBrowser picks={picksWithGrade as DraftPick[]} />

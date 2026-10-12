@@ -82,7 +82,7 @@ export default async function RankingsPage() {
 
   return (
     <div>
-      <div className="mb-8" style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: "1rem" }}>
+      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
         <div className="kicker mb-1">Statistiken</div>
         <h1 className="display-title text-4xl md:text-5xl text-ink">Owner Rankings</h1>
         <p className="text-text-muted mt-1 text-sm">All-Time · Klick auf eine Spalte zum Sortieren</p>

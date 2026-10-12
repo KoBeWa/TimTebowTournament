@@ -123,7 +123,7 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
                   {m.is_playoff && <span className="label-nav text-xs text-ink border border-border px-2 py-0.5">PO</span>}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${won ? "bg-accent-green/10 text-ink font-semibold" : "bg-accent-red/10 text-red"}`}>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${won ? "bg-accent-green/15 text-positive" : "bg-accent-red/15 text-negative"}`}>
                     {won ? "W" : "L"}
                   </span>
                   <span className="font-mono text-sm text-ink">{m.myScore.toFixed(1)}</span>

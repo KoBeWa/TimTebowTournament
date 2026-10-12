@@ -23,22 +23,22 @@ interface TxRow {
 }
 
 const POS_COLORS: Record<string, string> = {
-  QB: "#c0392b", RB: "#2980b9", WR: "#27ae60", TE: "#8e44ad",
-  K: "#e67e22", DST: "#7f8c8d", DEF: "#7f8c8d",
+  QB: "#f87171", RB: "#60a5fa", WR: "#34d399", TE: "#c084fc",
+  K: "#fb923c", DST: "#94a3b8", DEF: "#94a3b8",
 };
 
 function scoreStyle(s: number): { color: string; bg: string } {
-  if (s >= 80) return { color: "#1a1a1a",          bg: "rgba(26,26,26,0.07)" };
-  if (s >= 60) return { color: "#1a1a1a",          bg: "transparent" };
+  if (s >= 80) return { color: "var(--color-positive)",          bg: "rgba(52,211,153,0.09)" };
+  if (s >= 60) return { color: "var(--color-positive)",          bg: "transparent" };
   if (s >= 40) return { color: "var(--color-text-secondary)", bg: "transparent" };
-  if (s >= 20) return { color: "rgb(150,35,35)",   bg: "rgba(160,40,40,0.04)" };
-  return              { color: "rgb(130,20,20)",   bg: "rgba(160,40,40,0.08)" };
+  if (s >= 20) return { color: "var(--color-negative)",   bg: "rgba(248,113,113,0.04)" };
+  return              { color: "var(--color-negative)",   bg: "rgba(248,113,113,0.08)" };
 }
 
 function posTag(pos: string | null, faint = false) {
   if (!pos) return null;
   const p = pos === "DEF" ? "DST" : pos;
-  const c = POS_COLORS[p] ?? "#999";
+  const c = POS_COLORS[p] ?? "#8d99b2";
   return (
     <span
       className="label-nav text-xs px-1.5 py-0.5 rounded font-semibold"
@@ -126,7 +126,7 @@ export default function TransactionBrowser() {
         {!loading && (
           <div className="pb-2 label-nav text-xs text-text-muted">
             {adds} Moves · Ø Net{" "}
-            <span style={{ color: avgNet >= 0 ? "#1a1a1a" : "rgb(150,35,35)" }}>
+            <span style={{ color: avgNet >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}>
               {avgNet >= 0 ? "+" : ""}{avgNet.toFixed(1)}
             </span>
           </div>
@@ -139,7 +139,7 @@ export default function TransactionBrowser() {
         <div className="space-y-8">
           {weeks.map((week) => (
             <div key={week}>
-              <div className="label-nav text-xs text-text-muted mb-2 pb-1" style={{ borderBottom: "1px solid #1a1a1a" }}>
+              <div className="label-nav text-xs text-text-muted mb-2 pb-1" style={{ borderBottom: "1px solid var(--color-border-strong)" }}>
                 Woche {week}
               </div>
 
@@ -164,7 +164,7 @@ export default function TransactionBrowser() {
 
                       {/* Add */}
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-xs font-bold flex-shrink-0" style={{ color: "#27ae60" }}>+</span>
+                        <span className="text-xs font-bold flex-shrink-0" style={{ color: "var(--color-positive)" }}>+</span>
                         {posTag(tx.add_pos)}
                         <span className="text-sm font-medium text-ink truncate">{tx.add_player}</span>
                       </div>

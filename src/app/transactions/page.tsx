@@ -47,7 +47,7 @@ export default async function TransactionsPage() {
   return (
     <div>
       {/* ── Page header ── */}
-      <div className="mb-8" style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: "1rem" }}>
+      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
         <div className="kicker mb-1">Statistiken</div>
         <h1 className="display-title text-4xl md:text-5xl text-ink">Transactions</h1>
         <p className="text-text-muted mt-1 text-sm">Waiver Moves &amp; Trades — Value Analysis</p>

@@ -1,7 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
-import { LEAGUE_NAME, LEAGUE_FOUNDED } from "@/lib/constants";
+import { LEAGUE_FOUNDED, MANAGERS, NAV_ITEMS } from "@/lib/constants";
 import Link from "next/link";
+import { ArrowRight, ChevronRight, Crown, Medal, TrendingDown } from "lucide-react";
+import NavIcon from "@/components/layout/NavIcon";
 
 async function getLeagueStats() {
   const { data: matchups } = await supabase
@@ -52,218 +54,219 @@ export default async function HomePage() {
     ? await getChampionRecord(latestSeason.year, latestSeason.champion)
     : null;
 
-  const quickLinks = [
-    { label: "History", href: "/history", desc: "Season-by-season Chronik" },
-    { label: "Gamecenter", href: "/gamecenter", desc: "Matchups & Lineups" },
-    { label: "Drafts", href: "/drafts", desc: "Pick-by-Pick Analyse" },
-    { label: "Transactions", href: "/transactions", desc: "Waiver Wire Moves" },
-    { label: "Head to Head", href: "/h2h", desc: "Manager vs. Manager" },
-    { label: "Trophy Room", href: "/trophies", desc: "Records & Achievements" },
-  ];
+  // Title count per manager, most titles first
+  const titleCounts = Object.entries(
+    seasons.reduce<Record<string, number>>((acc, s) => {
+      acc[s.champion] = (acc[s.champion] ?? 0) + 1;
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
+
+  const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
 
   return (
-    <div>
-      {/* ── MASTHEAD ── */}
-      <header
-        style={{ borderBottom: "1px solid #1a1a1a" }}
-        className="grid grid-cols-3 items-center py-4 mb-0"
-      >
-        <div className="label-nav text-xs text-text-faint">
-          <div>Est. {LEAGUE_FOUNDED}</div>
-          <div>{totalSeasons} Seasons</div>
-        </div>
+    <div className="space-y-10">
+      {/* ── HERO ── */}
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface-2 via-surface to-cream">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-gold/10 blur-3xl" />
 
-        <div className="text-center">
-          <div className="display-title text-4xl md:text-5xl text-ink leading-tight">
-            {LEAGUE_NAME}
-          </div>
-          <div
-            style={{ borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}
-            className="label-nav text-xs text-text-muted mt-2 py-1"
-          >
-            · Die offizielle Ligachronik · Est. {LEAGUE_FOUNDED} ·
-          </div>
-        </div>
-
-        <div className="label-nav text-xs text-text-faint text-right">
-          <div>8 Manager</div>
-          <div>Eine Legende</div>
-        </div>
-      </header>
-
-      {/* ── RED TICKER ── */}
-      <div
-        className="flex items-center h-[26px] overflow-hidden"
-        style={{ background: "#c0392b" }}
-      >
-        <div
-          className="label-nav text-xs text-white px-3 h-full flex items-center shrink-0"
-          style={{ background: "#1a1a1a" }}
-        >
-          Aktuell
-        </div>
-        <div className="label-nav text-xs text-white px-4 truncate">
-          {latestSeason
-            ? `Amtierender Champion: ${latestSeason.champion} (${latestSeason.year}) · Runner-Up: ${latestSeason.runner_up} · Sacko: ${latestSeason.sacko}`
-            : "Willkommen beim Tim Tebow Tournament"}
-        </div>
-      </div>
-
-      {/* ── MAIN CONTENT: CHAMPION AREA + SIDEBAR ── */}
-      {latestSeason && (
-        <div
-          className="grid grid-cols-1 md:grid-cols-3"
-          style={{ borderBottom: "1px solid #1a1a1a" }}
-        >
-          {/* Champion Area (2/3 width) */}
-          <div
-            className="md:col-span-2 py-8 pr-0 md:pr-8"
-            style={{ borderRight: "1px solid #1a1a1a" }}
-          >
-            <div className="kicker mb-2">Champion {latestSeason.year}</div>
-
-            <div className="display-title text-3xl sm:text-5xl md:text-7xl text-ink leading-none mb-4">
-              {latestSeason.champion}
+        <div className="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div>
+            <div className="chip mb-5">
+              <span className="h-1.5 w-1.5 rounded-full bg-red" />
+              Est. {LEAGUE_FOUNDED} · {totalSeasons} Seasons · {MANAGERS.length} Manager
             </div>
 
-            {championRecord && (
+            {latestSeason ? (
               <>
-                {/* Record badge */}
-                <div
-                  className="inline-block label-nav text-xs px-3 py-1 mb-6"
-                  style={{ border: "1px solid #1a1a1a" }}
-                >
-                  {championRecord.wins}–{championRecord.losses} Regular Season
+                <div className="flex items-center gap-2 text-gold">
+                  <Crown size={18} />
+                  <span className="label-nav text-sm">Champion {latestSeason.year}</span>
                 </div>
-
-                {/* 4-cell stat grid */}
-                <div
-                  className="grid grid-cols-2 sm:grid-cols-4"
-                  style={{ borderTop: "1px solid #1a1a1a", borderLeft: "1px solid #1a1a1a" }}
+                <Link
+                  href={`/manager/${latestSeason.champion}`}
+                  className="mt-1 block display-title text-6xl sm:text-8xl text-ink uppercase hover:text-gold transition-colors"
                 >
-                  {[
-                    { label: "Punkte", value: Math.round(Number(championRecord.points_for)).toLocaleString("de-DE") },
-                    { label: "Gegner", value: Math.round(Number(championRecord.points_against)).toLocaleString("de-DE") },
-                    { label: "Diff", value: `+${Math.round(Number(championRecord.points_for) - Number(championRecord.points_against)).toLocaleString("de-DE")}` },
-                    { label: "Titel", value: seasons.filter((s) => s.champion === latestSeason.champion).length.toString() },
-                  ].map((cell) => (
-                    <div
-                      key={cell.label}
-                      className="py-4 px-3 text-center"
-                      style={{ borderRight: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}
-                    >
-                      <div className="display-title text-2xl text-ink">{cell.value}</div>
-                      <div className="kicker mt-1" style={{ color: "#666" }}>{cell.label}</div>
-                    </div>
-                  ))}
+                  {latestSeason.champion}
+                </Link>
+                {championRecord && (
+                  <p className="mt-3 text-text-secondary">
+                    {championRecord.wins}–{championRecord.losses} in der Regular Season ·{" "}
+                    {titleCounts.find(([m]) => m === latestSeason.champion)?.[1] ?? 1}. Titel
+                  </p>
+                )}
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href={`/history/${latestSeason.year}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red/25 hover:bg-red-soft transition-colors"
+                  >
+                    Season {latestSeason.year} ansehen <ArrowRight size={16} />
+                  </Link>
+                  <Link
+                    href="/history"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-surface/60 px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface-2 transition-colors"
+                  >
+                    Alle Seasons
+                  </Link>
                 </div>
               </>
+            ) : (
+              <h1 className="display-title text-5xl text-ink">Tim Tebow Tournament</h1>
             )}
-
-            {/* Finalists row */}
-            <div className="flex gap-6 mt-4">
-              <div>
-                <div className="kicker" style={{ color: "#666" }}>Runner-Up</div>
-                <div className="font-semibold text-ink">{latestSeason.runner_up}</div>
-              </div>
-              <div>
-                <div className="kicker" style={{ color: "#c0392b" }}>Sacko</div>
-                <div className="font-semibold text-ink">{latestSeason.sacko}</div>
-              </div>
-            </div>
           </div>
 
-          {/* Sidebar (1/3 width) */}
-          <div className="py-8 pl-0 md:pl-6">
-            {/* Champions History */}
-            <div className="kicker mb-3">Champions History</div>
-            <div style={{ borderTop: "1px solid #1a1a1a" }}>
-              {seasons.slice(0, 8).map((s) => (
-                <Link
-                  key={s.year}
-                  href={`/history/${s.year}`}
-                  className="flex items-center justify-between py-2 hover:text-red transition-colors"
-                  style={{ borderBottom: "1px solid var(--color-border-light)" }}
-                >
-                  <span className="label-nav text-xs text-text-faint">{s.year}</span>
-                  <span className="text-sm font-medium text-ink">{s.champion}</span>
-                </Link>
-              ))}
-            </div>
-
-            {/* Liga-Rekorde */}
-            {records.length > 0 && (
-              <div className="mt-6">
-                <div className="kicker mb-3">Liga-Rekorde</div>
-                <div style={{ borderTop: "1px solid #1a1a1a" }}>
-                  {records.map((r) => (
-                    <div
-                      key={r.record_label}
-                      className="flex items-center justify-between py-2"
-                      style={{ borderBottom: "1px solid var(--color-border-light)" }}
-                    >
-                      <span className="text-xs text-text-muted truncate pr-2">{r.record_label}</span>
-                      <span className="label-nav text-xs text-ink shrink-0">{r.manager_id}</span>
+          {latestSeason && (
+            <div className="space-y-3">
+              {championRecord && (
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Punkte", value: fmt(Number(championRecord.points_for)) },
+                    { label: "Gegner", value: fmt(Number(championRecord.points_against)) },
+                    {
+                      label: "Diff",
+                      value: `${Number(championRecord.points_for) >= Number(championRecord.points_against) ? "+" : ""}${fmt(Number(championRecord.points_for) - Number(championRecord.points_against))}`,
+                    },
+                  ].map((cell) => (
+                    <div key={cell.label} className="rounded-2xl border border-border bg-cream/50 p-4 text-center">
+                      <div className="display-title text-2xl sm:text-3xl text-ink">{cell.value}</div>
+                      <div className="mt-1 text-xs text-text-muted">{cell.label}</div>
                     </div>
                   ))}
                 </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href={`/manager/${latestSeason.runner_up}`}
+                  className="rounded-2xl border border-border bg-cream/50 p-4 hover:border-border-strong transition-colors"
+                >
+                  <div className="flex items-center gap-1.5 text-xs text-silver">
+                    <Medal size={14} /> Runner-Up
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-ink">{latestSeason.runner_up}</div>
+                </Link>
+                <Link
+                  href={`/manager/${latestSeason.sacko}`}
+                  className="rounded-2xl border border-border bg-cream/50 p-4 hover:border-border-strong transition-colors"
+                >
+                  <div className="flex items-center gap-1.5 text-xs text-negative">
+                    <TrendingDown size={14} /> Sacko
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-ink">{latestSeason.sacko}</div>
+                </Link>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </section>
 
-      {/* ── STATS BAR ── */}
-      <div
-        className="grid grid-cols-2 sm:grid-cols-4"
-        style={{ borderTop: "3px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}
-      >
+      {/* ── LEAGUE STATS ── */}
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Seasons", value: totalSeasons.toString() },
-          { label: "Manager", value: "8" },
-          { label: "Spiele", value: stats.totalGames.toString() },
-          { label: "Punkte", value: Math.round(stats.totalPoints).toLocaleString("de-DE") },
-        ].map((cell, i) => (
-          <div
-            key={cell.label}
-            className="py-5 text-center"
-            style={{ borderRight: i < 3 ? "1px solid #1a1a1a" : "none" }}
-          >
-            <div className="display-title text-3xl md:text-4xl text-ink">{cell.value}</div>
-            <div className="kicker mt-1" style={{ color: "#666" }}>{cell.label}</div>
+          { label: "Manager", value: MANAGERS.length.toString() },
+          { label: "Spiele", value: fmt(stats.totalGames) },
+          { label: "Punkte gesamt", value: fmt(stats.totalPoints) },
+        ].map((cell) => (
+          <div key={cell.label} className="cell p-5">
+            <div className="text-xs text-text-muted">{cell.label}</div>
+            <div className="mt-1 display-title text-3xl md:text-4xl text-ink">{cell.value}</div>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* ── EXPLORE SECTION ── */}
-      <div className="mt-10">
-        <div className="kicker mb-1">Archiv</div>
-        <h2
-          className="display-title text-3xl text-ink mb-6"
-          style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: "0.5rem" }}
-        >
-          Explore the Archive
-        </h2>
-
-        <div
-          className="grid grid-cols-2 md:grid-cols-3"
-          style={{ borderTop: "1px solid var(--color-border)", borderLeft: "1px solid var(--color-border)" }}
-        >
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="cell-hover p-6 group"
-              style={{ borderRight: "1px solid var(--color-border)", borderBottom: "1px solid var(--color-border)" }}
-            >
-              <div className="label-nav text-sm text-ink group-hover:text-red transition-colors">
-                {link.label} →
+      {/* ── QUICK ACCESS ── */}
+      <section>
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <div className="kicker mb-1">Schnellzugriff</div>
+            <h2 className="section-title text-ink">Wohin willst du?</h2>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {NAV_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} className="cell-hover group p-4 sm:p-5">
+              <div className="flex items-start justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red/10 text-red group-hover:bg-red group-hover:text-white transition-colors">
+                  <NavIcon name={item.icon} size={20} />
+                </span>
+                <ChevronRight size={18} className="text-text-faint group-hover:text-ink group-hover:translate-x-0.5 transition-all" />
               </div>
-              <div className="text-xs text-text-muted mt-1">{link.desc}</div>
+              <div className="mt-4 font-semibold text-ink">{item.label}</div>
+              <div className="mt-0.5 text-xs text-text-muted">{item.desc}</div>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
+
+      {/* ── CHAMPIONS + RECORDS ── */}
+      <section className="grid gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="cell p-5 sm:p-6 lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="section-title text-ink">Champions</h2>
+            <Link href="/history" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+              Alle <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {seasons.map((s, i) => (
+              <Link
+                key={s.year}
+                href={`/history/${s.year}`}
+                className="flex items-center gap-3 rounded-xl border border-border-light bg-cream/40 px-3 py-2.5 hover:border-border-strong hover:bg-surface-2 transition-colors"
+              >
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${i === 0 ? "bg-gold/15 text-gold" : "bg-surface-2 text-text-muted"}`}>
+                  <Crown size={15} />
+                </span>
+                <span className="font-semibold text-ink">{s.champion}</span>
+                <span className="ml-auto label-nav text-xs text-text-faint">{s.year}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="cell p-5 sm:p-6">
+            <h2 className="section-title text-ink mb-4">Titel-Ranking</h2>
+            <div className="space-y-2.5">
+              {titleCounts.map(([manager, count]) => (
+                <Link key={manager} href={`/manager/${manager}`} className="group block">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-ink group-hover:text-red transition-colors">{manager}</span>
+                    <span className="text-text-muted">{count}×</span>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-surface-2">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-red to-gold"
+                      style={{ width: `${(count / titleCounts[0][1]) * 100}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {records.length > 0 && (
+            <div className="cell p-5 sm:p-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="section-title text-ink">Liga-Rekorde</h2>
+                <Link href="/trophies/records" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+                  Alle <ChevronRight size={16} />
+                </Link>
+              </div>
+              <div className="divide-y divide-border-light">
+                {records.map((r) => (
+                  <div key={r.record_label} className="flex items-center justify-between gap-3 py-2.5">
+                    <span className="text-sm text-text-secondary truncate">{r.record_label}</span>
+                    <span className="chip shrink-0">{r.manager_id}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

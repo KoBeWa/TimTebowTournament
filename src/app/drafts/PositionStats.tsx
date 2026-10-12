@@ -70,7 +70,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Owner Rankings</div>
           <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">Owner</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-4">Ø Grade</th>
@@ -84,7 +84,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
                   <td className="py-2.5 pr-4 font-semibold text-ink">{o.id}</td>
                   <td
                     className="py-2.5 pr-4 text-right font-mono text-sm font-semibold"
-                    style={{ color: o.avgGrade >= 0 ? "#1a1a1a" : "rgb(150,35,35)" }}
+                    style={{ color: o.avgGrade >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}
                   >
                     {sign(o.avgGrade)}
                   </td>
@@ -100,7 +100,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Top 5 Picks</div>
           <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Spieler</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-3">Pick</th>
@@ -130,7 +130,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Worst 5 Picks</div>
           <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Spieler</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-3">Pick</th>
@@ -146,7 +146,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
                     <div className="label-nav text-xs text-text-muted">{p.manager_id} · {p.season_year}</div>
                   </td>
                   <td className="py-2.5 pr-3 text-right font-mono text-xs text-text-muted">#{p.overall_pick}</td>
-                  <td className="py-2.5 text-right font-mono text-sm font-semibold" style={{ color: "rgb(150,35,35)" }}>
+                  <td className="py-2.5 text-right font-mono text-sm font-semibold" style={{ color: "var(--color-negative)" }}>
                     {sign(p.grade4)}
                   </td>
                 </tr>

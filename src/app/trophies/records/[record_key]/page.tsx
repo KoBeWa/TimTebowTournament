@@ -101,7 +101,7 @@ export default async function RecordDetailPage({
         <Link href="/trophies" className="text-text-muted hover:text-ink text-sm transition-colors">← Trophy Room</Link>
         <h1 className="display-title text-4xl md:text-5xl text-ink mt-2">{recordLabel}</h1>
         <div className="flex items-center gap-2 mt-1">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${negative ? "bg-accent-red/10 text-red" : "bg-accent-green/10 text-ink font-semibold"}`}>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${negative ? "bg-accent-red/15 text-negative" : "bg-accent-green/15 text-positive"}`}>
             {negative ? "Negative Record" : "Positive Record"}
           </span>
           {isMatchupRecord && (

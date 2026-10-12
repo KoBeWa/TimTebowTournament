@@ -159,7 +159,7 @@ export default async function MockDraftPage() {
     <div>
       <div
         className="mb-8"
-        style={{ borderBottom: "2px solid #1a1a1a", paddingBottom: "1rem" }}
+        style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}
       >
         <div className="kicker mb-1">Mini-Games</div>
         <h1 className="display-title text-4xl md:text-5xl text-ink">

@@ -33,7 +33,7 @@ function RecordPills({ labels, negative }: { labels: string[]; negative?: boolea
       {labels.map((l) => (
         <span key={l} className="label-nav text-xs px-1.5 py-0.5 rounded leading-snug"
           style={{
-            background: negative ? "rgba(150,35,35,0.08)" : "rgba(26,26,26,0.06)",
+            background: negative ? "rgba(248,113,113,0.08)" : "rgba(255,255,255,0.06)",
             color: negative ? "var(--color-red)" : "var(--color-text-muted)",
           }}>
           {l}
@@ -130,10 +130,10 @@ export default function TrophyRoomPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-5 py-2.5 transition-colors ${
+            className={`rounded-xl px-5 py-2.5 transition-colors ${
               tab === t
-                ? "bg-ink text-cream label-nav border border-ink"
-                : "bg-cream text-text-secondary label-nav border border-border"
+                ? "bg-red text-white label-nav border border-red"
+                : "bg-surface text-text-secondary label-nav border border-border hover:text-ink"
             }`}
           >
             {t === "achievements" ? "Achievements" : "Records"}
