@@ -56,14 +56,14 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+          <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
             <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
             <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Manager</th>
             {COLS.map((c) => (
               <th
                 key={c.key}
                 className="label-nav text-xs text-right py-2 px-3 cursor-pointer select-none whitespace-nowrap transition-colors"
-                style={{ color: c.key === sortKey ? "#1a1a1a" : "var(--color-text-muted)" }}
+                style={{ color: c.key === sortKey ? "var(--color-ink)" : "var(--color-text-muted)" }}
                 onClick={() => handleSort(c.key)}
               >
                 {c.label}
@@ -102,7 +102,7 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
                     className="py-3 px-3 text-right font-mono"
                     style={{
                       color: isActive
-                        ? "#1a1a1a"
+                        ? "var(--color-ink)"
                         : isPositive === true
                         ? "var(--color-text-secondary)"
                         : isPositive === false

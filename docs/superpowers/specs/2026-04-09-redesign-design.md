@@ -1,6 +1,6 @@
 # Tim Tebow Tournament — UI Redesign Spec
 **Date:** 2026-04-09  
-**Status:** Approved
+**Status:** Superseded (2026-10) — replaced by the dark "sports app" theme defined in `src/app/globals.css`
 
 ---
 

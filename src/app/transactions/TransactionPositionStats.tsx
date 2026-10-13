@@ -65,7 +65,7 @@ export default function TransactionPositionStats({ data }: { data: TxPositionDat
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Owner Rankings</div>
           <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">Owner</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-4">Ø Net</th>
@@ -79,7 +79,7 @@ export default function TransactionPositionStats({ data }: { data: TxPositionDat
                   <td className="py-2.5 pr-4 font-semibold text-ink">{o.id}</td>
                   <td
                     className="py-2.5 pr-4 text-right font-mono text-sm font-semibold"
-                    style={{ color: o.avgNet >= 0 ? "#1a1a1a" : "rgb(150,35,35)" }}
+                    style={{ color: o.avgNet >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}
                   >
                     {o.avgNet >= 0 ? "+" : ""}{o.avgNet.toFixed(1)}
                   </td>
@@ -95,7 +95,7 @@ export default function TransactionPositionStats({ data }: { data: TxPositionDat
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Top 5 Moves</div>
           <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Add / Drop</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2">Net</th>
@@ -126,7 +126,7 @@ export default function TransactionPositionStats({ data }: { data: TxPositionDat
           <div className="label-nav text-xs text-text-muted mb-3 uppercase tracking-wider">Worst 5 Moves</div>
           <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Add / Drop</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2">Net</th>
@@ -143,7 +143,7 @@ export default function TransactionPositionStats({ data }: { data: TxPositionDat
                     )}
                     <div className="label-nav text-xs text-text-faint">{p.manager_id} · {p.season_year} Wk{p.gain_week}</div>
                   </td>
-                  <td className="py-2.5 text-right font-mono text-sm font-semibold" style={{ color: "rgb(150,35,35)" }}>
+                  <td className="py-2.5 text-right font-mono text-sm font-semibold" style={{ color: "var(--color-negative)" }}>
                     {p.net_pts >= 0 ? "+" : ""}{p.net_pts.toFixed(1)}
                   </td>
                 </tr>

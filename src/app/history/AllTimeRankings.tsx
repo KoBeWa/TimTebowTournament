@@ -39,8 +39,8 @@ export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
               onClick={() => setTab(t)}
               className="label-nav text-xs px-3 py-1.5 transition-colors"
               style={{
-                background: tab === t ? "#1a1a1a" : "transparent",
-                color: tab === t ? "#f5f0e8" : "var(--color-text-muted)",
+                background: tab === t ? "var(--color-ink)" : "transparent",
+                color: tab === t ? "var(--color-cream)" : "var(--color-text-muted)",
                 borderRight: t === "regular" ? "1px solid var(--color-border)" : undefined,
               }}
             >
@@ -54,7 +54,7 @@ export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
         {tab === "regular" ? (
           <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Manager</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">Record</th>
@@ -95,7 +95,7 @@ export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
         ) : (
           <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+              <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Manager</th>
                 <th className="label-nav text-xs text-text-muted text-right py-2 pr-6">Teilnahmen</th>

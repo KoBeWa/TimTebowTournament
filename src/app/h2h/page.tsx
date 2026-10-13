@@ -63,12 +63,12 @@ export default function HeadToHeadPage() {
 
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
         <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
-          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-full sm:w-48 focus:border-red focus:outline-none">
+          className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-lg w-full sm:w-52 focus:border-red focus:outline-none">
           {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
         </select>
         <span className="text-3xl text-red tracking-wider display-title">VS</span>
         <select value={m2} onChange={(e) => setM2(e.target.value as ManagerId)}
-          className="bg-cream border border-border rounded-lg px-4 py-3 text-ink text-lg w-full sm:w-48 focus:border-red focus:outline-none">
+          className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-lg w-full sm:w-52 focus:border-red focus:outline-none">
           {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m1}>{m}</option>)}
         </select>
       </div>
@@ -79,20 +79,29 @@ export default function HeadToHeadPage() {
         <div className="text-text-muted text-center py-12">Lade Daten...</div>
       ) : (
         <>
-          <div className="cell p-8 text-center">
-            <div className="kicker mb-4">Direkter Vergleich ({matchups.length} Matchups)</div>
-            <div className="flex items-center justify-center gap-8">
-              <div className="text-center">
-                <div className={`text-4xl tracking-wider display-title ${wins > losses ? "text-red" : "text-text-secondary"}`}>{m1}</div>
-                <div className="display-title text-2xl text-ink font-semibold mt-2">{wins}</div>
+          <div className="cell p-6 sm:p-8">
+            <div className="kicker mb-5 text-center">Direkter Vergleich · {matchups.length} Matchups</div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+              <div className="text-right">
+                <div className={`display-title text-3xl sm:text-5xl uppercase ${wins > losses ? "text-ink" : "text-text-muted"}`}>{m1}</div>
+                <div className="text-sm text-text-muted mt-1">{wins > losses ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
               </div>
-              {ties > 0 && <div className="display-title text-2xl text-text-muted">{ties}</div>}
-              <span className="text-text-muted text-2xl">-</span>
-              <div className="text-center">
-                <div className={`text-4xl tracking-wider display-title ${losses > wins ? "text-red" : "text-text-secondary"}`}>{m2}</div>
-                <div className="display-title text-2xl text-ink font-semibold mt-2">{losses}</div>
+              <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">
+                {wins}<span className="text-text-faint mx-2">–</span>{losses}
+                {ties > 0 && <span className="text-text-muted text-2xl ml-2">({ties} T)</span>}
+              </div>
+              <div>
+                <div className={`display-title text-3xl sm:text-5xl uppercase ${losses > wins ? "text-ink" : "text-text-muted"}`}>{m2}</div>
+                <div className="text-sm text-text-muted mt-1">{losses > wins ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
               </div>
             </div>
+            {matchups.length > 0 && (
+              <div className="mt-6 flex h-2.5 overflow-hidden rounded-full bg-surface-3">
+                <div className="bg-red" style={{ width: `${(wins / matchups.length) * 100}%` }} />
+                <div className="bg-text-faint" style={{ width: `${(ties / matchups.length) * 100}%` }} />
+                <div className="bg-accent-blue" style={{ width: `${(losses / matchups.length) * 100}%` }} />
+              </div>
+            )}
           </div>
 
           <section>
@@ -104,11 +113,16 @@ export default function HeadToHeadPage() {
                   <div className="space-y-2">
                     {ms.map((m) => {
                       const won = m.myScore > m.theirScore;
+                      const tied = m.myScore === m.theirScore;
                       return (
-                        <div key={`${m.season_year}-${m.week}`} className="cell p-4 flex items-center justify-between">
+                        <div
+                          key={`${m.season_year}-${m.week}`}
+                          className={`cell px-4 py-3 flex items-center justify-between border-l-4 ${tied ? "border-l-text-faint" : won ? "border-l-red" : "border-l-accent-blue"}`}
+                        >
                           <div className="flex items-center gap-3">
                             <span className="text-text-muted text-sm w-16">Week {m.week}</span>
-                            {m.is_playoff && <span className="label-nav text-xs text-ink border border-border px-2 py-0.5">Playoff</span>}
+                            <span className="text-sm font-medium text-ink">{tied ? "Unentschieden" : `${won ? m1 : m2} gewinnt`}</span>
+                            {m.is_playoff && <span className="chip">Playoff</span>}
                           </div>
                           <div className="flex items-center gap-3">
                             <span className={`font-mono ${won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.myScore.toFixed(1)}</span>

@@ -105,7 +105,7 @@ export default async function ManagerTrophyPage({
               return (
                 <div key={i} className="cell px-5 py-3 flex items-center gap-3"
                   style={{
-                    borderColor: medal.rank === 1 ? "var(--color-gold-dark)" : medal.rank === 2 ? "#9ca3af" : "#b87333",
+                    borderColor: medal.rank === 1 ? "var(--color-gold-dark)" : medal.rank === 2 ? "var(--color-silver)" : "var(--color-bronze)",
                     borderWidth: "1px",
                   }}>
                   <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>{medal.icon}</span>
@@ -192,7 +192,7 @@ function AchievementCard({
           <span
             className="label-nav text-xs px-1.5 py-0.5 rounded flex-shrink-0"
             style={{
-              background: blunder ? "rgba(150,35,35,0.1)" : "rgba(26,26,26,0.08)",
+              background: blunder ? "rgba(248,113,113,0.1)" : "rgba(255,255,255,0.08)",
               color: blunder ? "var(--color-red)" : "var(--color-text-muted)",
               fontWeight: 700,
             }}

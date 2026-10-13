@@ -20,13 +20,13 @@ type SortKey = "season_year" | "round" | "overall_pick" | "position" | "team" | 
 
 function gradeStyle(g: number | null): { bg: string; textColor: string; weight: string } {
   if (g === null) return { bg: "transparent", textColor: "var(--color-text-muted)", weight: "400" };
-  if (g >= 30)  return { bg: "rgba(26,26,26,0.16)", textColor: "#1a1a1a",            weight: "700" };
-  if (g >= 15)  return { bg: "rgba(26,26,26,0.09)", textColor: "#1a1a1a",            weight: "600" };
-  if (g >= 5)   return { bg: "rgba(26,26,26,0.04)", textColor: "#1a1a1a",            weight: "500" };
+  if (g >= 30)  return { bg: "rgba(52,211,153,0.21)", textColor: "var(--color-positive)",            weight: "700" };
+  if (g >= 15)  return { bg: "rgba(52,211,153,0.12)", textColor: "var(--color-positive)",            weight: "600" };
+  if (g >= 5)   return { bg: "rgba(52,211,153,0.05)", textColor: "var(--color-positive)",            weight: "500" };
   if (g >= 0)   return { bg: "transparent",          textColor: "var(--color-text-secondary)", weight: "400" };
-  if (g >= -5)  return { bg: "rgba(160,40,40,0.04)", textColor: "var(--color-text-secondary)", weight: "400" };
-  if (g >= -15) return { bg: "rgba(160,40,40,0.08)", textColor: "rgb(160,40,40)",    weight: "500" };
-  return         { bg: "rgba(160,40,40,0.14)", textColor: "rgb(140,30,30)",           weight: "600" };
+  if (g >= -5)  return { bg: "rgba(248,113,113,0.04)", textColor: "var(--color-text-secondary)", weight: "400" };
+  if (g >= -15) return { bg: "rgba(248,113,113,0.08)", textColor: "var(--color-negative)",    weight: "500" };
+  return         { bg: "rgba(248,113,113,0.14)", textColor: "var(--color-negative)",           weight: "600" };
 }
 
 function gradeLabel(g: number | null) {
@@ -136,7 +136,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+            <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
               {/* Owner column — only when showing all managers */}
               {manager === "all" && (
                 <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">Owner</th>
@@ -150,7 +150,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
                     className={`label-nav text-xs py-2 cursor-pointer select-none whitespace-nowrap transition-colors ${
                       col.align === "right" ? "text-right pr-4" : "text-left pr-4"
                     }`}
-                    style={{ color: active ? "#1a1a1a" : "var(--color-text-muted)" }}
+                    style={{ color: active ? "var(--color-ink)" : "var(--color-text-muted)" }}
                   >
                     {col.label}
                     {active && <span className="ml-1 text-xs">{sortDir === 1 ? "↑" : "↓"}</span>}

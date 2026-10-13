@@ -37,7 +37,7 @@ function fmt(v: number, digits = 1) {
   return (v >= 0 ? "+" : "") + v.toFixed(digits);
 }
 function valColor(v: number) {
-  return v >= 0 ? "#1a1a1a" : "rgb(150,35,35)";
+  return v >= 0 ? "var(--color-positive)" : "var(--color-negative)";
 }
 function pct(n: number, d: number) {
   return d === 0 ? "—" : Math.round((n / d) * 100) + "%";
@@ -58,7 +58,7 @@ function SvgTooltip({ x, y, lines, W, H }: { x: number; y: number; lines: string
   return (
     <g pointerEvents="none">
       <rect x={tx} y={ty} width={boxW} height={boxH} rx={3}
-        fill="#1a1a1a" opacity={0.88} />
+        fill="#ff5b3a" opacity={0.88} />
       {lines.map((l, i) => (
         <text key={i} x={tx + PAD} y={ty + PAD + LINE_H * i + 9}
           style={{ fontSize: "10px", fill: "#fff", fontFamily: "inherit", fontWeight: i === 0 ? "600" : "400" }}>
@@ -98,22 +98,22 @@ function ActivityChart({ data }: {
         {[0.25, 0.5, 0.75, 1].map(p => (
           <line key={p} x1={PAD.l} x2={W - PAD.r}
             y1={PAD.t + plotH * (1 - p)} y2={PAD.t + plotH * (1 - p)}
-            stroke="#e0e0e0" strokeWidth="0.5" />
+            stroke="#22304d" strokeWidth="0.5" />
         ))}
         {data.map((d, i) => (
           <rect key={i} x={PAD.l + i * slotW + slotW * 0.3} y={ry(d.trades)}
-            width={slotW * 0.4} height={rh(d.trades)} fill="#1a1a1a" opacity={0.2}
+            width={slotW * 0.4} height={rh(d.trades)} fill="#ff5b3a" opacity={0.2}
             style={{ cursor: "pointer" }}
             onMouseEnter={() => setTip({ x: lx(i), y: ry(d.trades) + rh(d.trades) / 2, lines: [d.label, `Trades: ${d.trades}`] })} />
         ))}
-        {data.length > 1 && <polyline points={points} fill="none" stroke="#1a1a1a" strokeWidth="2" />}
+        {data.length > 1 && <polyline points={points} fill="none" stroke="#ff5b3a" strokeWidth="2" />}
         {data.map((d, i) => (
           <circle key={`dot-${i}`} cx={lx(i)} cy={ly(d.transactions)} r="5" fill="transparent"
             style={{ cursor: "pointer" }}
             onMouseEnter={() => setTip({ x: lx(i), y: ly(d.transactions), lines: [d.label, `Transactions: ${d.transactions}`, `Trades: ${d.trades}`] })} />
         ))}
         {data.map((d, i) => (
-          <circle key={`dot-vis-${i}`} cx={lx(i)} cy={ly(d.transactions)} r="3" fill="#1a1a1a" pointerEvents="none" />
+          <circle key={`dot-vis-${i}`} cx={lx(i)} cy={ly(d.transactions)} r="3" fill="#ff5b3a" pointerEvents="none" />
         ))}
         {data.map((d, i) => i % showEvery === 0 && (
           <text key={`xl-${i}`} x={lx(i)} y={H - 2} textAnchor="middle"
@@ -133,11 +133,11 @@ function ActivityChart({ data }: {
       </svg>
       <div className="flex gap-6 mt-2">
         <div className="flex items-center gap-2 label-nav text-xs text-text-muted">
-          <span style={{ display: "inline-block", width: 16, height: 2, background: "#1a1a1a", verticalAlign: "middle" }} />
+          <span style={{ display: "inline-block", width: 16, height: 2, background: "#ff5b3a", verticalAlign: "middle" }} />
           Transactions (links)
         </div>
         <div className="flex items-center gap-2 label-nav text-xs text-text-muted">
-          <span style={{ display: "inline-block", width: 12, height: 8, background: "rgba(26,26,26,0.2)", verticalAlign: "middle" }} />
+          <span style={{ display: "inline-block", width: 12, height: 8, background: "rgba(255,91,58,0.35)", verticalAlign: "middle" }} />
           Trades (rechts)
         </div>
       </div>
@@ -178,18 +178,18 @@ function TeamChart({ data, mode }: {
         {[0, 0.25, 0.5, 0.75, 1].map(p => (
           <line key={p} x1={PAD.l} x2={W - PAD.r}
             y1={PAD.t + plotH * p} y2={PAD.t + plotH * p}
-            stroke="#e0e0e0" strokeWidth="0.5" />
+            stroke="#22304d" strokeWidth="0.5" />
         ))}
         {/* Count bars */}
         {data.map((d, i) => (
           <rect key={`bar-${i}`}
             x={PAD.l + i * slotW + slotW * 0.25} y={barY(d.count)}
             width={slotW * 0.5} height={barH(d.count)}
-            fill="#1a1a1a" opacity={0.15} style={{ cursor: "pointer" }}
+            fill="#ff5b3a" opacity={0.15} style={{ cursor: "pointer" }}
             onMouseEnter={() => setTip({ x: lx(i), y: barY(d.count) + barH(d.count) / 2, lines: [d.team, `Adds: ${d.count}`] })} />
         ))}
         {/* Value / hit-rate line */}
-        {data.length > 1 && <polyline points={linePoints} fill="none" stroke="#1a1a1a" strokeWidth="1.5" />}
+        {data.length > 1 && <polyline points={linePoints} fill="none" stroke="#ff5b3a" strokeWidth="1.5" />}
         {lineVals.map((v, i) => (
           <circle key={`dot-hit-${i}`} cx={lx(i)} cy={ly(v)} r="6" fill="transparent" style={{ cursor: "pointer" }}
             onMouseEnter={() => setTip({
@@ -200,7 +200,7 @@ function TeamChart({ data, mode }: {
             })} />
         ))}
         {lineVals.map((v, i) => (
-          <circle key={`dot-${i}`} cx={lx(i)} cy={ly(v)} r="2.5" fill="#1a1a1a" pointerEvents="none" />
+          <circle key={`dot-${i}`} cx={lx(i)} cy={ly(v)} r="2.5" fill="#ff5b3a" pointerEvents="none" />
         ))}
         {/* X labels — rotated 45° */}
         {data.map((d, i) => (
@@ -228,11 +228,11 @@ function TeamChart({ data, mode }: {
       </svg>
       <div className="flex gap-6 mt-2">
         <div className="flex items-center gap-2 label-nav text-xs text-text-muted">
-          <span style={{ display: "inline-block", width: 16, height: 2, background: "#1a1a1a", verticalAlign: "middle" }} />
+          <span style={{ display: "inline-block", width: 16, height: 2, background: "#ff5b3a", verticalAlign: "middle" }} />
           {mode === "hitrate" ? "Hit Rate % (links)" : "Positive Value (links)"}
         </div>
         <div className="flex items-center gap-2 label-nav text-xs text-text-muted">
-          <span style={{ display: "inline-block", width: 12, height: 8, background: "rgba(26,26,26,0.15)", verticalAlign: "middle" }} />
+          <span style={{ display: "inline-block", width: 12, height: 8, background: "rgba(255,91,58,0.35)", verticalAlign: "middle" }} />
           Total Transactions (rechts)
         </div>
       </div>
@@ -245,7 +245,7 @@ function RankingTable({ rows, label }: { rows: { team: string; value: number }[]
   return (
     <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
       <thead>
-        <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+        <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">Owner</th>
           <th className="label-nav text-xs text-text-muted text-right py-2">{label}</th>
@@ -270,7 +270,7 @@ function WaiverTable({ rows, best }: { rows: VTxRow[]; best: boolean }) {
   return (
     <div className="overflow-x-auto"><table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
       <thead>
-        <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+        <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-2">#</th>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Add / Drop</th>
           <th className="label-nav text-xs text-text-muted text-left py-2 pr-3">Owner</th>
@@ -289,7 +289,7 @@ function WaiverTable({ rows, best }: { rows: VTxRow[]; best: boolean }) {
             </td>
             <td className="py-2.5 pr-3 label-nav text-xs text-ink">{r.team_name}</td>
             <td className="py-2.5 text-right font-mono text-sm font-semibold"
-              style={{ color: best ? "#1a1a1a" : "rgb(150,35,35)" }}>
+              style={{ color: best ? "var(--color-positive)" : "var(--color-negative)" }}>
               {fmt(best ? (r.scored_value ?? 0) : r.gain_value)}
             </td>
           </tr>
@@ -531,9 +531,9 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
               <button key={v} onClick={() => setView(v)}
                 className="label-nav text-xs px-3 py-2"
                 style={{
-                  background: view === v ? "#1a1a1a" : "transparent",
-                  color: view === v ? "#fff" : "var(--color-text-muted)",
-                  border: "1px solid #e0e0e0",
+                  background: view === v ? "var(--color-ink)" : "transparent",
+                  color: view === v ? "var(--color-cream)" : "var(--color-text-muted)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "2px",
                 }}>
                 {v === "stats" ? "Statistiken" : "Transaction Log"}
@@ -645,7 +645,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
                     <>
                       <div className="font-semibold text-ink text-base">{data.team}</div>
                       {!seasonFiltered && <div className="label-nav text-xs text-text-muted mb-1">{data.season}</div>}
-                      <div className="font-mono text-xl font-bold" style={{ color: pos ? "#1a1a1a" : "rgb(150,35,35)" }}>
+                      <div className="font-mono text-xl font-bold" style={{ color: pos ? "var(--color-positive)" : "var(--color-negative)" }}>
                         {fmt(data.total)}
                       </div>
                     </>
@@ -658,7 +658,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
       )}
 
       {/* ── Top 10 / Worst 10 Waiver ── */}
-      <div style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }} className="mb-10">
+      <div style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }} className="mb-10">
         <div className="kicker mb-1">Waiver</div>
         <h2 className="display-title text-2xl text-ink mb-6">Beste &amp; Schlechteste Moves</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -674,7 +674,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
       </div>
 
       {/* ── Position Stats ── */}
-      <div style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }} className="mb-10">
+      <div style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }} className="mb-10">
         <div className="kicker mb-1">Positionen</div>
         <h2 className="display-title text-2xl text-ink mb-6">Position Stats</h2>
         <div className="flex flex-wrap gap-1 mb-6">
@@ -713,7 +713,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
               <>
                 <div className="font-semibold text-ink text-sm">{curPos.worstDrop.player_name}</div>
                 <div className="label-nav text-xs text-text-muted">{curPos.worstDrop.team_name} · {curPos.worstDrop.season_year}</div>
-                <div className="font-mono text-xl font-bold mt-1" style={{ color: "rgb(150,35,35)" }}>{fmt(curPos.worstDrop.item_value)}</div>
+                <div className="font-mono text-xl font-bold mt-1" style={{ color: "var(--color-negative)" }}>{fmt(curPos.worstDrop.item_value)}</div>
               </>
             ) : <div className="text-text-faint text-xs label-nav">—</div>}
           </div>
@@ -721,7 +721,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
       </div>
 
       {/* ── Player & Team Transaction Stats ── */}
-      <div style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }} className="mb-10">
+      <div style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }} className="mb-10">
         <div className="kicker mb-1">Spieler &amp; Teams</div>
         <h2 className="display-title text-2xl text-ink mb-6">Player &amp; Team Transaction Stats</h2>
 
@@ -780,9 +780,9 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
                   <button key={m} onClick={() => setTeamChartMode(m)}
                     className="label-nav text-xs px-2 py-1 rounded"
                     style={{
-                      background: teamChartMode === m ? "#1a1a1a" : "transparent",
-                      color: teamChartMode === m ? "#fff" : "var(--color-text-muted)",
-                      border: "1px solid #e0e0e0",
+                      background: teamChartMode === m ? "var(--color-ink)" : "transparent",
+                      color: teamChartMode === m ? "var(--color-cream)" : "var(--color-text-muted)",
+                      border: "1px solid var(--color-border)",
                     }}>
                     {m === "value" ? "Positive Value" : "Hit Rate %"}
                   </button>
@@ -795,7 +795,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
       </div>
 
       {/* ── Trades ── */}
-      <div style={{ borderTop: "2px solid #1a1a1a", paddingTop: "2rem" }} className="mb-12">
+      <div style={{ borderTop: "2px solid var(--color-border-strong)", paddingTop: "2rem" }} className="mb-12">
         <div className="kicker mb-1">Trades</div>
         <h2 className="display-title text-2xl text-ink mb-6">
           {isFiltered ? "Trades" : "Top Trades All Time"}
@@ -868,11 +868,11 @@ function TransactionLog({ rows, showOwner, showSeason }: {
   }
 
   function typeLabel(type: string) {
-    if (type === "trade")    return { text: "Trade",    bg: "#e8f0ff", color: "#1a3a8f" };
-    if (type === "add/drop") return { text: "Add/Drop", bg: "#f0f8f0", color: "#1a6b1a" };
-    if (type === "add")      return { text: "Add",      bg: "#f0f8f0", color: "#1a6b1a" };
-    if (type === "drop")     return { text: "Drop",     bg: "#fff0f0", color: "#8f1a1a" };
-    return { text: type, bg: "#f4f4f4", color: "#555" };
+    if (type === "trade")    return { text: "Trade",    bg: "rgba(96,165,250,0.15)", color: "#93c5fd" };
+    if (type === "add/drop") return { text: "Add/Drop", bg: "rgba(52,211,153,0.15)", color: "#6ee7b7" };
+    if (type === "add")      return { text: "Add",      bg: "rgba(52,211,153,0.15)", color: "#6ee7b7" };
+    if (type === "drop")     return { text: "Drop",     bg: "rgba(248,113,113,0.15)", color: "#fca5a5" };
+    return { text: type, bg: "rgba(255,255,255,0.06)", color: "var(--color-text-secondary)" };
   }
 
   function Th({ col, children, right }: { col: LogCol; children: React.ReactNode; right?: boolean }) {
@@ -897,7 +897,7 @@ function TransactionLog({ rows, showOwner, showSeason }: {
     <div className="mb-10" style={{ overflowX: "auto" }}>
       <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+          <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
             {showSeason && <Th col="season">Saison</Th>}
             <Th col="week">Woche</Th>
             <Th col="date">Datum</Th>

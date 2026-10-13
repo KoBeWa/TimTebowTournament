@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { getChampionsBySeason } from "@/lib/queries";
 import { SEASONS } from "@/lib/constants";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { notFound } from "next/navigation";
 
 export function generateStaticParams() {
@@ -37,35 +38,51 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          {prevSeason && (
-            <Link href={`/history/${prevSeason}`} className="text-text-muted hover:text-ink text-sm transition-colors">
-              ← {prevSeason}
-            </Link>
-          )}
-          <div className="kicker mb-1">Season</div>
-          <h1 className="display-title text-4xl md:text-5xl text-ink">{year} Season</h1>
-          <p className="text-text-secondary mt-1">
-            {seasonInfo.total_managers} Teams · {seasonInfo.reg_season_weeks} Weeks · {seasonInfo.playoff_teams} Playoff Teams
-          </p>
+      <div>
+        <nav className="mb-4 flex items-center gap-1.5 text-sm text-text-muted">
+          <Link href="/history" className="hover:text-ink transition-colors">History</Link>
+          <ChevronRight size={14} className="text-text-faint" />
+          <span className="text-ink">{year}</span>
+        </nav>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="kicker mb-1">Season {year - SEASONS[0] + 1}</div>
+            <h1 className="display-title text-4xl md:text-5xl text-ink">{year} Season</h1>
+            <p className="text-text-secondary mt-1">
+              {seasonInfo.total_managers} Teams · {seasonInfo.reg_season_weeks} Weeks · {seasonInfo.playoff_teams} Playoff Teams
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {prevSeason ? (
+              <Link href={`/history/${prevSeason}`} className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-secondary hover:text-ink hover:bg-surface-2 transition-colors">
+                <ChevronLeft size={16} /> {prevSeason}
+              </Link>
+            ) : null}
+            {nextSeason ? (
+              <Link href={`/history/${nextSeason}`} className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-secondary hover:text-ink hover:bg-surface-2 transition-colors">
+                {nextSeason} <ChevronRight size={16} />
+              </Link>
+            ) : null}
+          </div>
         </div>
-        {nextSeason && (
-          <Link href={`/history/${nextSeason}`} className="text-text-muted hover:text-ink text-sm transition-colors">
-            {nextSeason} →
-          </Link>
-        )}
       </div>
 
       {/* Champion Banner */}
       {champs && (
-        <div className="cell p-8 text-center">
-          <div className="kicker mb-2">Champion</div>
-          <div className="display-title text-5xl text-ink">
-            {champs.champion}
-          </div>
-          <div className="text-text-muted text-sm mt-2">
-            Runner-Up: {champs.runner_up} · Sacko: {champs.sacko}
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface-2 via-surface to-cream p-8 text-center">
+          <div className="pointer-events-none absolute left-1/2 -top-24 h-56 w-56 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 text-gold">
+              <Crown size={18} />
+              <span className="label-nav text-sm">Champion</span>
+            </div>
+            <Link href={`/manager/${champs.champion}`} className="mt-1 block display-title text-5xl sm:text-7xl uppercase text-ink hover:text-gold transition-colors">
+              {champs.champion}
+            </Link>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <span className="chip">Runner-Up: {champs.runner_up}</span>
+              <span className="chip">Sacko: {champs.sacko}</span>
+            </div>
           </div>
         </div>
       )}

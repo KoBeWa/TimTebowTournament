@@ -141,8 +141,8 @@ function LineupTable({
               key={p.slot}
               className="flex items-center gap-3 p-3 rounded-lg transition-colors"
               style={{
-                background: wonBattle ? "rgba(26,26,26,0.06)" : "transparent",
-                border: wonBattle ? "1px solid rgba(26,26,26,0.12)" : "1px solid transparent",
+                background: wonBattle ? "rgba(255,255,255,0.06)" : "transparent",
+                border: wonBattle ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
               }}
             >
               {reversed && (
@@ -215,7 +215,7 @@ function LineupTable({
                     {p.player_name}
                   </span>
                   {p.shouldHaveStarted && (
-                    <span className="ml-2 text-xs" style={{ color: "rgb(180,40,40)" }}>hätte starten sollen</span>
+                    <span className="ml-2 text-xs" style={{ color: "var(--color-negative)" }}>hätte starten sollen</span>
                   )}
                 </div>
                 <div className={`text-sm font-mono ${p.shouldHaveStarted ? "text-ink font-semibold" : "text-text-muted"}`}>
@@ -249,7 +249,7 @@ function TeamStatBar({ stats, label, won }: { stats: TeamWeekStats; label: strin
   return (
     <div
       className="flex-1 rounded-lg p-4"
-      style={{ background: won ? "rgba(26,26,26,0.06)" : "rgba(0,0,0,0.02)", border: "1px solid var(--color-border-light)" }}
+      style={{ background: won ? "rgba(255,255,255,0.06)" : "transparent", border: "1px solid var(--color-border-light)" }}
     >
       <div className={`display-title text-lg mb-3 ${won ? "text-ink" : "text-text-secondary"}`}>{label}</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2">

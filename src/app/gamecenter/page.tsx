@@ -85,7 +85,7 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
                 background: won ? "rgba(0,0,0,0.015)" : undefined,
               }}
             >
-              <div className="label-nav text-xs w-14 truncate" style={{ color: won ? "#1a1a1a" : "var(--color-text-muted)" }}>
+              <div className="label-nav text-xs w-14 truncate" style={{ color: won ? "var(--color-ink)" : "var(--color-text-muted)" }}>
                 {name}
               </div>
               <div className="flex gap-4 flex-1 justify-between">
@@ -248,7 +248,7 @@ export default function GamecenterPage() {
                 onClick={() => setSeason(s)}
                 className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                   s === season
-                    ? "bg-red text-cream font-semibold"
+                    ? "bg-red text-white font-semibold"
                     : "bg-cream text-text-secondary hover:text-ink border border-border"
                 }`}
               >
@@ -266,7 +266,7 @@ export default function GamecenterPage() {
                 onClick={() => setWeek(w)}
                 className={`w-10 h-9 text-sm rounded-lg transition-colors ${
                   w === week
-                    ? "bg-red text-cream font-semibold"
+                    ? "bg-red text-white font-semibold"
                     : "bg-cream text-text-secondary hover:text-ink border border-border"
                 }`}
               >
