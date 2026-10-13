@@ -5,6 +5,12 @@
 
 create table if not exists public.achievements_backup_20261013 as table public.achievements;
 
+-- A manager can earn the same achievement several times per season (one per
+-- game or opponent), so uniqueness includes the game and the note.
+alter table public.achievements drop constraint if exists achievements_season_year_manager_id_achievement_key_key;
+create unique index if not exists achievements_unique_entry
+  on public.achievements (season_year, manager_id, achievement_key, notes, matchup_id) nulls not distinct;
+
 with meta as (
   select distinct on (achievement_key) achievement_key, achievement_category, description
   from public.achievements order by achievement_key, id
