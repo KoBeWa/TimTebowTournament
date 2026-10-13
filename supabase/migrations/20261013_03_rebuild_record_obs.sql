@@ -366,7 +366,7 @@ where (flag in ('win','loss') and val) or flag in ('high_score','top_half','top_
 union all
 select flag || case when val then '_start_streak' else '' end, manager_id, idx, len, null, null
 from (
-  select gs.*, bool_and(val) over (partition by manager_id, flag, season_year order by week) as from_start
+  select gs.*, bool_and(gs.val) over (partition by gs.manager_id, gs.flag, gs.season_year order by gs.week) as from_start
   from rebuild.game_streaks gs join rebuild.games g using (manager_id, idx)
   where flag in ('win','loss') and g.game_type = 'reg'
 ) t
