@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import ScoreTimeline from "./ScoreTimeline";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -566,6 +567,9 @@ export default function MatchupDetailPage({
           <TeamStatBar stats={statsB} label={matchup.manager_b} won={!aWon} />
         </div>
       )}
+
+      {/* Score progression across the NFL week */}
+      <ScoreTimeline season={season} week={week} managerA={matchup.manager_a} managerB={matchup.manager_b} />
 
       {/* Lineups */}
       <div className="flex flex-col lg:flex-row gap-6">
