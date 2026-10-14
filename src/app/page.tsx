@@ -47,7 +47,8 @@ export default async function HomePage() {
     getLeagueRecords(),
   ]);
 
-  const latestSeason = seasons[0];
+  // The newest season may still be running; show the last finished one
+  const latestSeason = seasons.find((s) => s.champion !== "—");
   const totalSeasons = seasons.length;
 
   const championRecord = latestSeason

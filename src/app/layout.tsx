@@ -17,8 +17,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Tim Tebow Tournament | Die offizielle Ligachronik",
-  description: "11 Seasons. 8 Manager. Eine Legende.",
+  description: "12 Seasons. 8 Manager. Eine Legende.",
 };
+
+// Pages read Supabase at build time; re-render them hourly so the weekly
+// sync (records, standings, achievements) shows up without a redeploy.
+export const revalidate = 3600;
 
 export default function RootLayout({
   children,
