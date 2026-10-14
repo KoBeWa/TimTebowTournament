@@ -47,8 +47,9 @@ export default async function HomePage() {
     getLeagueRecords(),
   ]);
 
-  // The newest season may still be running; show the last finished one
-  const latestSeason = seasons.find((s) => s.champion !== "—");
+  // The newest season may still be running; champion sections use finished ones
+  const finishedSeasons = seasons.filter((s) => s.champion !== "—");
+  const latestSeason = finishedSeasons[0];
   const totalSeasons = seasons.length;
 
   const championRecord = latestSeason
@@ -57,7 +58,7 @@ export default async function HomePage() {
 
   // Title count per manager, most titles first
   const titleCounts = Object.entries(
-    seasons.reduce<Record<string, number>>((acc, s) => {
+    finishedSeasons.reduce<Record<string, number>>((acc, s) => {
       acc[s.champion] = (acc[s.champion] ?? 0) + 1;
       return acc;
     }, {})
@@ -211,7 +212,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {seasons.map((s, i) => (
+            {finishedSeasons.map((s, i) => (
               <Link
                 key={s.year}
                 href={`/history/${s.year}`}
