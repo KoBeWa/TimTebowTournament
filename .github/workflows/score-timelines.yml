@@ -1,0 +1,59 @@
+name: Score timelines
+
+# Builds the Gamecenter score progression (public/score-timelines/<season>/<week>.json)
+# for the running season from nflverse play-by-play. Runs after the weekly
+# Sleeper -> Supabase sync in the Scrape repo (Tuesdays 08:17 UTC).
+
+on:
+  schedule:
+    - cron: "41 9 * 9-12,1 2"
+  workflow_dispatch:
+    inputs:
+      season:
+        description: "Season (empty = current)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: score-timelines
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # generated files always go to the deployed branch
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r scripts/score_timelines/requirements.txt
+
+      - name: Build
+        env:
+          # Public (browser) key, read-only: the same one the website ships
+          NEXT_PUBLIC_SUPABASE_URL: https://wocwqbdroxiqananhqke.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvY3dxYmRyb3hpcWFuYW5ocWtlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyMDg0NjgsImV4cCI6MjA4Mzc4NDQ2OH0.VHfuHFuAd4ugNXybqQoZW3AFPkzL4g5CTH6-aJ_fCuY
+        run: |
+          season="${{ inputs.season }}"
+          if [ -z "$season" ]; then
+            # NFL season = year it started; January belongs to the previous one
+            season=$(date -u +%Y)
+            [ "$(date -u +%m)" -lt 3 ] && season=$((season - 1))
+          fi
+          python scripts/score_timelines/build.py "$season"
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/score-timelines
+          git diff --cached --quiet && { echo "No changes"; exit 0; }
+          git commit -m "Update score timelines"
+          git push
