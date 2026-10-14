@@ -32,7 +32,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden xl:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
@@ -55,7 +55,7 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-ink"
+            className="xl:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-ink"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Menü schließen" : "Menü öffnen"}
             aria-expanded={mobileOpen}
@@ -67,7 +67,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="lg:hidden border-t border-border bg-cream max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="xl:hidden border-t border-border bg-cream max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="grid grid-cols-2 gap-2 p-4">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname.startsWith(item.href);
