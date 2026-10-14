@@ -4,21 +4,25 @@
 -- achievements (top_/worst_*_draft, top_/worst_draft_pick) are not part of it
 -- and stay as imported.
 --
+-- Season awards (titles, luck, schedule, tiers, streaks …) only count
+-- completed seasons; game-based achievements are awarded right away.
+--
 -- Decisions: shared last place counts for everyone on it; The Dud Bowl /
 -- The Shootout go to both managers and include playoff games; weekly high
 -- scores include the playoff weeks.
 
 create or replace view rebuild.achievements_calc as
-with g as (select * from rebuild.games_source),
+with complete as (select distinct season_year from public.playoff_results),
+g as (select * from rebuild.games_source),
 reg as (select * from g where game_type = 'reg'),
-sf as (select * from rebuild.season_facts),
+sf as (select * from rebuild.season_facts where season_year in (select season_year from complete)),
 champ as (select season_year, manager_id from sf where final_rank = 1),
 season_reg as (
   select season_year, manager_id,
          sum(pf) pf, sum(pa) pa, avg(pa) opp_avg,
          sum(allplay_wins) apw, sum(allplay_losses) apl,
          avg((week_rank <= week_teams / 2)::int) top_half_share
-  from reg group by 1,2
+  from reg where season_year in (select season_year from complete) group by 1,2
 ),
 season_rank as (
   select s.*,
@@ -34,24 +38,24 @@ luck as (
   select l.season_year, l.manager_id, l.luck::numeric luck,
          rank() over (partition by l.season_year order by l.luck desc) best,
          rank() over (partition by l.season_year order by l.luck asc) worst
-  from public.v_luck l
+  from public.v_luck l where l.season_year in (select season_year from complete)
 ),
 coach as (
   select c.season_year, c.manager_id, c.coach_score::numeric coach_score,
          rank() over (partition by c.season_year order by c.coach_score desc) best,
          rank() over (partition by c.season_year order by c.coach_score asc) worst
-  from public.v_coach_rank c
+  from public.v_coach_rank c where c.season_year in (select season_year from complete)
 ),
 draft as (
   select d.season_year, d.manager_id, d.avg_grade4::numeric g,
          rank() over (partition by d.season_year order by d.avg_grade4 desc) best,
          rank() over (partition by d.season_year order by d.avg_grade4 asc) worst
-  from public.v_draft_grades d
+  from public.v_draft_grades d where d.season_year in (select season_year from complete)
 ),
 rating as (
   select r.season_year, r.manager_id, r.league_rating::numeric score,
          ntile(8) over (order by r.league_rating desc) eighth
-  from public.v_league_rating r
+  from public.v_league_rating r where r.season_year in (select season_year from complete)
 ),
 weekly as (
   select season_year, manager_id,

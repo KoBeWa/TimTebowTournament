@@ -45,12 +45,12 @@ select
   r.wins, r.losses, r.ties,
   r.points_for::numeric as points_for,
   r.points_against::numeric as points_against,
-  p.seed,
+  coalesce(p.seed, r.reg_rank) as seed,  -- running season: no playoff row yet
   p.final_rank,
-  p.final_rank = max(p.final_rank) over (partition by r.season_year) as is_last,
-  p.seed <= s.playoff_teams as made_playoffs
+  coalesce(p.final_rank = max(p.final_rank) over (partition by r.season_year), false) as is_last,
+  p.seed is not null and p.seed <= s.playoff_teams as made_playoffs
 from public.season_results r
-join public.playoff_results p on p.season_year = r.season_year and p.manager_id = r.manager_id
+left join public.playoff_results p on p.season_year = r.season_year and p.manager_id = r.manager_id
 join public.seasons s on s.year = r.season_year;
 
 -- One row per manager per game, with weekly context
