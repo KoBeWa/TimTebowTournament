@@ -100,7 +100,13 @@ export default async function HistoryPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-base font-semibold text-ink">
-                    <Crown size={16} className="text-gold" /> {s.champion}
+                    {s.champion === "—" ? (
+                      <span className="text-text-muted">Saison läuft</span>
+                    ) : (
+                      <>
+                        <Crown size={16} className="text-gold" /> {s.champion}
+                      </>
+                    )}
                   </div>
                   <div className="text-xs text-text-muted mt-0.5">
                     {s.total_managers} Teams · {s.reg_season_weeks} Weeks
