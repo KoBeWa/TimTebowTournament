@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
   { label: "Drafts", href: "/drafts", icon: "list-ordered", desc: "Pick-by-Pick Analyse" },
   { label: "Transactions", href: "/transactions", icon: "arrow-left-right", desc: "Waiver Wire Moves" },
   { label: "Head to Head", href: "/h2h", icon: "swords", desc: "Manager vs. Manager" },
+  { label: "Spieler", href: "/players", icon: "users", desc: "Spieler & ihre Historie" },
   { label: "Trophy Room", href: "/trophies", icon: "award", desc: "Rekorde & Achievements" },
   { label: "Mock Draft", href: "/mock-draft", icon: "target", desc: "NFL Draft tippen" },
 ] as const;

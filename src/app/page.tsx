@@ -186,7 +186,7 @@ export default async function HomePage() {
             <h2 className="section-title text-ink">Wohin willst du?</h2>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {NAV_ITEMS.map((item) => (
             <Link key={item.href} href={item.href} className="cell-hover group p-4 sm:p-5">
               <div className="flex items-start justify-between">

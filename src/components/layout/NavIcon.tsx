@@ -7,6 +7,7 @@ import {
   Target,
   Trophy,
   Tv,
+  Users,
   type LucideProps,
 } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/constants";
@@ -20,6 +21,7 @@ const ICONS = {
   swords: Swords,
   award: Award,
   target: Target,
+  users: Users,
 } as const;
 
 export default function NavIcon({
