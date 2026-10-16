@@ -40,13 +40,13 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-surface-3 text-ink"
                       : "text-text-muted hover:bg-surface-2 hover:text-ink"
                   }`}
                 >
-                  <NavIcon name={item.icon} size={15} className={isActive ? "text-red" : ""} />
+                  <NavIcon name={item.icon} size={15} className={`hidden 2xl:block ${isActive ? "text-red" : ""}`} />
                   {item.label}
                 </Link>
               );

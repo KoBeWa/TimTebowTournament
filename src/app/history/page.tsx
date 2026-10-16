@@ -3,6 +3,8 @@ import { getSeasonSummaries } from "@/lib/queries";
 import Link from "next/link";
 import { ChevronRight, Crown } from "lucide-react";
 import AllTimeRankings from "./AllTimeRankings";
+import AllTimeTrends from "./AllTimeTrends";
+import { getTrendData } from "./trends";
 
 async function getSeasonResults() {
   const { data } = await supabase
@@ -53,10 +55,11 @@ async function getAllTimeRankings() {
 }
 
 export default async function HistoryPage() {
-  const [seasons, results, allTime] = await Promise.all([
+  const [seasons, results, allTime, trends] = await Promise.all([
     getSeasonSummaries(),
     getSeasonResults(),
     getAllTimeRankings(),
+    getTrendData(),
   ]);
 
   const resultsBySeason = results.reduce(
@@ -78,6 +81,7 @@ export default async function HistoryPage() {
 
       {/* ── ALL-TIME RANKINGS ── */}
       <AllTimeRankings rows={allTime} />
+      <AllTimeTrends data={trends} />
 
       <div className="mt-10 mb-4">
         <div className="kicker mb-1">Chronik</div>
