@@ -41,7 +41,7 @@ const FILTERS: { key: Filter; label: string; test: (r: Row) => boolean }[] = [
 const COLUMNS: { key: SortKey; label: string; title?: string; align?: "left" }[] = [
   { key: "name", label: "Spieler", align: "left" },
   { key: "position", label: "Pos", align: "left" },
-  { key: "team", label: "Team", align: "left", title: "Aktuelles NFL-Team" },
+  { key: "team", label: "Team", align: "left", title: "NFL-Team(s), während er in diesem Kader stand" },
   { key: "first", label: "Saisons", align: "left" },
   { key: "weeks", label: "Wochen", title: "Wochen im Kader" },
   { key: "starts", label: "Starts" },
@@ -72,7 +72,10 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
       fetchAll<{ player_key: string; kind: string }>((f, t) =>
         supabase.from("mv_player_events").select("player_key, kind").eq("manager_id", manager).order("player_key").range(f, t)),
       loadPlayerSummaries(),
-    ]).then(([stats, events, summaries]) => {
+      fetchAll<{ player_key: string; teams: string }>((f, t) =>
+        supabase.from("mv_player_manager_teams").select("player_key, teams").eq("manager_id", manager).order("player_key").range(f, t)),
+    ]).then(([stats, events, summaries, teams]) => {
+      const teamOf = new Map(teams.map((t) => [t.player_key, t.teams]));
       const info = new Map<string, PlayerSummary>(summaries.map((s) => [s.player_key, s]));
       const byKey = new Map<string, Row>();
       const row = (key: string): Row => {
@@ -81,7 +84,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
           const s = info.get(key);
           r = {
             key, name: s?.player_name ?? key.replace(/^(DST|N):/, ""), position: s?.position ?? null,
-            team: s?.position === "DST" ? null : s?.latest_team ?? null, headshot: s?.headshot ?? null,
+            team: teamOf.get(key) ?? null, headshot: s?.headshot ?? null,
             weeks: 0, starts: 0, points: 0, avg: null, best: null, first: null, last: null,
             drafted: 0, adds: 0, drops: 0, trades: 0,
           };
