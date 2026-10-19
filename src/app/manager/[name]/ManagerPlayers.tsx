@@ -54,6 +54,11 @@ const COLUMNS: { key: SortKey; label: string; title?: string; align?: "left" }[]
   { key: "trades", label: "Trades", title: "Per Trade bekommen" },
 ];
 
+// Old codes of relocated teams -> current code (as in NFL_TEAMS)
+const OLD_CODES: Record<string, string> = { OAK: "LV", SD: "LAC", STL: "LA", LAR: "LA", WSH: "WAS", JAC: "JAX" };
+const normTeams = (teams: string | undefined) =>
+  teams ? [...new Set(teams.split("/").map((t) => OLD_CODES[t] ?? t))].join("/") : null;
+
 const TEXT_KEYS = new Set<SortKey>(["name", "position", "team"]);
 const PAGE = 100;
 
@@ -86,7 +91,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
           const s = info.get(key);
           r = {
             key, name: s?.player_name ?? key.replace(/^(DST|N):/, ""), position: s?.position ?? null,
-            team: teamOf.get(key) ?? (s?.position === "DST" ? DST_TEAM[s.player_name] ?? null : null),
+            team: normTeams(teamOf.get(key)) ?? (s?.position === "DST" ? DST_TEAM[s.player_name] ?? null : null),
             headshot: s?.headshot ?? null,
             weeks: 0, starts: 0, points: 0, avg: null, best: null, first: null, last: null,
             drafted: 0, adds: 0, drops: 0, trades: 0,
