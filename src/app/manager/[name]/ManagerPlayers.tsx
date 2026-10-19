@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import TeamChart, { DST_TEAM, NFL_TEAMS } from "./TeamChart";
 import { fetchAll, loadPlayerSummaries, playerHref, POSITIONS, type PlayerManagerStats, type PlayerSummary } from "@/lib/players";
 
 interface Row {
@@ -53,6 +54,11 @@ const COLUMNS: { key: SortKey; label: string; title?: string; align?: "left" }[]
   { key: "trades", label: "Trades", title: "Per Trade bekommen" },
 ];
 
+// Old codes of relocated teams -> current code (as in NFL_TEAMS)
+const OLD_CODES: Record<string, string> = { OAK: "LV", SD: "LAC", STL: "LA", LAR: "LA", WSH: "WAS", JAC: "JAX" };
+const normTeams = (teams: string | undefined) =>
+  teams ? [...new Set(teams.split("/").map((t) => OLD_CODES[t] ?? t))].join("/") : null;
+
 const TEXT_KEYS = new Set<SortKey>(["name", "position", "team"]);
 const PAGE = 100;
 
@@ -64,6 +70,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "weeks", desc: true });
   const [limit, setLimit] = useState(PAGE);
+  const [team, setTeam] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -84,7 +91,8 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
           const s = info.get(key);
           r = {
             key, name: s?.player_name ?? key.replace(/^(DST|N):/, ""), position: s?.position ?? null,
-            team: teamOf.get(key) ?? null, headshot: s?.headshot ?? null,
+            team: normTeams(teamOf.get(key)) ?? (s?.position === "DST" ? DST_TEAM[s.player_name] ?? null : null),
+            headshot: s?.headshot ?? null,
             weeks: 0, starts: 0, points: 0, avg: null, best: null, first: null, last: null,
             drafted: 0, adds: 0, drops: 0, trades: 0,
           };
@@ -115,6 +123,16 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
     [rows],
   );
 
+  const teamCounts = useMemo(() => {
+    const by = new Map<string, string[]>(NFL_TEAMS.map((t) => [t, []]));
+    for (const r of rows) {
+      for (const t of new Set((r.team ?? "").split("/").filter(Boolean))) by.get(t)?.push(r.name);
+    }
+    return [...by.entries()]
+      .map(([t, players]) => ({ team: t, players }))
+      .sort((a, b) => b.players.length - a.players.length || a.team.localeCompare(b.team));
+  }, [rows]);
+
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     const test = FILTERS.find((f) => f.key === filter)!.test;
@@ -122,6 +140,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
     return rows
       .filter(test)
       .filter((r) => pos === "all" || r.position === pos)
+      .filter((r) => !team || (r.team ?? "").split("/").includes(team))
       .filter((r) => !q || r.name.toLowerCase().includes(q))
       .sort((a, b) => {
         const va = a[key], vb = b[key];
@@ -131,7 +150,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
         const cmp = TEXT_KEYS.has(key) ? String(va).localeCompare(String(vb)) : Number(va) - Number(vb);
         return (desc ? -cmp : cmp) || a.name.localeCompare(b.name);
       });
-  }, [rows, filter, pos, query, sort]);
+  }, [rows, filter, pos, query, sort, team]);
 
   function sortBy(key: SortKey) {
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: !TEXT_KEYS.has(key) && key !== "first" }));
@@ -145,6 +164,10 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
         <h2 className="section-title text-ink">Spieler</h2>
         {!loading && <span className="text-sm text-text-muted">{rows.length} Spieler seit 2015 im Kader</span>}
       </div>
+
+      {!loading && rows.length > 0 && (
+        <TeamChart counts={teamCounts} selected={team} onSelect={(t) => { setTeam(t); setLimit(PAGE); }} />
+      )}
 
       <div className="flex flex-wrap gap-2 mb-3">
         {FILTERS.map((f) => (
@@ -168,6 +191,12 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
             </button>
           ))}
         </div>
+        {team && (
+          <button onClick={() => setTeam(null)}
+            className="px-2.5 py-1 text-xs rounded-lg bg-surface-3 text-ink border border-border-strong">
+            Team: {team} ✕
+          </button>
+        )}
       </div>
 
       {loading ? (
