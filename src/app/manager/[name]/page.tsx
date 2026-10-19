@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { MANAGERS } from "@/lib/constants";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ManagerPlayers from "./ManagerPlayers";
 
 export function generateStaticParams() {
   return MANAGERS.map((name) => ({ name }));
@@ -108,6 +109,8 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
           </table>
         </div>
       </section>
+
+      <ManagerPlayers manager={name} />
 
       {/* Recent Matchups */}
       <section>
