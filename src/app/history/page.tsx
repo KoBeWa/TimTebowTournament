@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
 import Link from "next/link";
 import { ChevronRight, Crown } from "lucide-react";
-import AllTimeRankings from "./AllTimeRankings";
+import AllTimeRankings, { type AllTimeRow } from "./AllTimeRankings";
 import AllTimeTrends from "./AllTimeTrends";
 import { getTrendData } from "./trends";
 
@@ -15,37 +15,37 @@ async function getSeasonResults() {
   return data ?? [];
 }
 
-async function getAllTimeRankings() {
+async function getAllTimeRankings(): Promise<AllTimeRow[]> {
   const [{ data: standings }, { data: eloData }] = await Promise.all([
     supabase
       .from("v_alltime_standings")
-      .select("manager_id, reg_wins, reg_losses, reg_ties, allplay_wins, allplay_losses, championships, runner_up, third_place, playoff_appearances, real_po_wins, real_po_losses"),
+      .select("manager_id, reg_wins, reg_losses, reg_ties, po_wins, po_losses, po_ties, real_po_wins, real_po_losses, total_wins, total_losses, total_ties, total_pf, avg_pf_per_game, allplay_wins, allplay_losses, championships, runner_up, third_place, playoff_appearances"),
     supabase
       .from("v_elo_current")
-      .select("manager_id, current_elo, elo_rank")
-      .order("elo_rank", { ascending: true }),
+      .select("manager_id, current_elo"),
   ]);
 
   const eloByManager: Record<string, number> = {};
   for (const row of eloData ?? []) {
     eloByManager[row.manager_id] = Math.round(Number(row.current_elo));
   }
+  const rec = (w: number, l: number, t: number) => ({ w: w ?? 0, l: l ?? 0, t: t ?? 0 });
 
   return (standings ?? []).map((r) => {
-    const gp = (r.reg_wins ?? 0) + (r.reg_losses ?? 0) + (r.reg_ties ?? 0);
-    const apGp = Number(r.allplay_wins ?? 0) + Number(r.allplay_losses ?? 0);
     const gold = r.championships ?? 0;
     const silver = r.runner_up ?? 0;
     const bronze = r.third_place ?? 0;
     return {
       manager_id: r.manager_id,
-      record: `${r.reg_wins}–${r.reg_losses}${r.reg_ties > 0 ? `–${r.reg_ties}` : ""}`,
-      winPct: gp > 0 ? r.reg_wins / gp : 0,
-      apRecord: apGp > 0 ? `${r.allplay_wins}–${r.allplay_losses}` : "—",
-      apWinPct: apGp > 0 ? Number(r.allplay_wins) / apGp : 0,
+      total: rec(r.total_wins, r.total_losses, r.total_ties),
+      regular: rec(r.reg_wins, r.reg_losses, r.reg_ties),
+      playoffs: rec(r.po_wins, r.po_losses, r.po_ties),
+      bracket: rec(r.real_po_wins, r.real_po_losses, 0),
+      allPlay: rec(Number(r.allplay_wins), Number(r.allplay_losses), 0),
+      pf: Number(r.total_pf ?? 0),
+      ppg: Number(r.avg_pf_per_game ?? 0),
       elo: eloByManager[r.manager_id] ?? null,
       playoffAppearances: r.playoff_appearances ?? 0,
-      poRecord: `${r.real_po_wins ?? 0}–${r.real_po_losses ?? 0}`,
       gold,
       silver,
       bronze,

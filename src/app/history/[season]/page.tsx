@@ -4,6 +4,7 @@ import { SEASONS } from "@/lib/constants";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { notFound } from "next/navigation";
+import { seasonScores } from "./seasonScore";
 
 export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
@@ -15,14 +16,22 @@ async function getSeasonData(year: number) {
     { data: results },
     { data: playoffs },
     champMap,
+    { data: allPlay },
+    { data: luck },
   ] = await Promise.all([
     supabase.from("seasons").select("*").eq("year", year).single(),
     supabase.from("season_results").select("*").eq("season_year", year).order("reg_rank", { ascending: true }),
     supabase.from("playoff_results").select("*").eq("season_year", year).order("final_rank", { ascending: true }),
     getChampionsBySeason(),
+    supabase.from("v_all_play").select("manager_id, ap_wins, ap_losses, ap_ties, ap_win_pct").eq("season_year", year),
+    supabase.from("v_luck").select("manager_id, luck").eq("season_year", year),
   ]);
 
-  return { seasonInfo, results: results ?? [], playoffs: playoffs ?? [], champs: champMap[year] };
+  return {
+    seasonInfo, results: results ?? [], playoffs: playoffs ?? [], champs: champMap[year],
+    allPlay: new Map((allPlay ?? []).map((r) => [r.manager_id, r])),
+    luck: new Map((luck ?? []).map((r) => [r.manager_id, Number(r.luck)])),
+  };
 }
 
 export default async function SeasonPage({ params }: { params: Promise<{ season: string }> }) {
@@ -30,8 +39,16 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
   const year = parseInt(seasonStr);
   if (isNaN(year)) notFound();
 
-  const { seasonInfo, results, playoffs, champs } = await getSeasonData(year);
+  const { seasonInfo, results, playoffs, champs, allPlay, luck } = await getSeasonData(year);
   if (!seasonInfo) notFound();
+
+  const finalRank = new Map(playoffs.map((p) => [p.manager_id, p.final_rank as number]));
+  const scores = seasonScores(results.map((r) => ({
+    manager_id: r.manager_id,
+    apPct: allPlay.has(r.manager_id) ? Number(allPlay.get(r.manager_id)!.ap_win_pct) : null,
+    wins: r.wins, losses: r.losses, ties: r.ties, pf: Number(r.points_for),
+    rank: finalRank.get(r.manager_id) ?? r.reg_rank,
+  })));
 
   const prevSeason = SEASONS.includes(year - 1) ? year - 1 : null;
   const nextSeason = SEASONS.includes(year + 1) ? year + 1 : null;
@@ -90,7 +107,11 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
       {/* Standings */}
       <section>
         <div className="kicker mb-1">Standings</div>
-        <h2 className="section-title text-ink mb-4">Regular Season Standings</h2>
+        <h2 className="section-title text-ink mb-1">Regular Season Standings</h2>
+        <p className="text-xs text-text-muted mb-4">
+          Score 0–100: All Play 35 % · Bilanz 25 % · Punkte (im Saisonvergleich) 15 % · Endplatzierung 25 %
+          {finalRank.size === 0 ? " (laufende Saison: aktueller Tabellenplatz)" : ""}
+        </p>
         <div className="cell overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -98,10 +119,14 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                 <th className="p-4 w-12">#</th>
                 <th className="p-4">Manager</th>
                 <th className="p-4 text-center">Record</th>
+                <th className="p-4 text-center" title="Bilanz, wenn man jede Woche gegen alle gespielt hätte">All Play</th>
+                <th className="p-4 text-right" title="Siege minus erwartete Siege laut All Play">Luck</th>
                 <th className="p-4 text-right">PF</th>
-                <th className="p-4 text-right">PA</th>
-                <th className="p-4 text-right hidden sm:table-cell">Max PF</th>
-                <th className="p-4 text-right hidden md:table-cell">Efficiency</th>
+                <th className="p-4 text-right hidden sm:table-cell">PA</th>
+                <th className="p-4 text-right hidden lg:table-cell">Max PF</th>
+                <th className="p-4 text-right hidden lg:table-cell">Efficiency</th>
+                <th className="p-4 text-center" title="Endplatzierung">Final</th>
+                <th className="p-4 text-right" title="All Play 35 % · Bilanz 25 % · Punkte 15 % · Platzierung 25 %">Score</th>
               </tr>
             </thead>
             <tbody>
@@ -119,13 +144,31 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                     <span className="loss">{r.losses}</span>
                     {r.ties > 0 && <><span className="text-text-muted">-</span><span className="tie">{r.ties}</span></>}
                   </td>
+                  <td className="p-4 text-center font-mono text-text-secondary whitespace-nowrap">
+                    {(() => {
+                      const ap = allPlay.get(r.manager_id);
+                      return ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
+                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "—";
+                    })()}
+                  </td>
+                  <td className={`p-4 text-right font-mono ${(luck.get(r.manager_id) ?? 0) > 0 ? "text-positive" : (luck.get(r.manager_id) ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
+                    {luck.has(r.manager_id) ? `${luck.get(r.manager_id)! > 0 ? "+" : ""}${luck.get(r.manager_id)!.toFixed(1)}` : "—"}
+                  </td>
                   <td className="p-4 text-right font-mono">{Number(r.points_for).toFixed(1)}</td>
-                  <td className="p-4 text-right font-mono text-text-secondary">{Number(r.points_against).toFixed(1)}</td>
-                  <td className="p-4 text-right font-mono text-text-secondary hidden sm:table-cell">
+                  <td className="p-4 text-right font-mono text-text-secondary hidden sm:table-cell">{Number(r.points_against).toFixed(1)}</td>
+                  <td className="p-4 text-right font-mono text-text-secondary hidden lg:table-cell">
                     {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "—"}
                   </td>
-                  <td className="p-4 text-right font-mono hidden md:table-cell">
+                  <td className="p-4 text-right font-mono hidden lg:table-cell">
                     {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "—"}
+                  </td>
+                  <td className="p-4 text-center font-mono text-text-secondary">
+                    {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "—"}
+                  </td>
+                  <td className="p-4 text-right">
+                    <span className="inline-block min-w-[2.5rem] rounded-md bg-surface-3 px-2 py-0.5 text-center font-mono font-semibold text-ink">
+                      {scores[r.manager_id]}
+                    </span>
                   </td>
                 </tr>
               ))}
