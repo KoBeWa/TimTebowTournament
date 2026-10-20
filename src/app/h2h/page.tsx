@@ -10,6 +10,9 @@ import {
 } from "./stats";
 
 const fmt = (n: number) => n.toFixed(1);
+// Win difference as the headline number, the record goes underneath
+const fmtDiff = (d: number) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : "±0");
+const fmtRecord = (w: number, l: number, t = 0) => `${w}–${l}${t ? `–${t}` : ""}`;
 const when = (m: { season_year: number; week: number }) => `${m.season_year} · W${m.week}`;
 
 export default function HeadToHeadPage() {
@@ -129,9 +132,9 @@ export default function HeadToHeadPage() {
                 <div className={`display-title text-3xl sm:text-5xl uppercase ${wins > losses ? "text-ink" : "text-text-muted"}`}>{m1}</div>
                 <div className="text-sm text-text-muted mt-1">{wins > losses ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
               </div>
-              <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">
-                {wins}<span className="text-text-faint mx-2">–</span>{losses}
-                {ties > 0 && <span className="text-text-muted text-2xl ml-2">({ties} T)</span>}
+              <div className="text-center">
+                <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">{fmtDiff(wins - losses)}</div>
+                <div className="mt-1 text-sm text-text-muted tabular-nums">({fmtRecord(wins, losses, ties)})</div>
               </div>
               <div>
                 <div className={`display-title text-3xl sm:text-5xl uppercase ${losses > wins ? "text-ink" : "text-text-muted"}`}>{m2}</div>
@@ -207,7 +210,8 @@ export default function HeadToHeadPage() {
                     return (
                       <div key={s} className={`rounded-xl border ${lead} bg-surface px-3 py-2 text-center`}>
                         <div className="kicker">{s}</div>
-                        <div className="font-mono text-sm text-ink tabular-nums">{r.wins}–{r.losses}{r.ties ? `–${r.ties}` : ""}</div>
+                        <div className="font-mono text-sm text-ink tabular-nums">{fmtDiff(r.wins - r.losses)}</div>
+                        <div className="font-mono text-[10px] text-text-muted tabular-nums">({fmtRecord(r.wins, r.losses, r.ties)})</div>
                       </div>
                     );
                   })}
@@ -390,7 +394,12 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                         style={{ backgroundColor: tone }}
                         title={`${r} vs ${c}: ${p?.wins ?? 0}–${p?.losses ?? 0}${p?.ties ? `–${p.ties}` : ""}`}
                       >
-                        {p ? `${p.wins}–${p.losses}` : "–"}
+                        {p ? (
+                          <>
+                            <span className="block">{fmtDiff(p.wins - p.losses)}</span>
+                            <span className="block text-[10px] leading-tight text-text-secondary">({fmtRecord(p.wins, p.losses, p.ties)})</span>
+                          </>
+                        ) : "–"}
                       </button>
                     </td>
                   );
