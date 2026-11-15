@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { isBlunder, achievementLabel } from "@/lib/classifications";
-import { MANAGERS } from "@/lib/constants";
+import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
+import PageHeader from "@/components/ui/PageHeader";
+import TrophyTabs, { type TrophyCard } from "./TrophyTabs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -82,142 +84,56 @@ export default async function ManagerTrophyPage({
 
   const blundersByKey = groupByKey(blunders);
 
+  const categories = CATEGORY_ORDER
+    .map((cat) => ({
+      key: cat as string,
+      label: CATEGORY_LABELS[cat],
+      cards: Object.entries(byCategory[cat] ?? {})
+        .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+        .map(([key, items]) => toCard(key, items)),
+    }))
+    .filter((c) => c.cards.length > 0);
+
+  const blunderCards = Object.entries(blundersByKey)
+    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+    .map(([key, items]) => toCard(key, items));
+
   return (
-    <div className="space-y-10">
-      {/* ── Header ── */}
-      <div>
-        <Link href="/trophies" className="label-nav text-xs text-text-muted hover:text-ink transition-colors">
-          ← Trophy Room
-        </Link>
-        <h1 className="display-title text-4xl md:text-5xl text-ink mt-2">{name}</h1>
-        <p className="text-text-muted text-sm mt-1">
-          {positive.length} Achievements &nbsp;·&nbsp; {blunders.length} Blunders &nbsp;·&nbsp; {achievements.length} Total Badges
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title={<span className="inline-flex items-center gap-3">
+          <span aria-hidden className="inline-block h-8 w-1.5 rounded-full sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
+          {name}
+        </span>}
+        description={`Trophy Room: ${positive.length} Achievements, ${blunders.length} Blunders, ${achievements.length} Badges gesamt`}
+        crumbs={[{ label: "Trophy Room", href: "/trophies" }]}
+      >
+        <Link href={`/manager/${name}`} className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Profil</Link>
+      </PageHeader>
 
-      {/* ── Medals ── */}
-      {medals.length > 0 && (
-        <section>
-          <div className="kicker mb-4">Medals</div>
-          <div className="flex flex-wrap gap-3">
-            {medals.map((m, i) => {
-              const medal = MEDAL_KEYS[m.achievement_key];
-              return (
-                <div key={i} className="cell px-5 py-3 flex items-center gap-3"
-                  style={{
-                    borderColor: medal.rank === 1 ? "var(--color-gold-dark)" : medal.rank === 2 ? "var(--color-silver)" : "var(--color-bronze)",
-                    borderWidth: "1px",
-                  }}>
-                  <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>{medal.icon}</span>
-                  <div>
-                    <div className="label-nav text-xs text-text-muted">{medal.label}</div>
-                    <div className="display-title text-lg text-ink">{m.season_year}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Achievement categories ── */}
-      {CATEGORY_ORDER.map((cat) => {
-        const catMap = byCategory[cat];
-        if (!catMap || Object.keys(catMap).length === 0) return null;
-
-        const entries = Object.entries(catMap).sort((a, b) => {
-          // Sort by count desc, then alphabetically
-          if (b[1].length !== a[1].length) return b[1].length - a[1].length;
-          return a[0].localeCompare(b[0]);
-        });
-
-        return (
-          <section key={cat}>
-            <div className="kicker mb-4">{CATEGORY_LABELS[cat]}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {entries.map(([key, items]) => (
-                <AchievementCard key={key} ach_key={key} items={items} blunder={false} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
-
-      {/* ── Blunders ── */}
-      {Object.keys(blundersByKey).length > 0 && (
-        <section>
-          <div className="kicker mb-4" style={{ color: "var(--color-red)" }}>Blunders</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {Object.entries(blundersByKey)
-              .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
-              .map(([key, items]) => (
-                <AchievementCard key={key} ach_key={key} items={items} blunder={true} />
-              ))}
-          </div>
-        </section>
-      )}
+      <TrophyTabs
+        medals={medals.map((m) => {
+          const medal = MEDAL_KEYS[m.achievement_key];
+          return { icon: medal.icon, label: medal.label, rank: medal.rank, year: m.season_year };
+        })}
+        categories={categories}
+        blunders={blunderCards}
+      />
     </div>
   );
 }
 
-// ── Achievement card ─────────────────────────────────────────────────────────
-function AchievementCard({
-  ach_key,
-  items,
-  blunder,
-}: {
-  ach_key: string;
-  items: Achievement[];
-  blunder: boolean;
-}) {
-  const count = items.length;
+function toCard(key: string, items: Achievement[]): TrophyCard {
   const labels = items
     .slice()
     .sort((a, b) => a.season_year - b.season_year || (a.weekly_matchups?.week ?? 0) - (b.weekly_matchups?.week ?? 0))
     .map((a) => a.weekly_matchups?.week ? `${a.season_year} W${a.weekly_matchups.week}` : `${a.season_year}`);
-  const description = items[0]?.description;
-  const values = items.map((a) => a.value).filter(Boolean);
-
-  return (
-    <div
-      className="cell p-4"
-      style={blunder ? { borderColor: "var(--color-red)", borderWidth: "1px", opacity: 0.9 } : undefined}
-    >
-      {/* Title row */}
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <span className="font-semibold text-ink text-sm leading-snug">
-          {achievementLabel(ach_key)}
-        </span>
-        {count > 1 && (
-          <span
-            className="label-nav text-xs px-1.5 py-0.5 rounded flex-shrink-0"
-            style={{
-              background: blunder ? "rgba(248,113,113,0.1)" : "rgba(255,255,255,0.08)",
-              color: blunder ? "var(--color-red)" : "var(--color-text-muted)",
-              fontWeight: 700,
-            }}
-          >
-            ×{count}
-          </span>
-        )}
-      </div>
-
-      {/* Years / matchup labels */}
-      <div className="label-nav text-xs text-text-muted mb-1">
-        {labels.join(" · ")}
-      </div>
-
-      {/* Description */}
-      {description && (
-        <div className="text-xs text-text-muted leading-snug">{description}</div>
-      )}
-
-      {/* Values (if any) */}
-      {values.length > 0 && (
-        <div className="text-xs font-mono mt-1" style={{ color: blunder ? "var(--color-red)" : "var(--color-text-muted)" }}>
-          {values.join(" · ")}
-        </div>
-      )}
-    </div>
-  );
+  return {
+    key,
+    title: achievementLabel(key),
+    count: items.length,
+    labels,
+    description: items[0]?.description ?? null,
+    values: items.map((a) => a.value).filter((v): v is string => Boolean(v)),
+  };
 }

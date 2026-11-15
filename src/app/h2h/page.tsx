@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { MANAGERS, type ManagerId } from "@/lib/constants";
+import { MANAGERS, MANAGER_COLORS, type ManagerId } from "@/lib/constants";
+import PageHeader from "@/components/ui/PageHeader";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 import {
   benchStats, overallAverage, record, recordGames, resultOf, rivalryKillers, scoring,
   sideSwitchers, streaks, topPerformances,
@@ -13,7 +16,15 @@ const fmt = (n: number) => n.toFixed(1);
 // Win difference as the headline number, the record goes underneath
 const fmtDiff = (d: number) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : "±0");
 const fmtRecord = (w: number, l: number, t = 0) => `${w}–${l}${t ? `–${t}` : ""}`;
-const when = (m: { season_year: number; week: number }) => `${m.season_year} · W${m.week}`;
+const when = (m: { season_year: number; week: number }) => `${m.season_year}, W${m.week}`;
+
+const TABS = [
+  { key: "overview", label: "Übersicht" },
+  { key: "seasons", label: "Saisons" },
+  { key: "players", label: "Spieler" },
+  { key: "matrix", label: "Liga-Matrix" },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
 
 export default function HeadToHeadPage() {
   const [m1, setM1] = useState<ManagerId>("Benni");
@@ -22,6 +33,7 @@ export default function HeadToHeadPage() {
   const [matchups, setMatchups] = useState<H2HMatchup[]>([]);
   const [lineups, setLineups] = useState<LineupRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
 
   // League-wide records of every pairing (for the matrix and own averages)
   useEffect(() => {
@@ -97,17 +109,21 @@ export default function HeadToHeadPage() {
   const nameOf = (side: "me" | "them") => (side === "me" ? m1 : m2);
   const lastFive = matchups.slice(-5);
 
+  const c1 = MANAGER_COLORS[m1];
+  const c2 = MANAGER_COLORS[m2];
+  const pair = m1 !== m2 && !loading;
+  const hasGames = pair && matchups.length > 0 && games;
+  const empty = (
+    <div className="py-10 text-center text-text-muted">
+      {m1 === m2 ? "Bitte wähle zwei verschiedene Manager aus." : loading ? "Lade Daten…" : "Keine Matchups gefunden."}
+    </div>
+  );
+
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="kicker">Rivalitäten</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">Head to Head</h1>
-        <p className="text-text-secondary mt-2">Wähle zwei Manager für den direkten Vergleich, oder klick ein Feld in der Matrix</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Head to Head" description="Wähle zwei Manager für den direkten Vergleich oder klick ein Feld in der Liga-Matrix." />
 
-      <LeagueMatrix pairs={pairs} m1={m1} m2={m2} onSelect={(a, b) => { setM1(a); setM2(b); }} />
-
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
         <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
           className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-lg w-full sm:w-52 focus:border-red focus:outline-none">
           {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
@@ -119,210 +135,219 @@ export default function HeadToHeadPage() {
         </select>
       </div>
 
-      {m1 === m2 ? (
-        <div className="text-text-muted text-center py-8">Bitte wähle zwei verschiedene Manager aus.</div>
-      ) : loading ? (
-        <div className="text-text-muted text-center py-12">Lade Daten...</div>
-      ) : (
-        <>
-          <div className="cell p-6 sm:p-8">
-            <div className="kicker mb-5 text-center">Direkter Vergleich · {matchups.length} Matchups</div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-              <div className="text-right">
-                <div className={`display-title text-3xl sm:text-5xl uppercase ${wins > losses ? "text-ink" : "text-text-muted"}`}>{m1}</div>
-                <div className="text-sm text-text-muted mt-1">{wins > losses ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
-              </div>
-              <div className="text-center">
-                <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">{fmtDiff(wins - losses)}</div>
-                <div className="mt-1 text-sm text-text-muted tabular-nums">({fmtRecord(wins, losses, ties)})</div>
-              </div>
-              <div>
-                <div className={`display-title text-3xl sm:text-5xl uppercase ${losses > wins ? "text-ink" : "text-text-muted"}`}>{m2}</div>
-                <div className="text-sm text-text-muted mt-1">{losses > wins ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
-              </div>
+      {pair && (
+      <div className="cell p-6 sm:p-8">
+        <div className="mb-5 text-center text-sm text-text-muted">Direkter Vergleich, {matchups.length} Matchups</div>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="text-right">
+            <div className={`display-title text-3xl sm:text-5xl uppercase ${wins > losses ? "text-ink" : "text-text-muted"}`}><ManagerName id={m1} plain /></div>
+            <div className="text-sm text-text-muted mt-1">{wins > losses ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
+          </div>
+          <div className="text-center">
+            <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">{fmtDiff(wins - losses)}</div>
+            <div className="mt-1 text-sm text-text-muted tabular-nums">({fmtRecord(wins, losses, ties)})</div>
+          </div>
+          <div>
+            <div className={`display-title text-3xl sm:text-5xl uppercase ${losses > wins ? "text-ink" : "text-text-muted"}`}><ManagerName id={m2} plain /></div>
+            <div className="text-sm text-text-muted mt-1">{losses > wins ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
+          </div>
+        </div>
+        {matchups.length > 0 && (
+          <>
+            <div className="mt-6 flex h-2.5 overflow-hidden rounded-full bg-surface-3">
+              <div style={{ width: `${(wins / matchups.length) * 100}%`, backgroundColor: c1 }} />
+              <div className="bg-text-faint" style={{ width: `${(ties / matchups.length) * 100}%` }} />
+              <div style={{ width: `${(losses / matchups.length) * 100}%`, backgroundColor: c2 }} />
             </div>
-            {matchups.length > 0 && (
-              <>
-                <div className="mt-6 flex h-2.5 overflow-hidden rounded-full bg-surface-3">
-                  <div className="bg-red" style={{ width: `${(wins / matchups.length) * 100}%` }} />
-                  <div className="bg-text-faint" style={{ width: `${(ties / matchups.length) * 100}%` }} />
-                  <div className="bg-accent-blue" style={{ width: `${(losses / matchups.length) * 100}%` }} />
-                </div>
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-text-secondary">
-                  <span>Regular Season <b className="text-ink tabular-nums">{reg.wins}–{reg.losses}</b></span>
-                  <span>Playoffs <b className="text-ink tabular-nums">{po.wins}–{po.losses}</b></span>
-                  <span className="flex items-center gap-1.5">
-                    Letzte 5
-                    {lastFive.map((m) => {
-                      const r = resultOf(m);
-                      return (
-                        <span key={`${m.season_year}-${m.week}`} title={when(m)}
-                          className={`h-2.5 w-2.5 rounded-full ${r === "me" ? "bg-red" : r === "them" ? "bg-accent-blue" : "bg-text-faint"}`} />
-                      );
-                    })}
-                  </span>
-                </div>
-              </>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-text-secondary">
+              <span>Reguläre Saison <b className="text-ink tabular-nums">{reg.wins}–{reg.losses}</b></span>
+              <span>Playoffs <b className="text-ink tabular-nums">{po.wins}–{po.losses}</b></span>
+              <span className="flex items-center gap-1.5">
+                Letzte 5
+                {lastFive.map((m) => {
+                  const r = resultOf(m);
+                  return (
+                    <span key={`${m.season_year}-${m.week}`} title={when(m)}
+                      className={`h-2.5 w-2.5 rounded-full ${r === "tie" ? "bg-text-faint" : ""}`}
+                      style={r === "tie" ? undefined : { backgroundColor: r === "me" ? c1 : c2 }} />
+                  );
+                })}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+      )}
+
+      <Tabs tabs={TABS} value={tab} onChange={setTab} label="Bereich" />
+
+      {tab === "overview" && (!hasGames ? empty : (
+        <div className="space-y-8">
+      <section>
+        <h2 className="section-title text-ink mb-4">Matchup-Stats</h2>
+        <div className="cell overflow-hidden">
+          <CompareRow label="Ø Punkte" a={fmt(sc.avgMe)} b={fmt(sc.avgThem)} aWins={sc.avgMe > sc.avgThem} bWins={sc.avgThem > sc.avgMe} />
+          <CompareRow label="Ø vs. eigener Schnitt"
+            a={`${sc.avgMe - avg1 >= 0 ? "+" : ""}${fmt(sc.avgMe - avg1)}`}
+            b={`${sc.avgThem - avg2 >= 0 ? "+" : ""}${fmt(sc.avgThem - avg2)}`}
+            hint="Punkte in diesem Duell minus eigener Karriere-Schnitt" />
+          <CompareRow label="Höchster Score" a={fmt(sc.maxMe)} b={fmt(sc.maxThem)} aWins={sc.maxMe > sc.maxThem} bWins={sc.maxThem > sc.maxMe} />
+          <CompareRow label="Längste Siegesserie" a={`${st.longest.me}`} b={`${st.longest.them}`}
+            aWins={st.longest.me > st.longest.them} bWins={st.longest.them > st.longest.me} />
+          <CompareRow label="Bankpunkte gesamt" a={fmt(players.bench1.total)} b={fmt(players.bench2.total)}
+            hint="Punkte, die auf der Bank liegen geblieben sind" />
+          <div className="flex flex-wrap justify-between gap-2 px-4 sm:px-5 py-3 text-sm text-text-secondary">
+            <span>Ø Abstand <b className="text-ink">{fmt(sc.avgMargin)}</b></span>
+            {st.current.side && st.current.side !== "tie" && (
+              <span>Aktuelle Serie: <b className="text-ink">{nameOf(st.current.side)}</b> {st.current.length} Sieg{st.current.length > 1 ? "e" : ""} in Folge</span>
             )}
           </div>
+        </div>
+      </section>
 
-          {matchups.length > 0 && games && (
-            <>
-              <section>
-                <h2 className="section-title text-ink mb-4">Matchup-Stats</h2>
-                <div className="cell overflow-hidden">
-                  <CompareRow label="Ø Punkte" a={fmt(sc.avgMe)} b={fmt(sc.avgThem)} aWins={sc.avgMe > sc.avgThem} bWins={sc.avgThem > sc.avgMe} />
-                  <CompareRow label="Ø vs. eigener Schnitt"
-                    a={`${sc.avgMe - avg1 >= 0 ? "+" : ""}${fmt(sc.avgMe - avg1)}`}
-                    b={`${sc.avgThem - avg2 >= 0 ? "+" : ""}${fmt(sc.avgThem - avg2)}`}
-                    hint="Punkte in diesem Duell minus eigener Karriere-Schnitt" />
-                  <CompareRow label="Höchster Score" a={fmt(sc.maxMe)} b={fmt(sc.maxThem)} aWins={sc.maxMe > sc.maxThem} bWins={sc.maxThem > sc.maxMe} />
-                  <CompareRow label="Längste Siegesserie" a={`${st.longest.me}`} b={`${st.longest.them}`}
-                    aWins={st.longest.me > st.longest.them} bWins={st.longest.them > st.longest.me} />
-                  <CompareRow label="Bankpunkte gesamt" a={fmt(players.bench1.total)} b={fmt(players.bench2.total)}
-                    hint="Punkte, die auf der Bank liegen geblieben sind" />
-                  <div className="flex flex-wrap justify-between gap-2 px-4 sm:px-5 py-3 text-sm text-text-secondary">
-                    <span>Ø Abstand <b className="text-ink">{fmt(sc.avgMargin)}</b></span>
-                    {st.current.side && st.current.side !== "tie" && (
-                      <span>Aktuelle Serie: <b className="text-ink">{nameOf(st.current.side)}</b> {st.current.length} Sieg{st.current.length > 1 ? "e" : ""} in Folge</span>
-                    )}
-                  </div>
-                </div>
-              </section>
+      <section>
+        <h2 className="section-title text-ink mb-4">Rekordspiele</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {games.biggestMe && <GameCard title={`Höchster Sieg ${m1}`} m={games.biggestMe} m1={m1} m2={m2} />}
+          {games.biggestThem && <GameCard title={`Höchster Sieg ${m2}`} m={games.biggestThem} m1={m1} m2={m2} />}
+          <GameCard title="Knappstes Spiel" m={games.closest} m1={m1} m2={m2} />
+          <GameCard title="Meiste Punkte zusammen" m={games.highest} m1={m1} m2={m2} />
+          <GameCard title="Wenigste Punkte zusammen" m={games.lowest} m1={m1} m2={m2} />
+        </div>
+      </section>
+        </div>
+      ))}
 
-              <section>
-                <h2 className="section-title text-ink mb-4">Rekordspiele</h2>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {games.biggestMe && <GameCard title={`Höchster Sieg ${m1}`} m={games.biggestMe} m1={m1} m2={m2} />}
-                  {games.biggestThem && <GameCard title={`Höchster Sieg ${m2}`} m={games.biggestThem} m1={m1} m2={m2} />}
-                  <GameCard title="Knappstes Spiel" m={games.closest} m1={m1} m2={m2} />
-                  <GameCard title="Meiste Punkte zusammen" m={games.highest} m1={m1} m2={m2} />
-                  <GameCard title="Wenigste Punkte zusammen" m={games.lowest} m1={m1} m2={m2} />
-                </div>
-              </section>
+      {tab === "seasons" && (!hasGames ? empty : (
+        <div className="space-y-8">
+      <section>
+        <h2 className="section-title text-ink mb-4">Bilanz pro Saison</h2>
+        <div className="flex flex-wrap gap-2">
+          {seasons.map((s) => {
+            const r = record(bySeason[s]);
+            const leadColor = r.wins > r.losses ? c1 : r.losses > r.wins ? c2 : null;
+            return (
+              <div key={s} className="rounded-xl border border-border bg-surface px-3 py-2 text-center"
+                style={leadColor ? { borderColor: leadColor } : undefined}>
+                <div className="text-xs text-text-muted">{s}</div>
+                <div className="text-sm text-ink tabular-nums">{fmtDiff(r.wins - r.losses)}</div>
+                <div className="text-[10px] text-text-muted tabular-nums">({fmtRecord(r.wins, r.losses, r.ties)})</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
-              <section>
-                <h2 className="section-title text-ink mb-4">Bilanz pro Saison</h2>
-                <div className="flex flex-wrap gap-2">
-                  {seasons.map((s) => {
-                    const r = record(bySeason[s]);
-                    const lead = r.wins > r.losses ? "border-red/60" : r.losses > r.wins ? "border-accent-blue/60" : "border-border";
-                    return (
-                      <div key={s} className={`rounded-xl border ${lead} bg-surface px-3 py-2 text-center`}>
-                        <div className="kicker">{s}</div>
-                        <div className="font-mono text-sm text-ink tabular-nums">{fmtDiff(r.wins - r.losses)}</div>
-                        <div className="font-mono text-[10px] text-text-muted tabular-nums">({fmtRecord(r.wins, r.losses, r.ties)})</div>
+      <section>
+        <h2 className="section-title text-ink mb-4">Alle Matchups</h2>
+        <div className="space-y-4">
+          {[...seasons].reverse().map((season) => (
+            <div key={season}>
+              <h3 className="mb-2 text-sm font-medium text-text-muted">{season}</h3>
+              <div className="space-y-2">
+                {bySeason[season].map((m) => {
+                  const won = m.myScore > m.theirScore;
+                  const tied = m.myScore === m.theirScore;
+                  return (
+                    <div
+                      key={`${m.season_year}-${m.week}`}
+                      className={`cell px-4 py-3 flex items-center justify-between border-l-4 ${tied ? "border-l-text-faint" : ""}`}
+                      style={tied ? undefined : { borderLeftColor: won ? c1 : c2 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-text-muted text-sm w-16">Woche {m.week}</span>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink">{tied ? "Unentschieden" : <>{<ManagerName id={won ? m1 : m2} plain />} gewinnt</>}</span>
+                        {m.is_playoff && <span className="chip">Playoffs</span>}
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section>
-                <h2 className="section-title text-ink mb-4">Besondere Spieler</h2>
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="cell p-4 sm:p-5">
-                    <div className="kicker mb-3">Top-Einzelleistungen</div>
-                    <ol className="space-y-2">
-                      {players.top.map((p, i) => (
-                        <li key={`${p.player}-${p.season_year}-${p.week}`} className="flex items-baseline gap-3 text-sm">
-                          <span className="w-4 text-text-faint">{i + 1}</span>
-                          <span className="flex-1 min-w-0">
-                            <span className="text-ink font-medium">{p.player}</span>
-                            <span className="block text-xs text-text-muted">{p.manager} · {when(p)}</span>
-                          </span>
-                          <span className="font-mono text-ink">{fmt(p.points)}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                  {[{ m: m1, list: players.killers1 }, { m: m2, list: players.killers2 }].map(({ m, list }) => (
-                    <div key={m} className="cell p-4 sm:p-5">
-                      <div className="kicker mb-3">Rivalen-Killer · {m}</div>
-                      <ol className="space-y-2">
-                        {list.map((p) => (
-                          <li key={p.player} className="flex items-baseline gap-3 text-sm">
-                            <span className="flex-1 min-w-0">
-                              <span className="text-ink font-medium">{p.player}</span>
-                              <span className="block text-xs text-text-muted">{p.games} Spiele · Ø {fmt(p.points / p.games)} · Best {fmt(p.best)}</span>
-                            </span>
-                            <span className="font-mono text-ink">{fmt(p.points)}</span>
-                          </li>
-                        ))}
-                      </ol>
+                      <div className="flex items-center gap-3">
+                        <span className={`tabular-nums ${won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.myScore.toFixed(1)}</span>
+                        <span className="text-text-muted">-</span>
+                        <span className={`tabular-nums ${!won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.theirScore.toFixed(1)}</span>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="cell p-4 sm:p-5">
-                    <div className="kicker mb-2">Seitenwechsler</div>
-                    {players.switchers.length ? (
-                      <>
-                        <p className="text-sm text-text-secondary mb-3">
-                          {players.switchers.length} Spieler haben in diesem Duell schon für beide gestartet
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {players.switchers.slice(0, 10).map((p) => <span key={p} className="chip">{p}</span>)}
-                          {players.switchers.length > 10 && (
-                            <span className="chip" title={players.switchers.slice(10).join(", ")}>
-                              +{players.switchers.length - 10} weitere
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-sm text-text-secondary">Kein Spieler hat in diesem Duell für beide Seiten gestartet.</p>
-                    )}
-                  </div>
-                  <div className="cell p-4 sm:p-5">
-                    <div className="kicker mb-2">Bester Bankdrücker</div>
-                    <div className="space-y-1 text-sm text-text-secondary">
-                      {[{ m: m1, b: players.bench1.best }, { m: m2, b: players.bench2.best }].map(({ m, b }) => b && (
-                        <div key={m}>
-                          <span className="text-ink">{m}</span>: {b.player_name} mit <b className="text-ink">{fmt(b.points)}</b> auf der Bank ({when(b)})
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+        </div>
+      ))}
 
-          <section>
-            <h2 className="section-title text-ink mb-4">Alle Matchups</h2>
-            <div className="space-y-4">
-              {[...seasons].reverse().map((season) => (
-                <div key={season}>
-                  <div className="kicker mb-2">{season}</div>
-                  <div className="space-y-2">
-                    {bySeason[season].map((m) => {
-                      const won = m.myScore > m.theirScore;
-                      const tied = m.myScore === m.theirScore;
-                      return (
-                        <div
-                          key={`${m.season_year}-${m.week}`}
-                          className={`cell px-4 py-3 flex items-center justify-between border-l-4 ${tied ? "border-l-text-faint" : won ? "border-l-red" : "border-l-accent-blue"}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-text-muted text-sm w-16">Week {m.week}</span>
-                            <span className="text-sm font-medium text-ink">{tied ? "Unentschieden" : `${won ? m1 : m2} gewinnt`}</span>
-                            {m.is_playoff && <span className="chip">Playoff</span>}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`font-mono ${won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.myScore.toFixed(1)}</span>
-                            <span className="text-text-muted">-</span>
-                            <span className={`font-mono ${!won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.theirScore.toFixed(1)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+      {tab === "players" && (!hasGames ? empty : (
+      <section>
+        <h2 className="section-title text-ink mb-4">Besondere Spieler</h2>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="cell p-4 sm:p-5">
+            <h3 className="mb-3 text-sm font-medium text-ink">Top-Einzelleistungen</h3>
+            <ol className="space-y-2">
+              {players.top.map((p, i) => (
+                <li key={`${p.player}-${p.season_year}-${p.week}`} className="flex items-baseline gap-3 text-sm">
+                  <span className="w-4 text-text-faint">{i + 1}</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="text-ink font-medium">{p.player}</span>
+                    <span className="block text-xs text-text-muted">{p.manager}, {when(p)}</span>
+                  </span>
+                  <span className="tabular-nums text-ink">{fmt(p.points)}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {[{ m: m1, list: players.killers1 }, { m: m2, list: players.killers2 }].map(({ m, list }) => (
+            <div key={m} className="cell p-4 sm:p-5">
+              <h3 className="mb-3 text-sm font-medium text-ink">Rivalen-Killer {m}</h3>
+              <ol className="space-y-2">
+                {list.map((p) => (
+                  <li key={p.player} className="flex items-baseline gap-3 text-sm">
+                    <span className="flex-1 min-w-0">
+                      <span className="text-ink font-medium">{p.player}</span>
+                      <span className="block text-xs text-text-muted">{p.games} Spiele, Ø {fmt(p.points / p.games)}, Best {fmt(p.best)}</span>
+                    </span>
+                    <span className="tabular-nums text-ink">{fmt(p.points)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="cell p-4 sm:p-5">
+            <h3 className="mb-2 text-sm font-medium text-ink">Seitenwechsler</h3>
+            {players.switchers.length ? (
+              <>
+                <p className="text-sm text-text-secondary mb-3">
+                  {players.switchers.length} Spieler haben in diesem Duell schon für beide gestartet
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {players.switchers.slice(0, 10).map((p) => <span key={p} className="chip">{p}</span>)}
+                  {players.switchers.length > 10 && (
+                    <span className="chip" title={players.switchers.slice(10).join(", ")}>
+                      +{players.switchers.length - 10} weitere
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-text-secondary">Kein Spieler hat in diesem Duell für beide Seiten gestartet.</p>
+            )}
+          </div>
+          <div className="cell p-4 sm:p-5">
+            <h3 className="mb-2 text-sm font-medium text-ink">Bester Bankdrücker</h3>
+            <div className="space-y-1 text-sm text-text-secondary">
+              {[{ m: m1, b: players.bench1.best }, { m: m2, b: players.bench2.best }].map(({ m, b }) => b && (
+                <div key={m}>
+                  <span className="text-ink">{m}</span>: {b.player_name} mit <b className="text-ink">{fmt(b.points)}</b> auf der Bank ({when(b)})
                 </div>
               ))}
             </div>
-          </section>
-        </>
+          </div>
+        </div>
+      </section>
+      ))}
+
+      {tab === "matrix" && (
+        <LeagueMatrix pairs={pairs} m1={m1} m2={m2} onSelect={(a, b) => { setM1(a); setM2(b); setTab("overview"); }} />
       )}
     </div>
   );
@@ -332,10 +357,10 @@ function CompareRow({ label, a, b, aWins, bWins, hint }: {
   label: string; a: string; b: string; aWins?: boolean; bWins?: boolean; hint?: string;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-border-light px-4 sm:px-5 py-3">
-      <span className={`text-right font-mono tabular-nums ${aWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{a}</span>
-      <span className="kicker text-center min-w-[9rem]" title={hint}>{label}</span>
-      <span className={`font-mono tabular-nums ${bWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{b}</span>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-border-light px-4 sm:px-5 py-3 first:border-t-0">
+      <span className={`text-right tabular-nums ${aWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{a}</span>
+      <span className="min-w-[9rem] text-center text-xs text-text-muted" title={hint}>{label}</span>
+      <span className={`tabular-nums ${bWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{b}</span>
     </div>
   );
 }
@@ -344,16 +369,16 @@ function GameCard({ title, m, m1, m2 }: { title: string; m: H2HMatchup; m1: stri
   const r = resultOf(m);
   return (
     <div className="cell p-4">
-      <div className="kicker mb-2">{title}</div>
+      <h3 className="mb-2 text-sm font-medium text-text-muted">{title}</h3>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-lg tabular-nums">
+        <span className="text-lg tabular-nums">
           <span className={r === "me" ? "text-ink font-semibold" : "text-text-secondary"}>{fmt(m.myScore)}</span>
           <span className="text-text-faint mx-1.5">–</span>
           <span className={r === "them" ? "text-ink font-semibold" : "text-text-secondary"}>{fmt(m.theirScore)}</span>
         </span>
         <span className="text-xs text-text-muted">{when(m)}{m.is_playoff ? " · Playoff" : ""}</span>
       </div>
-      <div className="mt-1 text-xs text-text-muted">{m1} vs {m2} · Abstand {fmt(Math.abs(m.myScore - m.theirScore))}</div>
+      <div className="mt-1 text-xs text-text-muted">{m1} vs {m2}, Abstand {fmt(Math.abs(m.myScore - m.theirScore))}</div>
     </div>
   );
 }
@@ -372,13 +397,13 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
           <thead>
             <tr>
               <th className="px-2 py-2" />
-              {MANAGERS.map((c) => <th key={c} className="px-2 py-2 kicker font-normal">{c}</th>)}
+              {MANAGERS.map((c) => <th key={c} className="px-2 py-2 text-xs font-medium text-text-muted">{c}</th>)}
             </tr>
           </thead>
           <tbody>
             {MANAGERS.map((r) => (
               <tr key={r} className="border-t border-border-light">
-                <th className="px-3 py-2 text-left text-ink font-medium whitespace-nowrap">{r}</th>
+                <th className="px-3 py-2 text-left font-medium whitespace-nowrap"><ManagerName id={r} /></th>
                 {MANAGERS.map((c) => {
                   if (r === c) return <td key={c} className="bg-surface-2" />;
                   const p = get(r, c);
@@ -390,7 +415,7 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                     <td key={c} className="p-0.5">
                       <button
                         onClick={() => onSelect(r, c)}
-                        className={`w-full rounded-md px-2 py-1.5 font-mono tabular-nums text-ink hover:ring-1 hover:ring-border-strong ${selected ? "ring-2 ring-red" : ""}`}
+                        className={`w-full rounded-md px-2 py-1.5 tabular-nums text-ink hover:ring-1 hover:ring-border-strong ${selected ? "ring-2 ring-red" : ""}`}
                         style={{ backgroundColor: tone }}
                         title={`${r} vs ${c}: ${p?.wins ?? 0}–${p?.losses ?? 0}${p?.ties ? `–${p.ties}` : ""}`}
                       >

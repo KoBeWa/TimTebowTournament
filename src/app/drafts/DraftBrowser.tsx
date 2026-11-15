@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
 import { SEASONS, MANAGERS, LEAGUE_FOUNDED } from "@/lib/constants";
+import ManagerName from "@/components/ui/ManagerName";
 
 export interface DraftPick {
   season_year: number;
@@ -18,6 +21,7 @@ export interface DraftPick {
 
 type SortKey = "season_year" | "round" | "overall_pick" | "position" | "team" | "player_name" | "grade4";
 
+// Row tint and text colour by grade (computed values, so they stay inline)
 function gradeStyle(g: number | null): { bg: string; textColor: string; weight: string } {
   if (g === null) return { bg: "transparent", textColor: "var(--color-text-muted)", weight: "400" };
   if (g >= 30)  return { bg: "rgba(52,211,153,0.21)", textColor: "var(--color-positive)",            weight: "700" };
@@ -34,12 +38,13 @@ function gradeLabel(g: number | null) {
   return (g >= 0 ? "+" : "") + g.toFixed(2);
 }
 
-const COLS: { key: SortKey; label: string; align: "left" | "right" }[] = [
+// `hide` marks columns that are dropped on phones
+const COLS: { key: SortKey; label: string; align: "left" | "right"; hide?: boolean }[] = [
   { key: "season_year",  label: "Draft",   align: "left"  },
-  { key: "round",        label: "Rd",      align: "right" },
+  { key: "round",        label: "Runde",   align: "right", hide: true },
   { key: "overall_pick", label: "Pick",    align: "right" },
   { key: "position",     label: "Pos",     align: "left"  },
-  { key: "team",         label: "Team",    align: "left"  },
+  { key: "team",         label: "Team",    align: "left", hide: true },
   { key: "player_name",  label: "Spieler", align: "left"  },
   { key: "grade4",       label: "Grade",   align: "right" },
 ];
@@ -51,6 +56,8 @@ function sortValue(p: DraftPick, key: SortKey): number | string {
   if (key === "grade4")      return p.grade4 ?? -999;
   return p[key] as number;
 }
+
+const SELECT = "rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink";
 
 export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
   const [season, setSeason] = useState<number | "all">("all");
@@ -91,69 +98,59 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
       : null;
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* Controls */}
-      <div className="flex flex-wrap gap-4 mb-6 items-end">
-        <div>
-          <label className="kicker block mb-2 text-xs">Saison</label>
-          <select
-            value={season}
-            onChange={(e) => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
-            className="label-nav text-xs px-3 py-2 bg-cream border border-border text-ink"
-            style={{ minWidth: "140px" }}
-          >
-            <option value="all">All Time</option>
-            {SEASONS.slice().reverse().map((s) => (
-              <option key={s} value={s}>Draft #{draftNumber(s)} · {s}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="kicker block mb-2 text-xs">Owner</label>
-          <select
-            value={manager}
-            onChange={(e) => setManager(e.target.value)}
-            className="label-nav text-xs px-3 py-2 bg-cream border border-border text-ink"
-            style={{ minWidth: "120px" }}
-          >
-            <option value="all">Overall</option>
-            {MANAGERS.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-        <div className="pb-2">
-          <span className="label-nav text-xs text-text-muted">
-            {filtered.length} Picks
-            {avgGrade !== null && (
-              <> · Ø Grade: <span className={avgGrade >= 0 ? "text-ink" : "text-red"}>{avgGrade >= 0 ? "+" : ""}{avgGrade.toFixed(2)}</span></>
-            )}
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <select aria-label="Saison" value={season}
+          onChange={(e) => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
+          className={SELECT}>
+          <option value="all">Alle Saisons</option>
+          {SEASONS.slice().reverse().map((s) => (
+            <option key={s} value={s}>Draft #{draftNumber(s)}, {s}</option>
+          ))}
+        </select>
+        <select aria-label="Owner" value={manager} onChange={(e) => setManager(e.target.value)} className={SELECT}>
+          <option value="all">Alle Owner</option>
+          {MANAGERS.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+        <span className="text-sm text-text-muted">
+          {filtered.length} Picks
+          {avgGrade !== null && (
+            <>, Ø Grade <span className={avgGrade >= 0 ? "text-positive" : "text-negative"}>{avgGrade >= 0 ? "+" : ""}{avgGrade.toFixed(2)}</span></>
+          )}
+        </span>
+        {season !== "all" && (
+          <Link href={`/drafts/${season}`} className="ml-auto flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+            Ganze Saison {season} ansehen <ChevronRight size={15} />
+          </Link>
+        )}
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+      <div className="cell overflow-x-auto">
+        <table className="w-full text-sm">
           <thead>
-            <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
-              {/* Owner column — only when showing all managers */}
-              {manager === "all" && (
-                <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">Owner</th>
-              )}
-              {COLS.map((col) => {
+            <tr className="text-left text-xs font-medium text-text-muted">
+              {/* Owner column only when showing all managers */}
+              {manager === "all" && <th className="py-2.5 pl-4 pr-3 font-medium sm:pl-5">Owner</th>}
+              {COLS.map((col, i) => {
                 const active = sortKey === col.key;
+                const first = manager !== "all" && i === 0;
+                const last = i === COLS.length - 1;
                 return (
-                  <th
-                    key={col.key}
+                  <th key={col.key}
+                    aria-sort={active ? (sortDir === 1 ? "ascending" : "descending") : "none"}
                     onClick={() => handleSort(col.key)}
-                    className={`label-nav text-xs py-2 cursor-pointer select-none whitespace-nowrap transition-colors ${
-                      col.align === "right" ? "text-right pr-4" : "text-left pr-4"
-                    }`}
-                    style={{ color: active ? "var(--color-ink)" : "var(--color-text-muted)" }}
-                  >
+                    className={`cursor-pointer select-none whitespace-nowrap py-2.5 font-medium transition-colors hover:text-ink ${
+                      col.align === "right" ? "text-right" : "text-left"} ${
+                      first ? "pl-4 sm:pl-5" : "pl-0"} ${last ? "pr-4 sm:pr-5" : "pr-3"} ${
+                      col.hide ? "hidden md:table-cell" : ""} ${active ? "text-ink" : ""}`}>
                     {col.label}
-                    {active && <span className="ml-1 text-xs">{sortDir === 1 ? "↑" : "↓"}</span>}
+                    {active && (sortDir === 1
+                      ? <ArrowUp size={12} className="ml-1 inline" />
+                      : <ArrowDown size={12} className="ml-1 inline" />)}
                   </th>
                 );
               })}
@@ -163,39 +160,21 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
             {filtered.map((p) => {
               const gs = gradeStyle(p.grade4);
               return (
-                <tr
-                  key={`${p.season_year}-${p.overall_pick}-${p.manager_id}`}
-                  style={{
-                    borderBottom: "1px solid var(--color-border-light)",
-                    background: gs.bg,
-                  }}
-                >
+                <tr key={`${p.season_year}-${p.overall_pick}-${p.manager_id}`}
+                  className="border-t border-border-light"
+                  style={{ background: gs.bg }}>
                   {manager === "all" && (
-                    <td className="py-2 pr-4 label-nav text-xs font-semibold text-ink">{p.manager_id}</td>
+                    <td className="py-2 pl-4 pr-3 font-medium text-ink sm:pl-5"><ManagerName id={p.manager_id} /></td>
                   )}
-                  {/* Draft year */}
-                  <td className="py-2 pr-4 label-nav text-xs text-text-secondary whitespace-nowrap">
+                  <td className={`whitespace-nowrap py-2 pr-3 text-text-secondary ${manager !== "all" ? "pl-4 sm:pl-5" : ""}`}>
                     #{draftNumber(p.season_year)} <span className="text-text-faint">{p.season_year}</span>
                   </td>
-                  {/* Round */}
-                  <td className="py-2 pr-4 text-right font-mono text-xs text-text-muted">{p.round}</td>
-                  {/* Pick # */}
-                  <td className="py-2 pr-4 text-right font-mono text-xs text-text-muted">{p.overall_pick}</td>
-                  {/* Position */}
-                  <td className="py-2 pr-4">
-                    <span className="label-nav text-xs text-red font-semibold">{p.position}</span>
-                  </td>
-                  {/* Team */}
-                  <td className="py-2 pr-4 label-nav text-xs text-text-secondary font-mono">
-                    {p.team ?? "—"}
-                  </td>
-                  {/* Player name */}
-                  <td className="py-2 pr-4 text-sm font-medium text-ink">{p.player_name}</td>
-                  {/* Grade */}
-                  <td
-                    className="py-2 text-right font-mono text-xs"
-                    style={{ color: gs.textColor, fontWeight: gs.weight }}
-                  >
+                  <td className="hidden py-2 pr-3 text-right tabular-nums text-text-muted md:table-cell">{p.round}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums text-text-muted">{p.overall_pick}</td>
+                  <td className="py-2 pr-3 font-semibold text-red">{p.position}</td>
+                  <td className="hidden py-2 pr-3 text-text-secondary md:table-cell">{p.team ?? "—"}</td>
+                  <td className="py-2 pr-3 font-medium text-ink">{p.player_name}</td>
+                  <td className="py-2 pr-4 text-right tabular-nums sm:pr-5" style={{ color: gs.textColor, fontWeight: gs.weight }}>
                     {gradeLabel(p.grade4)}
                   </td>
                 </tr>

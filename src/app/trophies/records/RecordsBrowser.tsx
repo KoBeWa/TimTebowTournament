@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 import { isNegativeRecord } from "@/lib/classifications";
 import { CATEGORIES, RECORD_CATEGORY, type Category } from "./categories";
 
@@ -124,32 +127,22 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
   const currentHolder = recordTimeline.find((e) => e.is_current);
 
   return (
-    <div className="space-y-0">
-      {/* ── Category Tabs ── */}
-      <div className="flex flex-wrap gap-0 border-b border-border mb-0 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => selectCategory(cat)}
-            className={`label-nav text-xs px-4 py-2.5 whitespace-nowrap transition-colors border-b-2 -mb-px ${
-              cat === activeCat
-                ? "border-ink text-ink"
-                : "border-transparent text-text-muted hover:text-ink"
-            }`}
-          >
-            {cat}
-            <span className="ml-1.5 font-normal opacity-50">
-              ({categoryRecords[cat].length})
-            </span>
-          </button>
-        ))}
-      </div>
+    <div className="space-y-4">
+      <Tabs tabs={CATEGORIES.map((cat) => ({ key: cat, label: cat, count: categoryRecords[cat].length }))}
+        value={activeCat} onChange={selectCategory} label="Kategorie" />
 
-      {/* ── 3-Column Body ── */}
-      <div className="flex gap-0 border border-border mt-4" style={{ minHeight: "70vh" }}>
+      {/* Below md the panes stack and the record list becomes a select; no fixed heights there */}
+      <div className="cell overflow-hidden md:flex md:max-h-[70vh] md:min-h-[24rem]">
 
-        {/* LEFT — Record List */}
-        <div className="w-56 flex-shrink-0 border-r border-border overflow-y-auto" style={{ maxHeight: "70vh" }}>
+        {/* Record list */}
+        <div className="border-b border-border p-3 md:hidden">
+          <select value={selectedKey ?? ""} onChange={(e) => setSelectedKey(e.target.value)}
+            aria-label="Record"
+            className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-red focus:outline-none">
+            {recordsInCat.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
+          </select>
+        </div>
+        <div className="hidden w-56 shrink-0 overflow-y-auto border-r border-border md:block">
           {recordsInCat.map(({ key, label }) => {
             const isSelected = key === selectedKey;
             const isNegKey = isNegativeRecord(key);
@@ -158,20 +151,16 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
               <button
                 key={key}
                 onClick={() => setSelectedKey(key)}
-                className={`w-full text-left px-3 py-2.5 border-b border-border-light transition-colors ${
-                  isSelected ? "bg-ink" : "hover:bg-ink/5"
+                className={`w-full border-b border-border-light px-3 py-2.5 text-left transition-colors ${
+                  isSelected ? "bg-surface-3" : "hover:bg-surface-2"
                 }`}
               >
-                <div className={`text-xs font-medium leading-snug ${isSelected ? "text-cream" : "text-ink"}`}>
-                  {label}
-                </div>
+                <div className="text-xs font-medium leading-snug text-ink">{label}</div>
                 {holder && (
-                  <div className={`text-xs mt-0.5 ${isSelected ? "text-cream/60" : "text-text-muted"}`}>
-                    <span style={!isSelected && isNegKey ? { color: "var(--color-red)" } : {}}>
-                      {holder.manager_id}
-                    </span>
-                    {" · "}
-                    <span className="font-mono">{fmtVal(Number(holder.record_value))}</span>
+                  <div className="mt-0.5 text-xs text-text-muted">
+                    <span className={isNegKey ? "text-negative" : ""}>{holder.manager_id}</span>
+                    {", "}
+                    <span className="tabular-nums">{fmtVal(Number(holder.record_value))}</span>
                   </div>
                 )}
               </button>
@@ -179,32 +168,30 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
           })}
         </div>
 
-        {/* CENTER — Owner Values */}
-        <div className="flex-1 overflow-y-auto border-r border-border" style={{ maxHeight: "70vh" }}>
+        {/* Owner values */}
+        <div className="border-b border-border md:flex-1 md:overflow-y-auto md:border-b-0 md:border-r">
           {selectedKey ? (
             <>
-              <div className="px-4 pt-4 pb-3 border-b border-border-light">
-                <div className="kicker text-xs mb-0.5">{activeCat}</div>
-                <div className="display-title text-xl text-ink leading-tight">{selectedLabel}</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`label-nav text-xs px-2 py-0.5 ${isNeg ? "bg-red/10 text-red" : "bg-ink/8 text-text-muted"}`}>
+              <div className="border-b border-border-light px-4 pb-3 pt-4">
+                <div className="text-xs text-text-muted">{activeCat}</div>
+                <div className="display-title text-xl leading-tight text-ink">{selectedLabel}</div>
+                <div className="mt-1 flex items-center gap-3">
+                  <span className={`rounded px-2 py-0.5 text-xs ${isNeg ? "bg-red/10 text-red" : "bg-surface-3 text-text-muted"}`}>
                     {isNeg ? "Negativ" : "Positiv"}
                   </span>
-                  <Link
-                    href={`/trophies/records/${selectedKey}`}
-                    className="label-nav text-xs text-text-muted hover:text-ink transition-colors"
-                  >
-                    Detail →
+                  <Link href={`/trophies/records/${selectedKey}`}
+                    className="inline-flex items-center gap-0.5 text-xs text-text-muted transition-colors hover:text-ink">
+                    Detail <ChevronRight size={12} />
                   </Link>
                 </div>
               </div>
 
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border-light text-left">
-                    <th className="px-4 py-2 label-nav text-xs text-text-muted w-10">#</th>
-                    <th className="px-4 py-2 label-nav text-xs text-text-muted">Manager</th>
-                    <th className="px-4 py-2 label-nav text-xs text-text-muted text-right">Wert</th>
+                  <tr className="text-xs font-medium text-text-muted">
+                    <th className="w-10 py-2 pl-4 text-left font-medium">#</th>
+                    <th className="px-4 py-2 text-left font-medium">Manager</th>
+                    <th className="px-4 py-2 text-right font-medium">Wert</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -212,23 +199,13 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
                     const isCurrent = currentHolder?.manager_id === row.manager_id;
                     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
                     return (
-                      <tr
-                        key={row.manager_id}
-                        className={`border-b border-border-light transition-colors ${isCurrent ? "bg-ink/5" : ""}`}
-                      >
-                        <td className="px-4 py-2.5 label-nav text-xs text-text-muted">{medal}</td>
-                        <td className="px-4 py-2.5">
-                          <Link
-                            href={`/manager/${row.manager_id}`}
-                            className="font-medium text-ink hover:text-red transition-colors text-sm"
-                          >
-                            {row.manager_id}
-                          </Link>
-                          {isCurrent && (
-                            <span className="ml-2 label-nav text-xs text-red">REC</span>
-                          )}
+                      <tr key={row.manager_id} className={`border-t border-border-light ${isCurrent ? "bg-surface-2" : ""}`}>
+                        <td className="py-2.5 pl-4 text-xs text-text-muted">{medal}</td>
+                        <td className="px-4 py-2.5 text-sm font-medium">
+                          <ManagerName id={row.manager_id} />
+                          {isCurrent && <span className="ml-2 text-xs text-red">Rekord</span>}
                         </td>
-                        <td className={`px-4 py-2.5 text-right font-mono text-sm ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
+                        <td className={`px-4 py-2.5 text-right text-sm tabular-nums ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
                           {fmtVal(row.current_value)}
                         </td>
                       </tr>
@@ -242,42 +219,28 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
           )}
         </div>
 
-        {/* RIGHT — Timeline */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto" style={{ maxHeight: "70vh" }}>
+        {/* Timeline */}
+        <div className="md:w-64 md:shrink-0 md:overflow-y-auto">
           {selectedKey ? (
             <>
-              <div className="px-4 pt-4 pb-3 border-b border-border-light">
-                <div className="label-nav text-xs text-text-muted">Record Timeline</div>
+              <div className="border-b border-border-light px-4 pb-3 pt-4">
+                <h3 className="text-sm font-medium text-text-muted">Record-Timeline</h3>
               </div>
               <div className="divide-y divide-border-light">
                 {recordTimeline.map((entry, idx) => {
                   const period = fmtPeriod(entry.from_year, entry.from_week, entry.to_year, entry.to_week, entry.is_current);
                   return (
-                    <div
-                      key={entry.id}
-                      className={`px-4 py-3 ${entry.is_current ? "bg-ink/5" : ""}`}
-                    >
+                    <div key={entry.id} className={`px-4 py-3 ${entry.is_current ? "bg-surface-2" : ""}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <Link
-                            href={`/manager/${entry.manager_id}`}
-                            className={`text-sm font-semibold hover:text-red transition-colors block truncate ${entry.is_current ? "text-ink" : "text-ink"}`}
-                          >
-                            {entry.manager_id}
-                          </Link>
-                          <div className="text-xs text-text-muted mt-0.5">{period}</div>
+                          <div className="truncate text-sm font-semibold"><ManagerName id={entry.manager_id} /></div>
+                          <div className="mt-0.5 text-xs text-text-muted">{period}</div>
                           <div className="text-xs text-text-faint">{entry.weeks_held} Wo.</div>
                         </div>
-                        <div className="flex-shrink-0 text-right">
-                          <div className="font-mono text-sm text-ink font-semibold">
-                            {fmtVal(Number(entry.record_value))}
-                          </div>
-                          {entry.is_current && (
-                            <div className="label-nav text-xs text-red mt-0.5">AKTUELL</div>
-                          )}
-                          {idx === 0 && !entry.is_current && (
-                            <div className="label-nav text-xs text-text-muted mt-0.5">BEST</div>
-                          )}
+                        <div className="shrink-0 text-right">
+                          <div className="text-sm font-semibold tabular-nums text-ink">{fmtVal(Number(entry.record_value))}</div>
+                          {entry.is_current && <div className="mt-0.5 text-xs text-red">Aktuell</div>}
+                          {idx === 0 && !entry.is_current && <div className="mt-0.5 text-xs text-text-muted">Bestwert</div>}
                         </div>
                       </div>
                     </div>

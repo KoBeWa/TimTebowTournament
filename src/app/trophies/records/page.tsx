@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import Link from "next/link";
+import PageHeader from "@/components/ui/PageHeader";
 import RecordsBrowser, { type OwnerRow, type TimelineEntry } from "./RecordsBrowser";
 
 export default async function RecordsPage({
@@ -33,17 +33,13 @@ export default async function RecordsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/trophies" className="text-text-muted hover:text-ink text-sm transition-colors">
-          ← Trophy Room
-        </Link>
-        <h1 className="display-title text-4xl md:text-5xl text-ink mt-2">Records</h1>
-        <p className="text-text-secondary mt-1 text-sm">
-          {typedOwners.length > 0
-            ? `${new Set(typedOwners.map((r) => r.record_key)).size} Records · alle 8 Owner`
-            : ""}
-        </p>
-      </div>
+      <PageHeader
+        title="Records"
+        crumbs={[{ label: "Trophy Room", href: "/trophies" }]}
+        description={typedOwners.length > 0
+          ? `${new Set(typedOwners.map((r) => r.record_key)).size} Records, alle 8 Manager`
+          : undefined}
+      />
 
       <RecordsBrowser
         ownerValues={typedOwners}

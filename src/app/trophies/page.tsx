@@ -5,8 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { MANAGERS } from "@/lib/constants";
 import { isBlunder, isNegativeRecord } from "@/lib/classifications";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 
 type Tab = "achievements" | "records";
+
+// The third entry leaves for the records browser so the three pages feel like one place
+const TABS = [
+  { key: "achievements", label: "Achievements" },
+  { key: "records", label: "Records" },
+  { key: "browse", label: <span className="inline-flex items-center gap-1">Alle Records <ChevronRight size={12} /></span> },
+] as const;
 
 interface Achievement {
   achievement_key: string;
@@ -26,24 +38,8 @@ interface RecordHolder {
   from_year: number;
 }
 
-function RecordPills({ labels, negative }: { labels: string[]; negative?: boolean }) {
-  if (labels.length === 0) return <span className="text-text-faint text-xs">—</span>;
-  return (
-    <div className="flex flex-col gap-1">
-      {labels.map((l) => (
-        <span key={l} className="label-nav text-xs px-1.5 py-0.5 rounded leading-snug"
-          style={{
-            background: negative ? "rgba(248,113,113,0.08)" : "rgba(255,255,255,0.06)",
-            color: negative ? "var(--color-red)" : "var(--color-text-muted)",
-          }}>
-          {l}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 export default function TrophyRoomPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("achievements");
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [records, setRecords] = useState<RecordHolder[]>([]);
@@ -63,7 +59,7 @@ export default function TrophyRoomPage() {
     fetchData();
   }, []);
 
-  if (loading) return <div className="text-text-muted text-center py-20">Lade Trophy Room...</div>;
+  if (loading) return <div className="py-20 text-center text-text-muted">Lade Trophy Room…</div>;
 
   // === ACHIEVEMENTS TAB DATA ===
   const achByManager: Record<string, { positive: Achievement[]; blunders: Achievement[] }> = {};
@@ -117,69 +113,43 @@ export default function TrophyRoomPage() {
     new Map(records.map((r) => [r.record_key, r])).values()
   ).sort((a, b) => a.record_label.localeCompare(b.record_label));
 
+  const th = "py-3 px-3 text-center text-xs font-medium text-text-muted";
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">Trophy Room</h1>
-        <p className="text-text-secondary mt-2">Records, Achievements und der ewige Ruhm</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
 
-      {/* Tab Switcher */}
-      <div className="flex gap-2">
-        {(["achievements", "records"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-xl px-5 py-2.5 transition-colors ${
-              tab === t
-                ? "bg-red text-white label-nav border border-red"
-                : "bg-surface text-text-secondary label-nav border border-border hover:text-ink"
-            }`}
-          >
-            {t === "achievements" ? "Achievements" : "Records"}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={TABS} value={tab} label="Bereich"
+        onChange={(k) => { if (k === "browse") router.push("/trophies/records"); else setTab(k); }} />
 
-      {/* ============ ACHIEVEMENTS TAB ============ */}
       {tab === "achievements" && (
         <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-text-muted text-left">
-                <th className="p-4 label-nav text-xs">Owner</th>
-                <th className="p-4 label-nav text-xs text-center">Achievements</th>
-                <th className="p-4 label-nav text-xs text-center"># Total</th>
-                <th className="p-4 label-nav text-xs text-center">Blunders</th>
-                <th className="p-4 label-nav text-xs text-center"># Total</th>
-                <th className="p-4 label-nav text-xs text-center">Total Badges</th>
+              <tr>
+                <th className="py-3 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
+                <th className={th}>Achievements</th>
+                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
+                <th className={th}>Blunders</th>
+                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
+                <th className={th}>Badges gesamt</th>
+                <th className="w-10 py-3 pr-4 sm:pr-5"><span className="sr-only">Trophäen</span></th>
               </tr>
             </thead>
             <tbody>
               {achSummary.map((row) => (
-                <tr key={row.manager} className="border-b border-border-light transition-colors hover:bg-cream/60">
-                  <td className="p-4">
-                    <Link
-                      href={`/trophies/${encodeURIComponent(row.manager)}`}
-                      className="font-medium text-ink hover:text-red transition-colors"
-                    >
-                      {row.manager}
-                    </Link>
+                <tr key={row.manager} className="border-t border-border-light hover:bg-surface-2">
+                  <td className="py-3 pl-4 pr-3 font-medium sm:pl-5">
+                    <ManagerName id={row.manager} />
                   </td>
-                  <td className="p-4 text-center font-semibold text-ink font-mono">
-                    {row.achievementTypes}
-                  </td>
-                  <td className="p-4 text-center font-mono text-text-muted text-xs">
-                    {row.achievementTotal}
-                  </td>
-                  <td className="p-4 text-center font-semibold font-mono" style={{ color: "var(--color-red)" }}>
-                    {row.blunderTypes}
-                  </td>
-                  <td className="p-4 text-center font-mono text-text-muted text-xs">
-                    {row.blunderTotal}
-                  </td>
-                  <td className="p-4 text-center font-semibold text-ink font-mono">
-                    {row.total}
+                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.achievementTypes}</td>
+                  <td className="hidden px-3 py-3 text-center text-xs tabular-nums text-text-muted sm:table-cell">{row.achievementTotal}</td>
+                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-negative">{row.blunderTypes}</td>
+                  <td className="hidden px-3 py-3 text-center text-xs tabular-nums text-text-muted sm:table-cell">{row.blunderTotal}</td>
+                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.total}</td>
+                  <td className="py-3 pr-4 text-right sm:pr-5">
+                    <Link href={`/trophies/${encodeURIComponent(row.manager)}`} aria-label={`Trophäen von ${row.manager}`}
+                      className="inline-flex text-text-muted hover:text-red"><ChevronRight size={16} /></Link>
                   </td>
                 </tr>
               ))}
@@ -188,45 +158,37 @@ export default function TrophyRoomPage() {
         </div>
       )}
 
-      {/* ============ RECORDS TAB ============ */}
       {tab === "records" && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div className="cell overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-text-muted text-left">
-                  <th className="p-4 label-nav text-xs">Owner</th>
-                  <th className="p-4 label-nav text-xs text-center">Positive Held</th>
-                  <th className="p-4 label-nav text-xs text-center">Negative Held</th>
-                  <th className="p-4 label-nav text-xs text-center">Total Held</th>
+                <tr>
+                  <th className="py-3 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
+                  <th className={th}>Positive Records</th>
+                  <th className={th}>Negative Records</th>
+                  <th className={`${th} pr-4 sm:pr-5`}>Records gesamt</th>
                 </tr>
               </thead>
               <tbody>
                 {recSummary.map((row) => (
-                  <tr key={row.manager} className="border-b border-border-light transition-colors align-top">
-                    <td className="p-4 font-medium text-ink">
-                      <Link href={`/manager/${row.manager}`} className="hover:text-red transition-colors">{row.manager}</Link>
-                    </td>
-                    <td className="p-4 text-center font-semibold text-ink">{row.positive}</td>
-                    <td className="p-4 text-center font-semibold" style={{ color: "var(--color-red)" }}>{row.negative}</td>
-                    <td className="p-4 text-center font-semibold text-ink">{row.total}</td>
+                  <tr key={row.manager} className="border-t border-border-light">
+                    <td className="py-3 pl-4 pr-3 font-medium sm:pl-5"><ManagerName id={row.manager} /></td>
+                    <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.positive}</td>
+                    <td className="px-3 py-3 text-center font-semibold tabular-nums text-negative">{row.negative}</td>
+                    <td className="py-3 pl-3 pr-4 text-center font-semibold tabular-nums text-ink sm:pr-5">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <Link
-            href="/trophies/records"
-            className="cell-hover p-5 flex items-center justify-between group"
-          >
+          <Link href="/trophies/records" className="cell-hover group flex items-center justify-between p-5">
             <div>
-              <div className="font-semibold text-ink group-hover:text-red transition-colors">Alle Records durchsuchen</div>
-              <div className="text-text-muted text-sm mt-0.5">
-                {uniqueRecords.length} Records in 8 Kategorien
-              </div>
+              <div className="font-semibold text-ink transition-colors group-hover:text-red">Alle Records durchsuchen</div>
+              <div className="mt-0.5 text-sm text-text-muted">{uniqueRecords.length} Records in 8 Kategorien</div>
             </div>
-            <span className="text-text-muted group-hover:text-red transition-colors text-lg">→</span>
+            <ChevronRight size={18} className="text-text-muted transition-colors group-hover:text-red" />
           </Link>
         </div>
       )}

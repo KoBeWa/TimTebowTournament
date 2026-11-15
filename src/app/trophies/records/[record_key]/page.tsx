@@ -1,6 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import { isNegativeRecord } from "@/lib/classifications";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import ManagerName from "@/components/ui/ManagerName";
+import RecordTabs from "./RecordTabs";
 import { notFound } from "next/navigation";
 
 type RankingRow = { manager: string; value: number };
@@ -96,43 +100,42 @@ export default async function RecordDetailPage({
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <Link href="/trophies" className="text-text-muted hover:text-ink text-sm transition-colors">← Trophy Room</Link>
-        <h1 className="display-title text-4xl md:text-5xl text-ink mt-2">{recordLabel}</h1>
-        <div className="flex items-center gap-2 mt-1">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${negative ? "bg-accent-red/15 text-negative" : "bg-accent-green/15 text-positive"}`}>
-            {negative ? "Negative Record" : "Positive Record"}
+    <div className="space-y-6">
+      <PageHeader
+        title={recordLabel}
+        crumbs={[{ label: "Trophy Room", href: "/trophies" }, { label: "Records", href: "/trophies/records" }]}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span className={`rounded px-2 py-0.5 text-xs font-semibold ${negative ? "bg-accent-red/15 text-negative" : "bg-accent-green/15 text-positive"}`}>
+              {negative ? "Negativer Record" : "Positiver Record"}
+            </span>
+            {isMatchupRecord && (
+              <span className="rounded bg-accent-blue/10 px-2 py-0.5 text-xs font-semibold text-accent-blue">Matchup-Record</span>
+            )}
           </span>
-          {isMatchupRecord && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue">Matchup Record</span>
-          )}
-        </div>
-      </div>
+        }
+      />
 
-      {/* Current Holder */}
       {currentHolder && (
-        <div className="cell p-8 text-center" style={{ borderColor: negative ? "var(--color-accent-red)" : "var(--color-gold-dark)", borderWidth: "1px" }}>
-          <div className="kicker mb-2">Current Record Holder</div>
-          <div className="text-5xl tracking-wider text-ink display-title">{currentHolder.manager_id}</div>
-          <div className="display-title text-2xl text-ink mt-2">{Number(currentHolder.record_value).toFixed(2)}</div>
-          <div className="text-text-muted text-sm mt-2">
-            {formatPeriod(currentHolder.from_year, currentHolder.from_week, currentHolder.to_year, currentHolder.to_week, true)} · {currentHolder.weeks_held} Wochen
+        <div className="cell p-6 text-center sm:p-8" style={{ borderColor: negative ? "var(--color-accent-red)" : "var(--color-gold-dark)", borderWidth: "1px" }}>
+          <div className="mb-2 text-sm text-text-muted">Aktueller Rekordhalter</div>
+          <div className="display-title text-4xl text-ink sm:text-5xl"><ManagerName id={currentHolder.manager_id} /></div>
+          <div className="mt-2 display-title text-2xl tabular-nums text-ink">{Number(currentHolder.record_value).toFixed(2)}</div>
+          <div className="mt-2 text-sm text-text-muted">
+            {formatPeriod(currentHolder.from_year, currentHolder.from_week, currentHolder.to_year, currentHolder.to_week, true)}, {currentHolder.weeks_held} Wochen
           </div>
         </div>
       )}
 
-      {/* All-Owner Ranking */}
-      <section>
-        <h2 className="section-title text-ink mb-4">Ranking — Alle Owner</h2>
-        {ranking ? (
-          <div className="cell overflow-hidden">
+      <RecordTabs
+        ranking={ranking ? (
+          <div className="cell overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-text-muted text-left">
-                  <th className="p-4 w-12">#</th>
-                  <th className="p-4">Manager</th>
-                  <th className="p-4 text-right">Wert</th>
+                <tr className="text-xs font-medium text-text-muted">
+                  <th className="w-12 py-3 pl-4 text-left font-medium sm:pl-5">#</th>
+                  <th className="px-3 py-3 text-left font-medium">Manager</th>
+                  <th className="py-3 pl-3 pr-4 text-right font-medium sm:pr-5">Wert</th>
                 </tr>
               </thead>
               <tbody>
@@ -140,15 +143,13 @@ export default async function RecordDetailPage({
                   const isCurrent = currentHolder?.manager_id === row.manager;
                   const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
                   return (
-                    <tr key={row.manager} className={`border-b border-border-light transition-colors ${isCurrent ? "bg-cream" : ""}`}>
-                      <td className="p-4 label-nav text-xs text-text-muted">{medal}</td>
-                      <td className="p-4">
-                        <Link href={`/manager/${row.manager}`} className="font-medium text-ink hover:text-red transition-colors">
-                          {row.manager}
-                          {isCurrent && <span className="text-red text-xs ml-2">RECORD</span>}
-                        </Link>
+                    <tr key={row.manager} className={`border-t border-border-light ${isCurrent ? "bg-surface-2" : ""}`}>
+                      <td className="py-3 pl-4 text-text-muted sm:pl-5">{medal}</td>
+                      <td className="px-3 py-3 font-medium">
+                        <ManagerName id={row.manager} />
+                        {isCurrent && <span className="ml-2 text-xs text-red">Rekord</span>}
                       </td>
-                      <td className={`p-4 text-right font-mono text-sm ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
+                      <td className={`py-3 pl-3 pr-4 text-right tabular-nums sm:pr-5 ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
                         {Number.isInteger(row.value) ? row.value : row.value.toFixed(2)}
                       </td>
                     </tr>
@@ -162,54 +163,41 @@ export default async function RecordDetailPage({
             Ranking für diesen Record-Typ wird noch implementiert.
           </div>
         )}
-      </section>
-
-      {/* Timeline */}
-      <section>
-        <h2 className="section-title text-ink mb-4">Record Timeline</h2>
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-[2.25rem] top-0 bottom-0 w-px bg-border" />
-
-          <div className="space-y-4">
-            {timeline.map((entry) => {
-              const link = matchupLinks[entry.id];
-              const period = formatPeriod(entry.from_year, entry.from_week, entry.to_year, entry.to_week, entry.is_current);
-
-              return (
-                <div key={entry.id} className="relative flex items-start gap-4 pl-2">
-                  {/* Dot on timeline */}
-                  <div className={`relative z-10 mt-4 w-5 h-5 rounded-full border-2 flex-shrink-0 ${
-                    entry.is_current ? "bg-ink border-ink" : "bg-cream border-border-light"
-                  }`} />
-
-                  {/* Content card */}
-                  <div className={`cell p-4 flex-1 flex items-center justify-between ${entry.is_current ? "border-border" : ""}`}>
-                    <div>
-                      <Link href={`/manager/${entry.manager_id}`}
-                        className={`font-semibold text-lg hover:text-red transition-colors ${entry.is_current ? "text-ink" : "text-ink"}`}>
-                        {entry.manager_id}
-                      </Link>
-                      <div className="text-text-muted text-sm">{period}</div>
-                      <div className="text-text-muted text-xs">{entry.weeks_held} Wochen gehalten</div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="font-mono text-lg text-ink">{Number(entry.record_value).toFixed(2)}</div>
-                      {link && (
-                        <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
-                          className="text-xs px-2 py-1 rounded bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 transition-colors whitespace-nowrap">
-                          Matchup →
-                        </Link>
-                      )}
+        timeline={
+          <div className="relative">
+            <div className="absolute bottom-0 left-[1.25rem] top-0 w-px bg-border" />
+            <div className="space-y-3">
+              {timeline.map((entry) => {
+                const link = matchupLinks[entry.id];
+                const period = formatPeriod(entry.from_year, entry.from_week, entry.to_year, entry.to_week, entry.is_current);
+                return (
+                  <div key={entry.id} className="relative flex items-start gap-3">
+                    <div className={`relative z-10 mt-5 h-3 w-3 shrink-0 rounded-full border-2 ml-3.5 ${
+                      entry.is_current ? "border-ink bg-ink" : "border-border-strong bg-surface"
+                    }`} />
+                    <div className="cell flex flex-1 items-center justify-between gap-3 p-4">
+                      <div className="min-w-0">
+                        <div className="text-lg font-semibold"><ManagerName id={entry.manager_id} /></div>
+                        <div className="text-sm text-text-muted">{period}</div>
+                        <div className="text-xs text-text-muted">{entry.weeks_held} Wochen gehalten</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
+                        <div className="text-lg tabular-nums text-ink">{Number(entry.record_value).toFixed(2)}</div>
+                        {link && (
+                          <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
+                            className="inline-flex items-center gap-0.5 whitespace-nowrap rounded bg-accent-blue/10 px-2 py-1 text-xs text-accent-blue transition-colors hover:bg-accent-blue/20">
+                            Matchup <ChevronRight size={12} />
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        }
+      />
     </div>
   );
 }
