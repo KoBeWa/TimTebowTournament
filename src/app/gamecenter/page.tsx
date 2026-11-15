@@ -4,6 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { SEASONS, CURRENT_SEASON } from "@/lib/constants";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 
 interface Matchup {
   season_year: number;
@@ -32,93 +36,79 @@ interface MatchupWithStats extends Matchup {
 
 function sign(n: number) { return n >= 0 ? `+${n.toFixed(1)}` : n.toFixed(1); }
 function signPct(n: number) { return (n >= 0 ? "+" : "") + n.toFixed(1) + "%"; }
+const pts = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const tone = (n: number | null) => (n === null || n === 0 ? "text-text-secondary" : n > 0 ? "text-positive" : "text-negative");
 
-function StatCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function StatRow({ label, a, b, toneA, toneB }: { label: string; a: string; b: string; toneA?: string; toneB?: string }) {
   return (
-    <div className="text-center">
-      <div className="label-nav text-xs text-text-faint" style={{ fontSize: "9px" }}>{label}</div>
-      <div className={`font-mono text-xs ${highlight ? "text-ink font-semibold" : "text-text-secondary"}`}>{value}</div>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-1 text-sm tabular-nums">
+      <span className={toneA ?? "text-text-secondary"}>{a}</span>
+      <span className="text-xs text-text-muted">{label}</span>
+      <span className={`text-right ${toneB ?? "text-text-secondary"}`}>{b}</span>
+    </div>
+  );
+}
+
+function Side({ id, score, won, align }: { id: string; score: number; won: boolean; align: "left" | "right" }) {
+  const right = align === "right";
+  return (
+    <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${right ? "flex-row-reverse text-right" : ""}`}>
+      <ManagerName id={id} plain className={`${right ? "flex-row-reverse" : ""} text-base ${won ? "font-semibold text-ink" : "text-text-muted"}`} />
+      <span className={`display-title text-xl sm:text-2xl tabular-nums ${right ? "mr-auto" : "ml-auto"} ${won ? "text-ink" : "text-text-faint"}`}>{pts(score)}</span>
     </div>
   );
 }
 
 function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number; week: number }) {
+  const [open, setOpen] = useState(false);
   const aWon = m.score_a > m.score_b;
+  const bWon = m.score_b > m.score_a;
+  const { statsA: a, statsB: b } = m;
   return (
-    <Link
-      href={`/gamecenter/${season}/${week}?a=${m.manager_a}&b=${m.manager_b}`}
-      className="cell-hover group block"
-      style={{ padding: "0" }}
-    >
-      {m.is_playoff && (
-        <div className="label-nav text-xs text-ink border-b border-border px-4 py-1.5">Playoff</div>
-      )}
+    <div className="cell overflow-hidden">
+      <Link
+        href={`/gamecenter/${season}/${week}?a=${m.manager_a}&b=${m.manager_b}`}
+        className="flex items-center gap-2.5 px-4 py-4 transition-colors hover:bg-surface-2 sm:gap-4 sm:px-5"
+      >
+        <Side id={m.manager_a} score={m.score_a} won={aWon} align="left" />
+        <span className="text-xs text-text-faint">vs</span>
+        <Side id={m.manager_b} score={m.score_b} won={bWon} align="right" />
+      </Link>
 
-      {/* Score header */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <div className={`display-title text-xl tracking-wide flex-1 ${aWon ? "text-ink" : "text-text-secondary"}`}>
-          {m.manager_a}
-        </div>
-        <div className="flex items-center gap-2 px-3">
-          <span className={`display-title text-2xl ${aWon ? "text-ink font-semibold" : "text-text-secondary"}`}>
-            {m.score_a.toFixed(1)}
-          </span>
-          <span className="text-text-muted text-xs">–</span>
-          <span className={`display-title text-2xl ${!aWon ? "text-ink font-semibold" : "text-text-secondary"}`}>
-            {m.score_b.toFixed(1)}
-          </span>
-        </div>
-        <div className={`display-title text-xl tracking-wide flex-1 text-right ${!aWon ? "text-ink" : "text-text-secondary"}`}>
-          {m.manager_b}
-        </div>
-      </div>
-
-      {/* Stats rows */}
-      <div style={{ borderTop: "1px solid var(--color-border-light)" }}>
-        {([["A", m.statsA, m.manager_a, aWon], ["B", m.statsB, m.manager_b, !aWon]] as const).map(
-          ([side, stats, name, won]) => (
-            <div
-              key={side}
-              className="flex items-center gap-3 px-5 py-2"
-              style={{
-                borderBottom: side === "A" ? "1px solid var(--color-border-light)" : undefined,
-                background: won ? "rgba(0,0,0,0.015)" : undefined,
-              }}
-            >
-              <div className="label-nav text-xs w-14 truncate" style={{ color: won ? "var(--color-ink)" : "var(--color-text-muted)" }}>
-                {name}
-              </div>
-              <div className="flex gap-4 flex-1 justify-between">
-                <StatCell
-                  label="vs Team Ø"
-                  value={signPct(stats.pts_vs_team_avg_pct)}
-                  highlight={stats.pts_vs_team_avg_pct > 0}
-                />
-                <StatCell
-                  label="vs Liga Ø"
-                  value={signPct(stats.pts_vs_league_avg_pct)}
-                  highlight={stats.pts_vs_league_avg_pct > 0}
-                />
-                <StatCell
-                  label="Pts Share"
-                  value={`${stats.pts_share_pct.toFixed(1)}% (#${stats.pts_rank})`}
-                  highlight={stats.pts_rank <= 2}
-                />
-                <StatCell
-                  label="Coach"
-                  value={stats.coach_score !== null ? `${stats.coach_score.toFixed(1)} (#${stats.coach_rank})` : "—"}
-                />
-                <StatCell
-                  label="Luck"
-                  value={stats.luck !== null ? sign(stats.luck) : "—"}
-                  highlight={stats.luck !== null && stats.luck > 0}
-                />
-              </div>
-            </div>
-          )
+      <div className="border-t border-border-light px-4 py-2 sm:px-5">
+        <StatRow
+          label="Coach-Score"
+          a={a.coach_score !== null ? a.coach_score.toFixed(1) : "–"}
+          b={b.coach_score !== null ? b.coach_score.toFixed(1) : "–"}
+        />
+        <StatRow
+          label="Luck"
+          a={a.luck !== null ? sign(a.luck) : "–"}
+          b={b.luck !== null ? sign(b.luck) : "–"}
+          toneA={tone(a.luck)}
+          toneB={tone(b.luck)}
+        />
+        {open && (
+          <>
+            <StatRow label="Coach-Rang" a={a.coach_rank !== null ? `#${a.coach_rank}` : "–"} b={b.coach_rank !== null ? `#${b.coach_rank}` : "–"} />
+            <StatRow label="vs Team Ø" a={signPct(a.pts_vs_team_avg_pct)} b={signPct(b.pts_vs_team_avg_pct)} toneA={tone(a.pts_vs_team_avg_pct)} toneB={tone(b.pts_vs_team_avg_pct)} />
+            <StatRow label="vs Liga Ø" a={signPct(a.pts_vs_league_avg_pct)} b={signPct(b.pts_vs_league_avg_pct)} toneA={tone(a.pts_vs_league_avg_pct)} toneB={tone(b.pts_vs_league_avg_pct)} />
+            <StatRow label="Punkteanteil" a={`${a.pts_share_pct.toFixed(1)}%`} b={`${b.pts_share_pct.toFixed(1)}%`} />
+            <StatRow label="Wochenrang" a={`#${a.pts_rank}`} b={`#${b.pts_rank}`} />
+          </>
         )}
       </div>
-    </Link>
+
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-center gap-1 border-t border-border-light px-4 py-2 text-xs text-text-muted transition-colors hover:text-ink"
+      >
+        {open ? "Weniger" : "Details"}
+        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+    </div>
   );
 }
 
@@ -126,26 +116,25 @@ export default function GamecenterPage() {
   const [season, setSeason] = useState(CURRENT_SEASON);
   const [week, setWeek] = useState<number | null>(null);
   const [maxWeek, setMaxWeek] = useState(16);
+  const [playoffWeeks, setPlayoffWeeks] = useState<number[]>([]);
   const [matchups, setMatchups] = useState<MatchupWithStats[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   // Detect latest week for a season
   const detectLatestWeek = useCallback(async (s: number) => {
     const { data } = await supabase
       .from("weekly_matchups")
-      .select("week")
+      .select("week, is_playoff")
       .eq("season_year", s)
-      .order("week", { ascending: false })
-      .limit(1);
+      .order("week", { ascending: false });
     const latest = data?.[0]?.week ?? 1;
     setMaxWeek(latest);
+    setPlayoffWeeks([...new Set((data ?? []).filter((r) => r.is_playoff).map((r) => r.week as number))].sort((x, y) => x - y));
     return latest;
   }, []);
 
   // Fetch week data + compute stats
   const fetchWeekData = useCallback(async (s: number, w: number) => {
-    setLoading(true);
-
     const [
       { data: rawMatchups },
       { data: weekScores },
@@ -203,91 +192,67 @@ export default function GamecenterPage() {
     }));
 
     setMatchups(enriched);
-    setLoading(false);
+    setLoadedKey(`${s}-${w}`);
   }, []);
 
-  // On mount: detect latest week for current season
+  // Detect the latest week whenever the season changes (also on mount)
   useEffect(() => {
-    detectLatestWeek(CURRENT_SEASON).then((latest) => {
-      setWeek(latest);
-    });
-  }, [detectLatestWeek]);
-
-  // When season changes (user click)
-  useEffect(() => {
-    if (season === CURRENT_SEASON) return; // handled on mount
-    detectLatestWeek(season).then((latest) => {
-      setWeek(latest);
-    });
+    let cancelled = false;
+    (async () => {
+      const latest = await detectLatestWeek(season);
+      if (!cancelled) setWeek(latest);
+    })();
+    return () => { cancelled = true; };
   }, [season, detectLatestWeek]);
 
   // Fetch data when week is known
   useEffect(() => {
     if (week === null) return;
-    fetchWeekData(season, week);
+    (async () => { await fetchWeekData(season, week); })();
   }, [season, week, fetchWeekData]);
 
-  const weeks = Array.from({ length: maxWeek }, (_, i) => i + 1);
+  const loading = week === null || loadedKey !== `${season}-${week}`;
+
+  const weekTabs = Array.from({ length: maxWeek }, (_, i) => {
+    const w = i + 1;
+    const po = playoffWeeks.indexOf(w);
+    return { key: w, label: po >= 0 ? `PO ${po + 1}` : String(w) };
+  });
 
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="kicker">Gamecenter</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">Gamecenter</h1>
-        <p className="text-text-secondary mt-2">Jedes Matchup, jeder Punkt, jede Woche</p>
-      </div>
+    <div>
+      <PageHeader title="Gamecenter" description="Jedes Matchup, jeder Punkt, jede Woche" />
 
-      {/* Selectors */}
-      <div className="flex flex-wrap gap-6">
-        <div>
-          <label className="kicker block mb-2">Season</label>
-          <div className="flex flex-wrap gap-1">
-            {SEASONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => setSeason(s)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  s === season
-                    ? "bg-red text-white font-semibold"
-                    : "bg-cream text-text-secondary hover:text-ink border border-border"
-                }`}
-              >
-                {s}
-              </button>
+      <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <label className="flex items-center gap-2 text-sm text-text-muted">
+          Saison
+          <select
+            value={season}
+            onChange={(e) => setSeason(Number(e.target.value))}
+            className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-ink"
+          >
+            {[...SEASONS].reverse().map((s) => (
+              <option key={s} value={s}>{s}</option>
             ))}
-          </div>
-        </div>
-        <div>
-          <label className="kicker block mb-2">Week</label>
-          <div className="flex flex-wrap gap-1">
-            {weeks.map((w) => (
-              <button
-                key={w}
-                onClick={() => setWeek(w)}
-                className={`w-10 h-9 text-sm rounded-lg transition-colors ${
-                  w === week
-                    ? "bg-red text-white font-semibold"
-                    : "bg-cream text-text-secondary hover:text-ink border border-border"
-                }`}
-              >
-                {w}
-              </button>
-            ))}
-          </div>
+          </select>
+        </label>
+        <div className="flex min-w-0 max-w-full items-center gap-2 text-sm text-text-muted">
+          <span className="shrink-0">Woche</span>
+          {week !== null && <Tabs tabs={weekTabs} value={week} onChange={setWeek} size="sm" label="Woche" />}
         </div>
       </div>
 
-      {/* Matchup Cards */}
-      {loading || week === null ? (
-        <div className="text-text-muted text-center py-12">Lade Matchups...</div>
+      {/* Keep the previous cards visible (dimmed) while the next week loads */}
+      {matchups.length === 0 && loading ? (
+        <div className="py-12 text-center text-text-muted">Lade Matchups...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 items-start gap-4 transition-opacity md:grid-cols-2 ${loading ? "opacity-50" : ""}`}>
           {matchups.map((m) => (
             <MatchupCard
               key={`${m.manager_a}-${m.manager_b}`}
               m={m}
-              season={season}
-              week={week}
+              season={m.season_year}
+              week={m.week}
             />
           ))}
         </div>
