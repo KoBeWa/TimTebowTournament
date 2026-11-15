@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import Tabs from "@/components/ui/Tabs";
 import TeamChart, { DST_TEAM, NFL_TEAMS } from "./TeamChart";
 import { fetchAll, loadPlayerSummaries, playerHref, POSITIONS, type PlayerManagerStats, type PlayerSummary } from "@/lib/players";
 
@@ -158,9 +159,14 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
 
   const fmt = (n: number | null) => (n == null ? "–" : n.toFixed(1));
 
+  const thBase = "py-2.5 px-3 text-xs font-medium text-text-muted whitespace-nowrap";
+  // Columns kept on phones; the rest only from lg
+  const PHONE = new Set<SortKey>(["name", "position", "weeks", "starts", "points"]);
+  const vis = (k: SortKey) => (PHONE.has(k) ? "" : "hidden lg:table-cell");
+
   return (
-    <section>
-      <div className="flex flex-wrap items-end justify-between gap-2 mb-4">
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 className="section-title text-ink">Spieler</h2>
         {!loading && <span className="text-sm text-text-muted">{rows.length} Spieler seit 2015 im Kader</span>}
       </div>
@@ -169,46 +175,36 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
         <TeamChart counts={teamCounts} selected={team} onSelect={(t) => { setTeam(t); setLimit(PAGE); }} />
       )}
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {FILTERS.map((f) => (
-          <button key={f.key} onClick={() => { setFilter(f.key); setLimit(PAGE); }}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filter === f.key ? "bg-red text-white font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
-            {f.label} {!loading && <span className={filter === f.key ? "text-white/80" : "text-text-faint"}>{counts[f.key]}</span>}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <Tabs size="sm" label="Filter" value={filter} onChange={(k) => { setFilter(k); setLimit(PAGE); }}
+          tabs={FILTERS.map((f) => ({ key: f.key, label: f.label, count: loading ? undefined : counts[f.key] }))} />
+        <Tabs size="sm" label="Position" value={pos} onChange={(k) => { setPos(k); setLimit(PAGE); }}
+          tabs={["all", ...POSITIONS].map((p) => ({ key: p, label: p === "all" ? "Alle Pos." : p }))} />
       </div>
-      <div className="flex flex-wrap gap-3 items-center mb-3">
+      <div className="flex flex-wrap items-center gap-3">
         <label className="relative flex-1 min-w-[12rem]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Spieler suchen…"
             className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2 text-sm text-ink placeholder:text-text-faint focus:border-red focus:outline-none" />
         </label>
-        <div className="flex flex-wrap gap-1">
-          {["all", ...POSITIONS].map((p) => (
-            <button key={p} onClick={() => setPos(p)}
-              className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${pos === p ? "bg-surface-3 text-ink font-semibold" : "text-text-muted hover:text-ink border border-border"}`}>
-              {p === "all" ? "Alle Pos." : p}
-            </button>
-          ))}
-        </div>
         {team && (
           <button onClick={() => setTeam(null)}
-            className="px-2.5 py-1 text-xs rounded-lg bg-surface-3 text-ink border border-border-strong">
+            className="rounded-lg border border-border-strong bg-surface-3 px-2.5 py-1 text-xs text-ink">
             Team: {team} ✕
           </button>
         )}
       </div>
 
       {loading ? (
-        <div className="text-text-muted text-center py-10">Lade Spieler…</div>
+        <div className="py-10 text-center text-text-muted">Lade Spieler…</div>
       ) : (
         <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
-                {COLUMNS.map((c) => (
+              <tr>
+                {COLUMNS.map((c, i) => (
                   <th key={c.key} title={c.title}
-                    className={`px-3 py-2 kicker font-normal whitespace-nowrap ${c.align === "left" ? "text-left" : "text-right"}`}>
+                    className={`${thBase} ${vis(c.key)} ${i === 0 ? "pl-4 sm:pl-5" : ""} ${i === COLUMNS.length - 1 ? "pr-4 sm:pr-5" : ""} ${c.align === "left" ? "text-left" : "text-right"}`}>
                     <button onClick={() => sortBy(c.key)} className={sort.key === c.key ? "text-red" : "hover:text-ink"}>
                       {c.label}{sort.key === c.key ? (sort.desc ? " ↓" : " ↑") : ""}
                     </button>
@@ -218,26 +214,26 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
             </thead>
             <tbody>
               {shown.slice(0, limit).map((r) => (
-                <tr key={r.key} className="border-b border-border-light hover:bg-surface-2">
-                  <td className="px-3 py-2">
-                    <Link href={playerHref(r.key)} className="flex items-center gap-2.5 group">
+                <tr key={r.key} className="border-t border-border-light hover:bg-surface-2">
+                  <td className="py-2 pl-4 pr-3 sm:pl-5">
+                    <Link href={playerHref(r.key)} className="group flex items-center gap-2.5">
                       <PlayerAvatar p={{ headshot: r.headshot, player_name: r.name, position: r.position }} size={28} />
-                      <span className="text-ink font-medium group-hover:text-red whitespace-nowrap">{r.name}</span>
+                      <span className="whitespace-nowrap font-medium text-ink group-hover:text-red">{r.name}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2 text-text-secondary">{r.position ?? "–"}</td>
-                  <td className="px-3 py-2 text-text-secondary">{r.team ?? "–"}</td>
-                  <td className="px-3 py-2 text-text-secondary whitespace-nowrap">
+                  <td className="px-3 py-2 text-text-muted">{r.position ?? "–"}</td>
+                  <td className="hidden px-3 py-2 text-text-muted lg:table-cell">{r.team ?? "–"}</td>
+                  <td className="hidden whitespace-nowrap px-3 py-2 text-text-muted lg:table-cell">
                     {r.first == null ? "–" : r.first === r.last ? r.first : `${r.first}–${r.last}`}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono">{r.weeks}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.starts}</td>
-                  <td className="px-3 py-2 text-right font-mono text-ink">{r.points.toFixed(1)}</td>
-                  <td className="px-3 py-2 text-right font-mono">{fmt(r.avg)}</td>
-                  <td className="px-3 py-2 text-right font-mono">{fmt(r.best)}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.drafted || "–"}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.adds || "–"}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.trades || "–"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{r.weeks}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{r.starts}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-ink">{r.points.toFixed(1)}</td>
+                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{fmt(r.avg)}</td>
+                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{fmt(r.best)}</td>
+                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{r.drafted || "–"}</td>
+                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{r.adds || "–"}</td>
+                  <td className="hidden py-2 pl-3 pr-4 text-right tabular-nums sm:pr-5 lg:table-cell">{r.trades || "–"}</td>
                 </tr>
               ))}
               {shown.length === 0 && (
@@ -247,7 +243,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
           </table>
           {shown.length > limit && (
             <button onClick={() => setLimit((l) => l + PAGE)}
-              className="w-full px-4 py-3 text-sm text-text-secondary hover:text-ink hover:bg-surface-2 border-t border-border-light">
+              className="w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:bg-surface-2 hover:text-ink">
               {Math.min(PAGE, shown.length - limit)} weitere anzeigen ({shown.length - limit} übrig)
             </button>
           )}

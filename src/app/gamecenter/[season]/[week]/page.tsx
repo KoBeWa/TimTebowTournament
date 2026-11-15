@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { MANAGER_COLORS } from "@/lib/constants";
+import PageHeader from "@/components/ui/PageHeader";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 import ScoreTimeline from "./ScoreTimeline";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -39,6 +43,13 @@ interface H2HData {
   prevMatchup: { season: number; week: number; scoreA: number; scoreB: number } | null;
 }
 
+type TabKey = "lineups" | "verlauf" | "vergleich";
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "lineups", label: "Lineups" },
+  { key: "verlauf", label: "Spielverlauf" },
+  { key: "vergleich", label: "Vergleich" },
+];
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SLOT_ORDER = ["QB", "RB1", "RB2", "WR1", "WR2", "TE", "FLEX", "K", "DST"];
@@ -73,7 +84,7 @@ function StatLine({ player }: { player: LineupPlayer }) {
     <span className="text-text-muted text-xs">
       {s.completions}/{s.attempts}, {s.passing_yards} YDS, {s.passing_tds} TD
       {(s.passing_interceptions ?? 0) > 0 && `, ${s.passing_interceptions} INT`}
-      {(s.carries ?? 0) > 0 && ` · ${s.carries} CAR, ${s.rushing_yards} YDS`}
+      {(s.carries ?? 0) > 0 && `; ${s.carries} CAR, ${s.rushing_yards} YDS`}
       {(s.rushing_tds ?? 0) > 0 && `, ${s.rushing_tds} TD`}
     </span>
   );
@@ -81,7 +92,7 @@ function StatLine({ player }: { player: LineupPlayer }) {
   if (pos === "RB") return (
     <span className="text-text-muted text-xs">
       {s.carries ?? 0} CAR, {s.rushing_yards ?? 0} YDS{(s.rushing_tds ?? 0) > 0 && `, ${s.rushing_tds} TD`}
-      {(s.receptions ?? 0) > 0 && ` · ${s.receptions} REC, ${s.receiving_yards} YDS`}
+      {(s.receptions ?? 0) > 0 && `; ${s.receptions} REC, ${s.receiving_yards} YDS`}
       {(s.receiving_tds ?? 0) > 0 && `, ${s.receiving_tds} TD`}
     </span>
   );
@@ -90,13 +101,13 @@ function StatLine({ player }: { player: LineupPlayer }) {
     <span className="text-text-muted text-xs">
       {s.receptions ?? 0}/{s.targets ?? 0} REC, {s.receiving_yards ?? 0} YDS
       {(s.receiving_tds ?? 0) > 0 && `, ${s.receiving_tds} TD`}
-      {(s.carries ?? 0) > 0 && ` · ${s.carries} CAR, ${s.rushing_yards} YDS`}
+      {(s.carries ?? 0) > 0 && `; ${s.carries} CAR, ${s.rushing_yards} YDS`}
     </span>
   );
 
   if (pos === "K") return (
     <span className="text-text-muted text-xs">
-      FG {s.fg_made ?? 0}/{s.fg_att ?? 0} · PAT {s.pat_made ?? 0}/{s.pat_att ?? 0}
+      FG {s.fg_made ?? 0}/{s.fg_att ?? 0}, PAT {s.pat_made ?? 0}/{s.pat_att ?? 0}
     </span>
   );
 
@@ -106,12 +117,11 @@ function StatLine({ player }: { player: LineupPlayer }) {
 // ─── Lineup table ─────────────────────────────────────────────────────────────
 
 function LineupTable({
-  lineup, label, positionWins, reversed,
+  lineup, managerId, positionWins,
 }: {
   lineup: LineupPlayer[];
-  label: string;
-  positionWins: Record<string, boolean>; // slot → did this team win the pos battle for this slot?
-  reversed?: boolean;
+  managerId: string;
+  positionWins: Record<string, boolean>; // pos group → did this team win the position battle?
 }) {
   const starters = lineup
     .filter((p) => p.is_starter)
@@ -127,201 +137,170 @@ function LineupTable({
     return slot;
   };
 
-  return (
-    <div className="flex-1 min-w-0">
-      <h3 className={`display-title text-2xl tracking-wide mb-4 text-ink ${reversed ? "text-right" : ""}`}>
-        {label}
-      </h3>
-      <div className="space-y-1">
-        {starters.map((p) => {
-          // Position group for this slot (e.g. RB1 → "RB")
-          const posGroup = Object.entries(POS_GROUPS).find(([, slots]) => slots.includes(p.slot))?.[0] ?? p.slot;
-          const wonBattle = positionWins[posGroup] === true;
-          return (
-            <div
-              key={p.slot}
-              className="flex items-center gap-3 p-3 rounded-lg transition-colors"
-              style={{
-                background: wonBattle ? "rgba(255,255,255,0.06)" : "transparent",
-                border: wonBattle ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
-              }}
-            >
-              {reversed && (
-                <div className="display-title text-lg tracking-wide text-ink ml-auto order-last">
-                  {p.points.toFixed(1)}
-                </div>
-              )}
-              {/* Slot badge */}
-              <div className="w-9 text-center flex-shrink-0">
-                <span className="text-xs font-semibold text-red">{slotLabel(p.slot)}</span>
-              </div>
-              {/* Headshot */}
-              <div className="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden bg-border-light flex items-center justify-center">
-                {p.headshot ? (
-                  <img
-                    src={p.headshot}
-                    alt={p.player_name}
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-cover object-top"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                ) : (
-                  <span className="text-xs text-text-faint font-semibold">
-                    {p.player_name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                  </span>
-                )}
-              </div>
-              {/* Name + stats */}
-              <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium text-ink truncate ${reversed ? "text-right" : ""}`}>
-                  {p.player_name}
-                </div>
-                <div className={reversed ? "text-right" : ""}>
-                  <StatLine player={p} />
-                </div>
-              </div>
-              {!reversed && (
-                <div className="display-title text-lg tracking-wide text-ink">
-                  {p.points.toFixed(1)}
-                </div>
-              )}
-              {wonBattle && (
-                <div className="w-1.5 h-1.5 rounded-full bg-ink flex-shrink-0" title="Position Battle gewonnen" />
-              )}
-            </div>
-          );
-        })}
-      </div>
+  const total = starters.reduce((sum, p) => sum + p.points, 0);
 
-      {bench.length > 0 && (
-        <>
-          <div className="kicker mt-5 mb-2 px-3">Bench</div>
-          <div className="space-y-1">
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h3 className="text-base font-semibold text-ink">
+          <ManagerName id={managerId} />
+        </h3>
+        <span className="text-sm tabular-nums text-text-muted">{total.toFixed(1)} Punkte</span>
+      </div>
+      <div className="cell overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs font-medium text-text-muted">
+              <th className="py-2.5 pl-4 pr-2 font-medium sm:pl-5">Slot</th>
+              <th className="px-2 py-2.5 font-medium">Spieler</th>
+              <th className="hidden px-2 py-2.5 font-medium md:table-cell">Statistik</th>
+              <th className="py-2.5 pl-2 pr-4 text-right font-medium sm:pr-5">Punkte</th>
+            </tr>
+          </thead>
+          <tbody>
+            {starters.map((p) => {
+              // Position group for this slot (e.g. RB1 → "RB")
+              const posGroup = Object.entries(POS_GROUPS).find(([, slots]) => slots.includes(p.slot))?.[0] ?? p.slot;
+              const wonBattle = positionWins[posGroup] === true;
+              return (
+                <tr key={p.slot} className="border-t border-border-light">
+                  <td className="py-2 pl-4 pr-2 text-xs font-semibold text-red sm:pl-5">{slotLabel(p.slot)}</td>
+                  <td className="px-2 py-2">
+                    <div className="flex items-center gap-3">
+                      <div className="hidden h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-border-light md:flex">
+                        {p.headshot ? (
+                          <img
+                            src={p.headshot}
+                            alt={p.player_name}
+                            width={36}
+                            height={36}
+                            className="h-full w-full object-cover object-top"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        ) : (
+                          <span className="text-xs font-semibold text-text-faint">
+                            {p.player_name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          </span>
+                        )}
+                      </div>
+                      <span className="truncate font-medium text-ink">{p.player_name}</span>
+                    </div>
+                  </td>
+                  <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
+                  <td className="whitespace-nowrap py-2 pl-2 pr-4 text-right tabular-nums text-ink sm:pr-5">
+                    <span className="font-semibold">{p.points.toFixed(1)}</span>
+                    {wonBattle && (
+                      <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-positive align-middle" title="Position-Battle gewonnen" />
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {bench.length > 0 && (
+              <tr className="border-t border-border bg-surface-2">
+                <td colSpan={4} className="py-1.5 pl-4 pr-4 text-xs font-medium text-text-muted sm:pl-5">Bank</td>
+              </tr>
+            )}
             {bench.map((p, i) => (
-              <div
-                key={`bench-${i}`}
-                className="flex items-center gap-3 p-2 px-3 rounded-lg"
-                style={{
-                  background: p.shouldHaveStarted ? "rgba(200,50,50,0.08)" : undefined,
-                  border: p.shouldHaveStarted ? "1px solid rgba(200,50,50,0.2)" : "1px solid transparent",
-                  opacity: p.shouldHaveStarted ? 1 : 0.55,
-                }}
-              >
-                <div className="w-9 text-center flex-shrink-0">
-                  <span className="text-xs text-text-muted">BN</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className={`text-sm truncate ${p.shouldHaveStarted ? "text-ink font-medium" : "text-text-secondary"}`}>
-                    {p.player_name}
-                  </span>
-                  {p.shouldHaveStarted && (
-                    <span className="ml-2 text-xs" style={{ color: "var(--color-negative)" }}>hätte starten sollen</span>
-                  )}
-                </div>
-                <div className={`text-sm font-mono ${p.shouldHaveStarted ? "text-ink font-semibold" : "text-text-muted"}`}>
+              <tr key={`bench-${i}`} className={`border-t border-border-light ${p.shouldHaveStarted ? "" : "opacity-60"}`}>
+                <td className="py-2 pl-4 pr-2 text-xs text-text-muted sm:pl-5">BN</td>
+                <td className="px-2 py-2">
+                  <span className={`truncate ${p.shouldHaveStarted ? "font-medium text-ink" : "text-text-secondary"}`}>{p.player_name}</span>
+                  {p.shouldHaveStarted && <span className="ml-2 text-xs text-negative">hätte starten sollen</span>}
+                </td>
+                <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
+                <td className={`py-2 pl-2 pr-4 text-right tabular-nums sm:pr-5 ${p.shouldHaveStarted ? "font-semibold text-ink" : "text-text-muted"}`}>
                   {p.points.toFixed(1)}
-                </div>
-              </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        </>
-      )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-// ─── Team stat bar ─────────────────────────────────────────────────────────────
+// ─── Team stat card ───────────────────────────────────────────────────────────
 
-function TeamStatBar({ stats, label, won }: { stats: TeamWeekStats; label: string; won: boolean }) {
+function TeamStatBar({ stats, managerId, won }: { stats: TeamWeekStats; managerId: string; won: boolean }) {
   const signPct = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
   const sign = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(2);
+  const color = MANAGER_COLORS[managerId] ?? "var(--color-border-strong)";
 
   const items = [
-    { label: "Pts Share", value: `${stats.pts_share_pct.toFixed(1)}%` },
-    { label: "Pts Rank", value: `#${stats.pts_rank}` },
+    { label: "Punkteanteil", value: `${stats.pts_share_pct.toFixed(1)}%` },
+    { label: "Wochenrang", value: `#${stats.pts_rank}` },
     { label: "vs Team Ø", value: signPct(stats.pts_vs_team_avg_pct) },
     { label: "vs Liga Ø", value: signPct(stats.pts_vs_league_avg_pct) },
-    { label: "Luck", value: stats.luck !== null ? sign(stats.luck) : "—" },
-    { label: "Coach Rank", value: stats.coach_rank !== null ? `#${stats.coach_rank}` : "—" },
-    { label: "Coach Score", value: stats.coach_score !== null ? stats.coach_score.toFixed(1) : "—" },
+    { label: "Luck", value: stats.luck !== null ? sign(stats.luck) : "–" },
+    { label: "Coach-Rang", value: stats.coach_rank !== null ? `#${stats.coach_rank}` : "–" },
+    { label: "Coach-Score", value: stats.coach_score !== null ? stats.coach_score.toFixed(1) : "–" },
   ];
 
   return (
-    <div
-      className="flex-1 rounded-lg p-4"
-      style={{ background: won ? "rgba(255,255,255,0.06)" : "transparent", border: "1px solid var(--color-border-light)" }}
-    >
-      <div className={`display-title text-lg mb-3 ${won ? "text-ink" : "text-text-secondary"}`}>{label}</div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+    <div className="cell flex-1 overflow-hidden" style={{ boxShadow: `inset 0 3px 0 ${color}` }}>
+      <div className={`px-4 pb-1 pt-3 text-base sm:px-5 ${won ? "font-semibold text-ink" : "text-text-secondary"}`}>
+        <ManagerName id={managerId} plain />
+      </div>
+      <dl>
         {items.map((item) => (
-          <div key={item.label} className="flex justify-between gap-2">
-            <span className="label-nav text-xs text-text-muted">{item.label}</span>
-            <span className="label-nav text-xs font-semibold text-ink">{item.value}</span>
+          <div key={item.label} className="flex justify-between gap-2 border-t border-border-light px-4 py-2 text-sm sm:px-5">
+            <dt className="text-text-muted">{item.label}</dt>
+            <dd className="font-medium tabular-nums text-ink">{item.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </div>
   );
 }
 
 // ─── H2H section ──────────────────────────────────────────────────────────────
 
-function H2HSection({ h2h, managerA, managerB, season, week }: {
+function H2HSection({ h2h, managerA, managerB }: {
   h2h: H2HData;
   managerA: string;
   managerB: string;
-  season: number;
-  week: number;
 }) {
   const margin = h2h.avgNetMarginForA;
   const favoredA = margin >= 0;
   return (
-    <div className="cell p-6">
-      <div className="kicker mb-4">Head to Head History</div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* All-time record */}
-        <div>
-          <div className="label-nav text-xs text-text-muted mb-1">All-Time Record</div>
-          <div className="display-title text-xl text-ink">{h2h.record}</div>
-          <div className="text-xs text-text-muted mt-0.5">{managerA} vs {managerB}</div>
+    <section>
+      <h2 className="section-title mb-4 text-ink">Direkter Vergleich</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="cell p-4">
+          <div className="text-xs text-text-muted">Bilanz gesamt</div>
+          <div className="display-title mt-1 text-xl tabular-nums text-ink">{h2h.record}</div>
+          <div className="mt-0.5 text-xs text-text-muted">{managerA} gegen {managerB}</div>
         </div>
-
-        {/* Win streak */}
-        <div>
-          <div className="label-nav text-xs text-text-muted mb-1">Aktueller Streak</div>
-          <div className="display-title text-xl text-ink">{h2h.winnerStreak}×</div>
-          <div className="text-xs text-text-muted mt-0.5">{h2h.winner} in Serie</div>
+        <div className="cell p-4">
+          <div className="text-xs text-text-muted">Aktuelle Serie</div>
+          <div className="display-title mt-1 text-xl tabular-nums text-ink">{h2h.winnerStreak}×</div>
+          <div className="mt-0.5 text-xs text-text-muted">{h2h.winner}</div>
         </div>
-
-        {/* Avg net margin */}
-        <div>
-          <div className="label-nav text-xs text-text-muted mb-1">Ø Net Margin</div>
-          <div className={`display-title text-xl ${favoredA ? "text-ink" : "text-text-secondary"}`}>
+        <div className="cell p-4">
+          <div className="text-xs text-text-muted">Ø Punktedifferenz</div>
+          <div className={`display-title mt-1 text-xl tabular-nums ${favoredA ? "text-ink" : "text-text-secondary"}`}>
             {favoredA ? "+" : ""}{Math.abs(margin).toFixed(1)}
           </div>
-          <div className="text-xs text-text-muted mt-0.5">zugunsten {favoredA ? managerA : managerB}</div>
+          <div className="mt-0.5 text-xs text-text-muted">zugunsten {favoredA ? managerA : managerB}</div>
         </div>
-
-        {/* Previous matchup */}
         {h2h.prevMatchup && (
-          <div>
-            <div className="label-nav text-xs text-text-muted mb-1">Letztes Aufeinandertreffen</div>
-            <Link
-              href={`/gamecenter/${h2h.prevMatchup.season}/${h2h.prevMatchup.week}?a=${managerA}&b=${managerB}`}
-              className="group"
-            >
-              <div className="display-title text-xl text-ink group-hover:text-red transition-colors">
-                {h2h.prevMatchup.scoreA.toFixed(1)} – {h2h.prevMatchup.scoreB.toFixed(1)}
-              </div>
-              <div className="text-xs text-text-muted mt-0.5">
-                {h2h.prevMatchup.season} · Woche {h2h.prevMatchup.week}
-              </div>
-            </Link>
-          </div>
+          <Link
+            href={`/gamecenter/${h2h.prevMatchup.season}/${h2h.prevMatchup.week}?a=${managerA}&b=${managerB}`}
+            className="cell group p-4 transition-colors hover:bg-surface-2"
+          >
+            <div className="text-xs text-text-muted">Letztes Aufeinandertreffen</div>
+            <div className="display-title mt-1 text-xl tabular-nums text-ink group-hover:text-red transition-colors">
+              {h2h.prevMatchup.scoreA.toFixed(1)} – {h2h.prevMatchup.scoreB.toFixed(1)}
+            </div>
+            <div className="mt-0.5 text-xs text-text-muted">
+              Saison {h2h.prevMatchup.season}, Woche {h2h.prevMatchup.week}
+            </div>
+          </Link>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -341,6 +320,7 @@ export default function MatchupDetailPage({
   const [statsB, setStatsB] = useState<TeamWeekStats | null>(null);
   const [h2h, setH2H] = useState<H2HData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<TabKey>("lineups");
 
   useEffect(() => { params.then(setResolvedParams); }, [params]);
 
@@ -530,57 +510,64 @@ export default function MatchupDetailPage({
 
   const { a: posWinsA, b: posWinsB } = getPositionBattle(lineupA, lineupB);
 
+  const color = (id: string) => MANAGER_COLORS[id] ?? "var(--color-border-strong)";
+
   return (
-    <div className="space-y-8">
-      <Link href="/gamecenter" className="text-text-muted hover:text-ink text-sm transition-colors">← Gamecenter</Link>
+    <div>
+      <PageHeader
+        crumbs={[{ label: "Gamecenter", href: "/gamecenter" }]}
+        title={`${matchup.manager_a} vs ${matchup.manager_b}`}
+        description={`Saison ${season}, Woche ${week}${matchup.is_playoff ? ", Playoff" : ""}`}
+      />
 
       {/* Score header */}
-      <div className="cell p-4 sm:p-8">
-        <div className="flex items-center justify-between text-center">
-          <div className="flex-1 min-w-0">
-            <div className="kicker mb-1">{aWon ? "Winner" : ""}</div>
-            <div className={`display-title text-xl sm:text-4xl md:text-5xl tracking-wider truncate ${aWon ? "text-red" : "text-text-secondary"}`}>
-              {matchup.manager_a}
-            </div>
+      <div className="cell mb-6 overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-4 py-6 text-center sm:px-8 sm:py-8">
+          <div className="min-w-0 flex-1">
+            <div className={`display-title truncate text-2xl sm:text-4xl ${aWon ? "text-ink" : "text-text-muted"}`}>{matchup.manager_a}</div>
+            {aWon && <div className="mt-1 text-xs text-text-muted">Sieger</div>}
           </div>
-          <div className="px-2 sm:px-6 shrink-0">
-            <div className="display-title text-lg sm:text-3xl md:text-4xl tracking-wide whitespace-nowrap">
-              <span className={aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_a.toFixed(1)}</span>
-              <span className="text-text-muted mx-2">–</span>
-              <span className={!aWon ? "text-ink font-semibold" : "text-text-secondary"}>{matchup.score_b.toFixed(1)}</span>
-            </div>
-            <div className="kicker mt-2">{season} · Week {week}{matchup.is_playoff && " · Playoff"}</div>
+          <div className="display-title shrink-0 whitespace-nowrap text-3xl tabular-nums sm:text-5xl">
+            <span className={aWon ? "text-ink" : "text-text-faint"}>{matchup.score_a.toFixed(1)}</span>
+            <span className="mx-2 text-text-faint sm:mx-3">–</span>
+            <span className={!aWon ? "text-ink" : "text-text-faint"}>{matchup.score_b.toFixed(1)}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="kicker mb-1">{!aWon ? "Winner" : ""}</div>
-            <div className={`display-title text-xl sm:text-4xl md:text-5xl tracking-wider truncate ${!aWon ? "text-red" : "text-text-secondary"}`}>
-              {matchup.manager_b}
-            </div>
+          <div className="min-w-0 flex-1">
+            <div className={`display-title truncate text-2xl sm:text-4xl ${!aWon ? "text-ink" : "text-text-muted"}`}>{matchup.manager_b}</div>
+            {!aWon && <div className="mt-1 text-xs text-text-muted">Sieger</div>}
           </div>
+        </div>
+        <div className="flex h-1">
+          <div className="flex-1" style={{ backgroundColor: color(matchup.manager_a) }} />
+          <div className="flex-1" style={{ backgroundColor: color(matchup.manager_b) }} />
         </div>
       </div>
 
-      {/* Team stat bars */}
-      {statsA && statsB && (
-        <div className="flex flex-col sm:flex-row gap-4">
-          <TeamStatBar stats={statsA} label={matchup.manager_a} won={aWon} />
-          <TeamStatBar stats={statsB} label={matchup.manager_b} won={!aWon} />
+      <div className="mb-6">
+        <Tabs tabs={TABS} value={tab} onChange={setTab} label="Ansicht" />
+      </div>
+
+      {tab === "lineups" && (
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <LineupTable lineup={lineupA} managerId={matchup.manager_a} positionWins={posWinsA} />
+          <LineupTable lineup={lineupB} managerId={matchup.manager_b} positionWins={posWinsB} />
         </div>
       )}
 
-      {/* Score progression across the NFL week */}
-      <ScoreTimeline season={season} week={week} managerA={matchup.manager_a} managerB={matchup.manager_b} />
+      {tab === "verlauf" && (
+        <ScoreTimeline season={season} week={week} managerA={matchup.manager_a} managerB={matchup.manager_b} />
+      )}
 
-      {/* Lineups */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        <LineupTable lineup={lineupA} label={matchup.manager_a} positionWins={posWinsA} />
-        <div className="hidden lg:block w-px bg-border" />
-        <LineupTable lineup={lineupB} label={matchup.manager_b} positionWins={posWinsB} reversed />
-      </div>
-
-      {/* H2H */}
-      {h2h && (
-        <H2HSection h2h={h2h} managerA={matchup.manager_a} managerB={matchup.manager_b} season={season} week={week} />
+      {tab === "vergleich" && (
+        <div className="space-y-8">
+          {statsA && statsB && (
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <TeamStatBar stats={statsA} managerId={matchup.manager_a} won={aWon} />
+              <TeamStatBar stats={statsB} managerId={matchup.manager_b} won={!aWon} />
+            </div>
+          )}
+          {h2h && <H2HSection h2h={h2h} managerA={matchup.manager_a} managerB={matchup.manager_b} />}
+        </div>
       )}
     </div>
   );

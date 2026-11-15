@@ -43,16 +43,16 @@ export default function TeamChart({ counts, selected, onSelect }: {
   return (
     <div className="cell p-4 sm:p-5 mb-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-        <div className="kicker">Spieler pro NFL-Team</div>
+        <h3 className="text-sm font-medium text-ink">Spieler pro NFL-Team</h3>
         <div className="text-xs text-text-muted">
-          {zero > 0 ? `${zero} Team${zero > 1 ? "s" : ""} ohne Spieler · ` : ""}Klick filtert die Liste
+          {zero > 0 ? `${zero} Team${zero > 1 ? "s" : ""} ohne Spieler. ` : ""}Klick filtert die Liste
         </div>
       </div>
       {/* Detail line for the hovered or selected team */}
       <div className="h-10 text-sm text-text-secondary overflow-hidden">
         {active ? (
           <>
-            <b className="text-ink">{active.team}</b> · {active.players.length} Spieler
+            <b className="text-ink">{active.team}</b>, {active.players.length} Spieler
             {active.players.length > 0 && (
               <span className="block truncate text-xs text-text-muted">
                 {active.players.slice(0, 8).join(", ")}{active.players.length > 8 ? ` +${active.players.length - 8}` : ""}
@@ -64,37 +64,60 @@ export default function TeamChart({ counts, selected, onSelect }: {
         )}
       </div>
 
-      <div className="overflow-x-auto -mx-1 px-1">
-        <div className="flex items-end gap-0.5 h-36 min-w-[50rem]" onMouseLeave={() => setHover(null)}>
-          {counts.map((c) => {
-            const n = c.players.length;
-            const dim = (selected && selected !== c.team) || (hover && hover !== c.team);
-            return (
-              <button key={c.team} type="button"
-                onClick={() => onSelect(selected === c.team ? null : c.team)}
-                onMouseEnter={() => setHover(c.team)} onFocus={() => setHover(c.team)} onBlur={() => setHover(null)}
-                aria-pressed={selected === c.team}
-                aria-label={`${c.team}: ${n} Spieler`}
-                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end">
-                <span className="mb-0.5 text-[10px] font-mono text-text-muted tabular-nums">{n}</span>
-                <span className="w-full max-w-[1.75rem] rounded-t-[4px] transition-opacity"
-                  style={{
-                    height: n ? `${Math.max(4, (n / max) * 100)}%` : "2px",
-                    backgroundColor: n ? BAR : "var(--color-border-strong)",
-                    opacity: dim ? 0.35 : 1,
-                  }} />
-              </button>
-            );
-          })}
+      {/* 16 + 16 bars below md, one row of 32 from md up; every team stays visible */}
+      <div className="space-y-4 md:space-y-0" onMouseLeave={() => setHover(null)}>
+        {[counts.slice(0, 16), counts.slice(16)].map((row, ri) => (
+          <div key={ri} className="md:hidden">
+            <BarRow row={row} max={max} selected={selected} hover={hover} setHover={setHover} onSelect={onSelect} />
+          </div>
+        ))}
+        <div className="hidden md:block">
+          <BarRow row={counts} max={max} selected={selected} hover={hover} setHover={setHover} onSelect={onSelect} />
         </div>
-        <div className="flex gap-0.5 min-w-[50rem] border-t border-border-strong pt-1">
-          {counts.map((c) => (
-            <span key={c.team}
-              className={`flex-1 min-w-0 text-center text-[10px] ${selected === c.team ? "text-ink font-semibold" : "text-text-muted"}`}>
-              {c.team}
-            </span>
-          ))}
-        </div>
+      </div>
+    </div>
+  );
+}
+
+function BarRow({ row, max, selected, hover, setHover, onSelect }: {
+  row: TeamCount[];
+  max: number;
+  selected: string | null;
+  hover: string | null;
+  setHover: (t: string | null) => void;
+  onSelect: (team: string | null) => void;
+}) {
+  return (
+    <div>
+      <div className="flex h-28 items-end gap-0.5 md:h-36">
+        {row.map((c) => {
+          const n = c.players.length;
+          const dim = (selected && selected !== c.team) || (hover && hover !== c.team);
+          return (
+            <button key={c.team} type="button"
+              onClick={() => onSelect(selected === c.team ? null : c.team)}
+              onMouseEnter={() => setHover(c.team)} onFocus={() => setHover(c.team)} onBlur={() => setHover(null)}
+              aria-pressed={selected === c.team}
+              aria-label={`${c.team}: ${n} Spieler`}
+              className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+              <span className="mb-0.5 text-[10px] tabular-nums text-text-muted">{n}</span>
+              <span className="w-full max-w-[1.75rem] rounded-t-[4px] transition-opacity"
+                style={{
+                  height: n ? `${Math.max(4, (n / max) * 100)}%` : "2px",
+                  backgroundColor: n ? BAR : "var(--color-border-strong)",
+                  opacity: dim ? 0.35 : 1,
+                }} />
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex gap-0.5 border-t border-border-strong pt-1">
+        {row.map((c) => (
+          <span key={c.team}
+            className={`min-w-0 flex-1 text-center text-[10px] ${selected === c.team ? "font-semibold text-ink" : "text-text-muted"}`}>
+            {c.team}
+          </span>
+        ))}
       </div>
     </div>
   );

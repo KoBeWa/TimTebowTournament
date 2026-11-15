@@ -29,16 +29,5 @@ async function getAllFatx(): Promise<FaTxRow[]> {
 export default async function TransactionsPage() {
   const [vtx, fatx] = await Promise.all([getAllVtx(), getAllFatx()]);
 
-  return (
-    <div>
-      {/* ── Page header ── */}
-      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
-        <div className="kicker mb-1">Statistiken</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">Transactions</h1>
-        <p className="text-text-muted mt-1 text-sm">Waiver Moves &amp; Trades — Value Analysis</p>
-      </div>
-
-      <TransactionDashboard vtx={vtx} fatx={fatx} />
-    </div>
-  );
+  return <TransactionDashboard vtx={vtx} fatx={fatx} />;
 }

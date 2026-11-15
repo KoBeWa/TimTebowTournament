@@ -1,11 +1,9 @@
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/ui/PageHeader";
 import RankingsTable, { type RankingRow } from "./RankingsTable";
 
 async function getRankings(): Promise<RankingRow[]> {
-  const { data, error } = await supabase.rpc("get_alltime_rankings_table" as never);
-  if (!error && data) return data as RankingRow[];
-
-  // Fallback: manual aggregation via separate queries
+  // Manual aggregation via separate queries
   const [
     { data: base },
     { data: leagueRec },
@@ -82,12 +80,7 @@ export default async function RankingsPage() {
 
   return (
     <div>
-      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
-        <div className="kicker mb-1">Statistiken</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">Owner Rankings</h1>
-        <p className="text-text-muted mt-1 text-sm">All-Time · Klick auf eine Spalte zum Sortieren</p>
-      </div>
-
+      <PageHeader title="Rankings" description="Alle Manager im Vergleich über alle Seasons. Klick auf eine Spaltenüberschrift sortiert die Tabelle." />
       <RankingsTable rows={rows} />
     </div>
   );

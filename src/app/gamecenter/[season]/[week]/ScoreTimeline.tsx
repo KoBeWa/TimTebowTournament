@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MANAGER_COLORS } from "@/lib/constants";
 
 // Data written by scripts/score_timelines/build.py
 interface TimelineFile {
@@ -17,8 +18,20 @@ interface Point {
   plays: { player: string; pts: number }[];
 }
 
-const COLOR_A = "#f4532f";
-const COLOR_B = "#4590ea";
+const FALLBACK_A = "#f4532f";
+const FALLBACK_B = "#4590ea";
+
+// Manager colours for the two lines; falls back to the fixed pair when they are hard to tell apart
+function lineColors(a: string, b: string) {
+  const ca = MANAGER_COLORS[a];
+  const cb = MANAGER_COLORS[b];
+  if (!ca || !cb) return { COLOR_A: FALLBACK_A, COLOR_B: FALLBACK_B };
+  const rgb = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const [ra, ga, ba] = rgb(ca);
+  const [rb, gb, bb] = rgb(cb);
+  const dist = Math.hypot(ra - rb, ga - gb, ba - bb);
+  return dist < 110 ? { COLOR_A: FALLBACK_A, COLOR_B: FALLBACK_B } : { COLOR_A: ca, COLOR_B: cb };
+}
 const HEIGHT = 280;
 const PAD = { top: 16, right: 56, bottom: 34, left: 40 };
 const WINDOW_GAP = 0.035; // share of the x axis between two game windows
@@ -88,6 +101,7 @@ export default function ScoreTimeline({
   const [failed, setFailed] = useState(false);
   const [width, setWidth] = useState(800);
   const [hoverT, setHoverT] = useState<number | null>(null);
+  const { COLOR_A, COLOR_B } = lineColors(managerA, managerB);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -172,11 +186,10 @@ export default function ScoreTimeline({
     return { seriesA, seriesB, x, y, fromX, ticks, path, endT, leadChanges, innerH };
   }, [data, managerA, managerB, width]);
 
-  if (failed) return null;
-  if (!data) {
-    return <div className="cell p-6 text-sm text-text-muted">Lade Punkteverlauf…</div>;
-  }
-  if (!chart) return null;
+  const empty = (text: string) => <div className="cell p-6 text-sm text-text-muted">{text}</div>;
+  if (failed) return empty("Für diese Woche gibt es keinen Spielverlauf.");
+  if (!data) return empty("Lade Punkteverlauf…");
+  if (!chart) return empty("Für diese Woche gibt es keinen Spielverlauf.");
 
   const { seriesA, seriesB, x, y, fromX, ticks, path, endT, leadChanges } = chart;
   const finalA = seriesA[seriesA.length - 1].score;
@@ -210,13 +223,13 @@ export default function ScoreTimeline({
   };
 
   return (
+    <div className="space-y-6">
     <section className="cell p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="kicker mb-1">Punkteverlauf</div>
           <h2 className="section-title text-ink">So lief der Spieltag</h2>
           <p className="mt-1 text-xs text-text-muted">
-            Punkte aller Starter nach echter Spielzeit (deutsche Zeit) · {leadChanges} Führungswechsel
+            Punkte aller Starter nach echter Spielzeit (deutsche Zeit), {leadChanges} Führungswechsel
           </p>
         </div>
         <div className="flex items-center gap-4 text-sm">
@@ -309,7 +322,7 @@ export default function ScoreTimeline({
             className="pointer-events-none absolute top-2 z-10 w-56 rounded-xl border border-border-strong bg-surface-2/95 p-3 text-xs shadow-xl backdrop-blur"
             style={{ left: tooltipLeft(hoverX, width) }}
           >
-            <div className="mb-2 text-text-muted">{formatTime(data.start + hoverT)} · Stand & letzte Aktion</div>
+            <div className="mb-2 text-text-muted">{formatTime(data.start + hoverT)}, Stand und letzte Aktion</div>
             {[
               { name: managerA, color: COLOR_A, p: hover.a },
               { name: managerB, color: COLOR_B, p: hover.b },
@@ -324,7 +337,7 @@ export default function ScoreTimeline({
                   <div className="ml-5 mt-0.5 text-text-faint">
                     {p.plays
                       .map((pl) => `${pl.player} ${pl.pts > 0 ? "+" : ""}${pl.pts.toFixed(1)}`)
-                      .join(" · ")}
+                      .join(", ")}
                   </div>
                 )}
               </div>
@@ -333,47 +346,47 @@ export default function ScoreTimeline({
         )}
       </div>
 
-      <details className="mt-4 group">
-        <summary className="cursor-pointer select-none text-sm text-text-muted hover:text-ink transition-colors">
-          Alle Punkte-Aktionen anzeigen
-        </summary>
-        <div className="mt-3 max-h-80 overflow-y-auto rounded-xl border border-border-light">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-surface-2 text-text-muted">
-              <tr>
-                <th className="px-3 py-2 text-left">Zeit</th>
-                <th className="px-3 py-2 text-left">Spieler</th>
-                <th className="px-3 py-2 text-right">Punkte</th>
-                <th className="px-3 py-2 text-right">{managerA}</th>
-                <th className="px-3 py-2 text-right">{managerB}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...seriesA.slice(1).map((p) => ({ ...p, side: "a" as const })), ...seriesB.slice(1).map((p) => ({ ...p, side: "b" as const }))]
-                .sort((p, q) => p.t - q.t)
-                .flatMap((p) => p.plays.map((pl, i) => ({ ...pl, t: p.t, side: p.side, key: `${p.side}-${p.t}-${i}` })))
-                .map((row) => (
-                  <tr key={row.key} className="border-t border-border-light">
-                    <td className="px-3 py-1.5 text-text-faint whitespace-nowrap">{formatTime(data.start + row.t)}</td>
-                    <td className="px-3 py-1.5 text-text-secondary">
-                      <span
-                        className="mr-2 inline-block h-0.5 w-3 rounded align-middle"
-                        style={{ background: row.side === "a" ? COLOR_A : COLOR_B }}
-                      />
-                      {row.player}
-                    </td>
-                    <td className={`px-3 py-1.5 text-right font-mono ${row.pts < 0 ? "text-negative" : "text-ink"}`}>
-                      {row.pts > 0 ? "+" : ""}
-                      {row.pts.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-1.5 text-right font-mono text-text-muted">{scoreAt(seriesA, row.t).score.toFixed(1)}</td>
-                    <td className="px-3 py-1.5 text-right font-mono text-text-muted">{scoreAt(seriesB, row.t).score.toFixed(1)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
     </section>
+
+    <section>
+      <h2 className="section-title mb-4 text-ink">Alle Punkte-Aktionen</h2>
+      <div className="cell max-h-[28rem] overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-surface-2">
+            <tr className="text-left text-xs font-medium text-text-muted">
+              <th className="py-2.5 pl-4 pr-2 font-medium sm:pl-5">Zeit</th>
+              <th className="px-2 py-2.5 font-medium">Spieler</th>
+              <th className="px-2 py-2.5 text-right font-medium">Punkte</th>
+              <th className="hidden px-2 py-2.5 text-right font-medium md:table-cell">{managerA}</th>
+              <th className="hidden py-2.5 pl-2 pr-4 text-right font-medium sm:pr-5 md:table-cell">{managerB}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...seriesA.slice(1).map((p) => ({ ...p, side: "a" as const })), ...seriesB.slice(1).map((p) => ({ ...p, side: "b" as const }))]
+              .sort((p, q) => p.t - q.t)
+              .flatMap((p) => p.plays.map((pl, i) => ({ ...pl, t: p.t, side: p.side, key: `${p.side}-${p.t}-${i}` })))
+              .map((row) => (
+                <tr key={row.key} className="border-t border-border-light">
+                  <td className="whitespace-nowrap py-1.5 pl-4 pr-2 text-text-faint sm:pl-5">{formatTime(data.start + row.t)}</td>
+                  <td className="px-2 py-1.5 text-text-secondary">
+                    <span
+                      className="mr-2 inline-block h-0.5 w-3 rounded align-middle"
+                      style={{ background: row.side === "a" ? COLOR_A : COLOR_B }}
+                    />
+                    {row.player}
+                  </td>
+                  <td className={`px-2 py-1.5 text-right tabular-nums ${row.pts < 0 ? "text-negative" : "text-ink"}`}>
+                    {row.pts > 0 ? "+" : ""}
+                    {row.pts.toFixed(2)}
+                  </td>
+                  <td className="hidden px-2 py-1.5 text-right tabular-nums text-text-muted md:table-cell">{scoreAt(seriesA, row.t).score.toFixed(1)}</td>
+                  <td className="hidden py-1.5 pl-2 pr-4 text-right tabular-nums text-text-muted sm:pr-5 md:table-cell">{scoreAt(seriesB, row.t).score.toFixed(1)}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    </div>
   );
 }

@@ -2,6 +2,9 @@ import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
 import Link from "next/link";
 import { ChevronRight, Crown } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import ManagerName from "@/components/ui/ManagerName";
+import HistoryTabs from "./HistoryTabs";
 import AllTimeRankings, { type AllTimeRow } from "./AllTimeRankings";
 import AllTimeTrends from "./AllTimeTrends";
 import { getTrendData } from "./trends";
@@ -71,66 +74,61 @@ export default async function HistoryPage() {
     {} as Record<number, typeof results>
   );
 
+  const seasonList = (
+    <div className="space-y-2">
+      {seasons.map((s) => {
+        const topThree = (resultsBySeason[s.year] ?? []).slice(0, 3);
+
+        return (
+          <Link
+            key={s.year}
+            href={`/history/${s.year}`}
+            className="cell-hover group flex items-center justify-between gap-4 px-4 py-4 sm:px-5"
+          >
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="display-title text-3xl text-text-muted transition-colors group-hover:text-ink sm:text-4xl">
+                {s.year}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-base font-semibold text-ink">
+                  {s.champion === "—" ? (
+                    <span className="text-text-muted">Saison läuft</span>
+                  ) : (
+                    <>
+                      <Crown size={16} className="text-gold" />
+                      <ManagerName id={s.champion} plain />
+                    </>
+                  )}
+                </div>
+                <div className="mt-0.5 text-xs text-text-muted">
+                  {s.total_managers} Teams, {s.reg_season_weeks} Wochen
+                </div>
+              </div>
+            </div>
+            <div className="ml-auto hidden gap-6 text-sm text-text-secondary sm:flex">
+              {topThree.map((r: (typeof results)[number], i: number) => (
+                <div key={r.manager_id} className="text-center" title="Platzierung Regular Season">
+                  <div className="mb-0.5 text-xs text-text-faint">{i + 1}.</div>
+                  <ManagerName id={r.manager_id} plain className="text-sm text-ink" />
+                  <div className="text-xs tabular-nums text-text-muted">{r.wins}–{r.losses}</div>
+                </div>
+              ))}
+            </div>
+            <ChevronRight size={20} className="shrink-0 text-text-faint transition-colors group-hover:text-ink" />
+          </Link>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div>
-      <div className="mb-8" style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}>
-        <div className="kicker mb-1">Archiv</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">League History</h1>
-        <p className="text-text-muted mt-1 text-sm">Jede Season erzählt ihre eigene Geschichte</p>
-      </div>
-
-      {/* ── ALL-TIME RANKINGS ── */}
-      <AllTimeRankings rows={allTime} />
-      <AllTimeTrends data={trends} />
-
-      <div className="mt-10 mb-4">
-        <div className="kicker mb-1">Chronik</div>
-        <h2 className="section-title text-ink">Alle Seasons</h2>
-      </div>
-      <div className="space-y-2">
-        {seasons.map((s) => {
-          const seasonResults = resultsBySeason[s.year] ?? [];
-          const topThree = seasonResults.slice(0, 3);
-
-          return (
-            <Link
-              key={s.year}
-              href={`/history/${s.year}`}
-              className="cell-hover flex items-center justify-between gap-4 px-4 sm:px-5 py-4 group"
-            >
-              <div className="flex items-center gap-6">
-                <div className="display-title text-4xl text-text-muted group-hover:text-ink transition-colors">
-                  {s.year}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-base font-semibold text-ink">
-                    {s.champion === "—" ? (
-                      <span className="text-text-muted">Saison läuft</span>
-                    ) : (
-                      <>
-                        <Crown size={16} className="text-gold" /> {s.champion}
-                      </>
-                    )}
-                  </div>
-                  <div className="text-xs text-text-muted mt-0.5">
-                    {s.total_managers} Teams · {s.reg_season_weeks} Weeks
-                  </div>
-                </div>
-              </div>
-              <div className="hidden sm:flex gap-6 ml-auto text-sm text-text-secondary">
-                {topThree.map((r: (typeof results)[number], i: number) => (
-                  <div key={r.manager_id} className="text-center">
-                    <div className="kicker mb-0.5" title="Platzierung Regular Season">{i === 0 ? "1." : i === 1 ? "2." : "3."}</div>
-                    <div className="text-ink text-sm">{r.manager_id}</div>
-                    <div className="text-text-muted text-xs">{r.wins}–{r.losses}</div>
-                  </div>
-                ))}
-              </div>
-              <ChevronRight size={20} className="shrink-0 text-text-faint group-hover:text-ink transition-colors" />
-            </Link>
-          );
-        })}
-      </div>
+      <PageHeader title="History" description="Ewige Tabelle, Verlauf seit 2015 und alle Seasons im Überblick." />
+      <HistoryTabs
+        table={<AllTimeRankings rows={allTime} />}
+        trends={<AllTimeTrends data={trends} />}
+        seasons={seasonList}
+      />
     </div>
   );
 }

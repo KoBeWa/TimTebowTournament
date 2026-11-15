@@ -2,10 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeftRight, ChevronRight, ListOrdered, LogIn, LogOut, Users } from "lucide-react";
+import { ArrowLeftRight, ListOrdered, LogIn, LogOut, Users } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import PageHeader from "@/components/ui/PageHeader";
+import StatTile from "@/components/ui/StatTile";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
+import { MANAGER_COLORS } from "@/lib/constants";
 import { loadPlayer, type PlayerEvent, type PlayerGame, type PlayerManagerStats, type PlayerSummary } from "@/lib/players";
 import { timeline } from "./timeline";
+
+const TABS = [
+  { key: "managers", label: "Manager" },
+  { key: "seasons", label: "Saisons" },
+  { key: "best", label: "Beste Spiele" },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
 
 const fmt = (n: number | null | undefined, d = 1) => (n == null ? "–" : n.toFixed(d));
 
@@ -15,6 +27,7 @@ export default function PlayerDetail({ playerKey }: { playerKey: string }) {
   const [events, setEvents] = useState<PlayerEvent[]>([]);
   const [games, setGames] = useState<PlayerGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("managers");
 
   useEffect(() => {
     loadPlayer(playerKey).then((d) => {
@@ -49,168 +62,177 @@ export default function PlayerDetail({ playerKey }: { playerKey: string }) {
     };
   });
 
-  return (
-    <div className="space-y-8">
-      <nav className="flex items-center gap-1.5 text-sm text-text-muted">
-        <Link href="/players" className="hover:text-ink transition-colors">Spieler</Link>
-        <ChevronRight size={14} className="text-text-faint" />
-        <span className="text-ink">{summary.player_name}</span>
-      </nav>
+  const moveCount = summary.adds + summary.drops + summary.trades;
+  const facts = [
+    { label: "Saisons", value: `${summary.seasons}` },
+    { label: "Manager", value: `${summary.managers}` },
+    { label: "Gedraftet", value: `${summary.times_drafted}×` },
+    { label: "Moves", value: `${moveCount}`, hint: `${summary.adds} Adds, ${summary.drops} Drops, ${summary.trades} Trades` },
+  ];
+  const descr = [
+    summary.position ?? "–",
+    summary.latest_team,
+    summary.first_season ? `Liga ${summary.first_season}–${summary.last_season}` : null,
+  ].filter(Boolean).join(", ");
 
-      <div className="cell p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-        <PlayerAvatar p={summary} size={96} />
-        <div className="flex-1">
-          <div className="kicker">
-            {summary.position ?? "–"}{summary.latest_team ? ` · ${summary.latest_team}` : ""}
-            {summary.first_season ? ` · Liga ${summary.first_season}–${summary.last_season}` : ""}
-          </div>
-          <h1 className="display-title text-4xl md:text-5xl text-ink">{summary.player_name}</h1>
+  return (
+    <div className="space-y-6">
+      <PageHeader title={summary.player_name} description={descr} crumbs={[{ label: "Spieler", href: "/players" }]} />
+
+      <div className="cell flex flex-col items-start gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+        <PlayerAvatar p={summary} size={80} />
+        <div className="min-w-0 flex-1 space-y-3">
           {summary.top_manager && (
-            <p className="text-text-secondary mt-1">
-              Am längsten bei <Link href={`/manager/${summary.top_manager}`} className="text-ink hover:text-red">{summary.top_manager}</Link>
-              {" "}({summary.top_manager_weeks} Wochen)
+            <p className="text-sm text-text-muted">
+              Am längsten bei <ManagerName id={summary.top_manager} className="font-medium text-ink" /> ({summary.top_manager_weeks} Wochen)
             </p>
           )}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
+            {facts.map((f) => (
+              <div key={f.label} title={f.hint}>
+                <dt className="text-xs text-text-muted">{f.label}</dt>
+                <dd className="font-semibold tabular-nums text-ink">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <Stat label="Punkte" value={fmt(summary.starter_points)} hint="als Starter, alle Manager" />
-        <Stat label="Starts" value={`${summary.starts}`} />
-        <Stat label="Ø pro Start" value={fmt(summary.avg_start)} />
-        <Stat label="Bestes Spiel" value={fmt(summary.best_start)} />
-        <Stat label="Saisons" value={`${summary.seasons}`} />
-        <Stat label="Manager" value={`${summary.managers}`} />
-        <Stat label="Gedraftet" value={`${summary.times_drafted}×`} />
-        <Stat label="Moves" value={`${summary.adds + summary.drops + summary.trades}`} hint={`${summary.adds} Adds · ${summary.drops} Drops · ${summary.trades} Trades`} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile label="Punkte" value={fmt(summary.starter_points)} hint="als Starter, alle Manager" />
+        <StatTile label="Starts" value={`${summary.starts}`} />
+        <StatTile label="Ø pro Start" value={fmt(summary.avg_start)} />
+        <StatTile label="Bestes Spiel" value={fmt(summary.best_start)} />
       </div>
 
-      {managers.length > 0 && (
-        <section>
-          <h2 className="section-title text-ink mb-4">Bei welchem Manager</h2>
-          <div className="cell overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-right">
-                  <th className="px-4 py-2 kicker font-normal text-left">Manager</th>
-                  <th className="px-4 py-2 kicker font-normal text-left w-1/3">Wochen im Kader</th>
-                  <th className="px-4 py-2 kicker font-normal">Starts</th>
-                  <th className="px-4 py-2 kicker font-normal">Punkte</th>
-                  <th className="px-4 py-2 kicker font-normal">Ø</th>
-                  <th className="px-4 py-2 kicker font-normal">Best</th>
-                  <th className="px-4 py-2 kicker font-normal">Saisons</th>
-                </tr>
-              </thead>
-              <tbody>
-                {managers.map((m) => (
-                  <tr key={m.manager_id} className="border-b border-border-light text-right">
-                    <td className="px-4 py-2.5 text-left">
-                      <Link href={`/manager/${m.manager_id}`} className="text-ink font-medium hover:text-red">{m.manager_id}</Link>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 flex-1 rounded-full bg-surface-3 overflow-hidden">
-                          <div className="h-full bg-red" style={{ width: `${(m.weeks_rostered / maxWeeks) * 100}%` }} />
-                        </div>
-                        <span className="font-mono w-8 text-right">{m.weeks_rostered}</span>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} label="Bereich" />
+
+      {tab === "managers" && (managers.length > 0 ? (
+        <div className="cell overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs font-medium text-text-muted">
+                <th className="py-3 pl-4 pr-3 text-left font-medium sm:pl-5">Manager</th>
+                <th className="hidden w-1/3 px-3 py-3 text-left font-medium md:table-cell">Wochen im Kader</th>
+                <th className="px-3 py-3 text-right font-medium md:hidden">Wochen</th>
+                <th className="px-3 py-3 text-right font-medium">Starts</th>
+                <th className="px-3 py-3 text-right font-medium">Punkte</th>
+                <th className="hidden px-3 py-3 text-right font-medium md:table-cell">Ø</th>
+                <th className="hidden px-3 py-3 text-right font-medium md:table-cell">Best</th>
+                <th className="hidden py-3 pl-3 pr-4 text-right font-medium sm:pr-5 md:table-cell">Saisons</th>
+              </tr>
+            </thead>
+            <tbody>
+              {managers.map((m) => (
+                <tr key={m.manager_id} className="border-t border-border-light text-right">
+                  <td className="py-2.5 pl-4 pr-3 text-left font-medium sm:pl-5"><ManagerName id={m.manager_id} /></td>
+                  <td className="hidden px-3 py-2.5 md:table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-3">
+                        <div className="h-full" style={{ width: `${(m.weeks_rostered / maxWeeks) * 100}%`, backgroundColor: MANAGER_COLORS[m.manager_id] }} />
                       </div>
-                    </td>
-                    <td className="px-4 py-2.5 font-mono">{m.starts}</td>
-                    <td className="px-4 py-2.5 font-mono text-ink">{fmt(m.starter_points)}</td>
-                    <td className="px-4 py-2.5 font-mono">{fmt(m.avg_start)}</td>
-                    <td className="px-4 py-2.5 font-mono">{fmt(m.best_start)}</td>
-                    <td className="px-4 py-2.5 text-text-secondary">
-                      {m.first_season === m.last_season ? m.first_season : `${m.first_season}–${m.last_season}`}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                      <span className="w-8 text-right tabular-nums">{m.weeks_rostered}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 tabular-nums md:hidden">{m.weeks_rostered}</td>
+                  <td className="px-3 py-2.5 tabular-nums">{m.starts}</td>
+                  <td className="px-3 py-2.5 tabular-nums text-ink">{fmt(m.starter_points)}</td>
+                  <td className="hidden px-3 py-2.5 tabular-nums md:table-cell">{fmt(m.avg_start)}</td>
+                  <td className="hidden px-3 py-2.5 tabular-nums md:table-cell">{fmt(m.best_start)}</td>
+                  <td className="hidden py-2.5 pl-3 pr-4 tabular-nums text-text-muted sm:pr-5 md:table-cell">
+                    {m.first_season === m.last_season ? m.first_season : `${m.first_season}–${m.last_season}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : <p className="py-8 text-center text-text-muted">Keine Manager-Daten.</p>)}
+
+      {tab === "seasons" && (
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+          <section>
+            <h2 className="section-title text-ink mb-4">Historie</h2>
+            <div className="space-y-5">
+              {seasons.map(({ season, items }) => (
+                <div key={season}>
+                  <h3 className="mb-2 text-sm font-medium text-text-muted">{season}</h3>
+                  <ol className="cell divide-y divide-border-light">
+                    {items.map((it, i) => (
+                      <li key={i} className="flex items-start gap-3 px-4 py-2.5 text-sm">
+                        {it.type === "event" ? <EventRow e={it.event} /> : (
+                          <>
+                            <Users size={16} className="mt-0.5 text-text-faint shrink-0" />
+                            <span className="flex-1 text-text-muted">
+                              Im Kader bei <b className="font-medium text-ink">{it.stint.manager_id}</b>
+                              , W{it.stint.from}{it.stint.to !== it.stint.from ? `–${it.stint.to}` : ""}
+                            </span>
+                            <span className="text-xs text-text-muted whitespace-nowrap">
+                              {it.stint.starts}/{it.stint.weeks} Starts, {fmt(it.stint.points)} Pkt
+                            </span>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {bySeason.length > 0 && (
+            <aside>
+              <h2 className="section-title text-ink mb-4">Saison für Saison</h2>
+              <div className="cell p-4 sm:p-5">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {bySeason.map((s) => (
+                      <tr key={s.season} className="border-b border-border-light last:border-0">
+                        <td className="py-1.5 text-text-muted">{s.season}</td>
+                        <td className="py-1.5 text-text-muted">{s.managers.join(", ")}</td>
+                        <td className="py-1.5 text-right tabular-nums text-ink" title={`${s.starts} Starts, Ø ${fmt(s.avg)}`}>
+                          {fmt(s.points)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </aside>
+          )}
+        </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-        <section>
-          <h2 className="section-title text-ink mb-4">Historie</h2>
-          <div className="space-y-5">
-            {seasons.map(({ season, items }) => (
-              <div key={season}>
-                <div className="kicker mb-2">{season}</div>
-                <ol className="cell divide-y divide-border-light">
-                  {items.map((it, i) => (
-                    <li key={i} className="flex items-start gap-3 px-4 py-2.5 text-sm">
-                      {it.type === "event" ? <EventRow e={it.event} /> : (
-                        <>
-                          <Users size={16} className="mt-0.5 text-text-faint shrink-0" />
-                          <span className="flex-1 text-text-secondary">
-                            Im Kader bei <b className="text-ink font-medium">{it.stint.manager_id}</b>
-                            {" "}· W{it.stint.from}{it.stint.to !== it.stint.from ? `–${it.stint.to}` : ""}
-                          </span>
-                          <span className="text-xs text-text-muted whitespace-nowrap">
-                            {it.stint.starts}/{it.stint.weeks} Starts · {fmt(it.stint.points)} Pkt
-                          </span>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <aside className="space-y-6">
-          {bestGames.length > 0 && (
-            <div className="cell p-4 sm:p-5">
-              <div className="kicker mb-3">Beste Spiele</div>
-              <ol className="space-y-2 text-sm">
-                {bestGames.map((g) => (
-                  <li key={`${g.season_year}-${g.week}`} className="flex items-baseline justify-between gap-3">
-                    <span className="text-text-secondary">{g.season_year} · W{g.week} · {g.manager_id}</span>
-                    <span className="font-mono text-ink">{fmt(g.points)}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-          {bySeason.length > 0 && (
-            <div className="cell p-4 sm:p-5">
-              <div className="kicker mb-3">Saison für Saison</div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {bySeason.map((s) => (
-                    <tr key={s.season} className="border-b border-border-light last:border-0">
-                      <td className="py-1.5 text-text-muted">{s.season}</td>
-                      <td className="py-1.5 text-text-secondary">{s.managers.join(", ")}</td>
-                      <td className="py-1.5 text-right font-mono text-ink" title={`${s.starts} Starts, Ø ${fmt(s.avg)}`}>
-                        {fmt(s.points)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="cell px-4 py-3" title={hint}>
-      <div className="kicker">{label}</div>
-      <div className="font-mono text-xl text-ink mt-0.5">{value}</div>
+      {tab === "best" && (bestGames.length > 0 ? (
+        <div className="cell overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs font-medium text-text-muted">
+                <th className="py-3 pl-4 pr-3 text-left font-medium sm:pl-5">Spiel</th>
+                <th className="px-3 py-3 text-left font-medium">Manager</th>
+                <th className="py-3 pl-3 pr-4 text-right font-medium sm:pr-5">Punkte</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bestGames.map((g) => (
+                <tr key={`${g.season_year}-${g.week}`} className="border-t border-border-light">
+                  <td className="py-2.5 pl-4 pr-3 text-text-muted sm:pl-5">{g.season_year} W{g.week}</td>
+                  <td className="px-3 py-2.5"><ManagerName id={g.manager_id} /></td>
+                  <td className="py-2.5 pl-3 pr-4 text-right tabular-nums text-ink sm:pr-5">{fmt(g.points)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : <p className="py-8 text-center text-text-muted">Keine Starts vorhanden.</p>)}
     </div>
   );
 }
 
 function EventRow({ e }: { e: PlayerEvent }) {
-  const week = e.week ? ` · W${e.week}` : "";
+  const week = e.week ? `, W${e.week}` : "";
   const map = {
-    draft: { icon: ListOrdered, text: <>Gedraftet von <b className="text-ink font-medium">{e.manager_id}</b> · Runde {e.round}, Pick {e.overall_pick}</>, cls: "text-gold" },
+    draft: { icon: ListOrdered, text: <>Gedraftet von <b className="text-ink font-medium">{e.manager_id}</b>, Runde {e.round}, Pick {e.overall_pick}</>, cls: "text-gold" },
     add: { icon: LogIn, text: <>Geholt von <b className="text-ink font-medium">{e.manager_id}</b> (Waiver/FA){week}</>, cls: "text-positive" },
     drop: { icon: LogOut, text: <>Entlassen von <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-negative" },
     trade_in: { icon: ArrowLeftRight, text: <>Per Trade zu <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-accent-blue" },
@@ -220,7 +242,7 @@ function EventRow({ e }: { e: PlayerEvent }) {
   return (
     <>
       <Icon size={16} className={`mt-0.5 shrink-0 ${map.cls}`} />
-      <span className="flex-1 text-text-secondary">{map.text}</span>
+      <span className="flex-1 text-text-muted">{map.text}</span>
       {e.kind === "draft" && e.value != null && (
         <span className="text-xs text-text-muted whitespace-nowrap" title="Draft-Note (Grade4)">Note {fmt(e.value, 2)}</span>
       )}

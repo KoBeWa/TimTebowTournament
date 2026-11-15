@@ -1,8 +1,10 @@
 import { supabase } from "@/lib/supabase";
-import { MANAGERS } from "@/lib/constants";
+import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ManagerPlayers from "./ManagerPlayers";
+import PageHeader from "@/components/ui/PageHeader";
+import StatTile from "@/components/ui/StatTile";
+import ManagerTabs from "./ManagerTabs";
 
 export function generateStaticParams() {
   return MANAGERS.map((name) => ({ name }));
@@ -45,99 +47,36 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
   const bestScore = Math.max(...allScores, 0);
   const worstScore = Math.min(...allScores, 999);
 
-  const statCards = [
-    { label: "Record", value: `${totalWins}-${totalLosses}${totalTies > 0 ? `-${totalTies}` : ""}` },
-    { label: "Win %", value: `${(winPct * 100).toFixed(1)}%` },
-    { label: "Championships", value: data.championships },
-    { label: "Playoff Apps", value: playoffApps },
-    { label: "Total PF", value: totalPF.toFixed(1) },
-    { label: "Avg PF/Season", value: numSeasons ? (totalPF / numSeasons).toFixed(1) : "—" },
-    { label: "Best Week", value: bestScore.toFixed(1) },
-    { label: "Worst Week", value: worstScore === 999 ? "—" : worstScore.toFixed(1) },
+  const record = `${totalWins}-${totalLosses}${totalTies > 0 ? `-${totalTies}` : ""}`;
+  const secondary = [
+    { label: "Punkte gesamt", value: totalPF.toFixed(1) },
+    { label: "Ø Punkte pro Saison", value: numSeasons ? (totalPF / numSeasons).toFixed(1) : "—" },
+    { label: "Beste Woche", value: bestScore.toFixed(1) },
+    { label: "Schlechteste Woche", value: worstScore === 999 ? "—" : worstScore.toFixed(1) },
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">{name}</h1>
-        <p className="text-text-secondary mt-1">{numSeasons} Seasons · {data.championships} Titles · Since 2015</p>
+    <div className="space-y-6">
+      <PageHeader
+        title={<span className="inline-flex items-center gap-3">
+          <span aria-hidden className="inline-block h-8 w-1.5 rounded-full sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
+          {name}
+        </span>}
+        description={`${numSeasons} Seasons, ${data.championships} Titel, seit 2015`}
+      >
+        <Link href="/h2h" className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Head to Head</Link>
+        <Link href={`/trophies/${name}`} className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Trophäen</Link>
+      </PageHeader>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatTile label="Bilanz" value={record} />
+        <StatTile label="Siegquote" value={`${(winPct * 100).toFixed(1)}%`} />
+        <StatTile label="Titel" value={data.championships} tone={data.championships > 0 ? "gold" : undefined} />
+        <StatTile label="Playoff-Teilnahmen" value={playoffApps} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {statCards.map((s) => (
-          <div key={s.label} className="cell p-4 text-center">
-            <div className="display-title text-2xl text-ink">{s.value}</div>
-            <div className="kicker mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Season History */}
-      <section>
-        <h2 className="section-title text-ink mb-4">Season History</h2>
-        <div className="cell overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-text-muted text-left">
-                <th className="p-4">Season</th><th className="p-4 text-center">Rank</th><th className="p-4 text-center">Record</th>
-                <th className="p-4 text-right">PF</th><th className="p-4 text-center hidden sm:table-cell">Playoff</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.results.map((s) => {
-                const po = data.playoffs.find((p) => p.season_year === s.season_year);
-                return (
-                  <tr key={s.season_year} className="border-b border-border-light transition-colors">
-                    <td className="p-4">
-                      <Link href={`/history/${s.season_year}`} className="text-ink hover:text-red transition-colors font-medium">
-                        {s.season_year}{po?.final_rank === 1 && " 🏆"}
-                      </Link>
-                    </td>
-                    <td className="p-4 text-center text-text-secondary">#{s.reg_rank}</td>
-                    <td className="p-4 text-center font-mono">
-                      <span className="win">{s.wins}</span>-<span className="loss">{s.losses}</span>
-                      {s.ties > 0 && <>-<span className="tie">{s.ties}</span></>}
-                    </td>
-                    <td className="p-4 text-right font-mono">{Number(s.points_for).toFixed(1)}</td>
-                    <td className="p-4 text-center hidden sm:table-cell">
-                      {po ? <span className={po.final_rank === 1 ? "text-ink font-semibold" : po.final_rank <= 4 ? "text-ink" : "text-text-muted"}>#{po.final_rank}</span> : "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <ManagerPlayers manager={name} />
-
-      {/* Recent Matchups */}
-      <section>
-        <h2 className="section-title text-ink mb-4">Letzte Matchups</h2>
-        <div className="space-y-2">
-          {data.matchups.slice(0, 20).map((m) => {
-            const won = m.myScore > m.theirScore;
-            return (
-              <div key={`${m.season}-${m.week}`} className="cell p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-text-muted text-sm w-20">{m.season} W{m.week}</span>
-                  <span className="text-text-secondary text-sm">vs {m.opponent}</span>
-                  {m.is_playoff && <span className="label-nav text-xs text-ink border border-border px-2 py-0.5">PO</span>}
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded ${won ? "bg-accent-green/15 text-positive" : "bg-accent-red/15 text-negative"}`}>
-                    {won ? "W" : "L"}
-                  </span>
-                  <span className="font-mono text-sm text-ink">{m.myScore.toFixed(1)}</span>
-                  <span className="text-text-muted text-sm">-</span>
-                  <span className="font-mono text-sm text-text-secondary">{m.theirScore.toFixed(1)}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <ManagerTabs manager={name} results={data.results} playoffs={data.playoffs}
+        matchups={data.matchups.slice(0, 20)} secondary={secondary} />
     </div>
   );
 }

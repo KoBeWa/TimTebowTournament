@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/ui/PageHeader";
 import MockDraftApp from "./MockDraftApp";
 
 export const dynamic = "force-dynamic";
@@ -157,18 +158,7 @@ export default async function MockDraftPage() {
 
   return (
     <div>
-      <div
-        className="mb-8"
-        style={{ borderBottom: "2px solid var(--color-border-strong)", paddingBottom: "1rem" }}
-      >
-        <div className="kicker mb-1">Mini-Games</div>
-        <h1 className="display-title text-4xl md:text-5xl text-ink">
-          Mock Draft 2026
-        </h1>
-        <p className="text-text-muted mt-1 text-sm">
-          32 Picks, deine Predictions — NFL Draft in Pittsburgh, 23. April
-        </p>
-      </div>
+      <PageHeader title="Mock Draft 2026" description="32 Picks, deine Tipps für den NFL Draft in Pittsburgh am 23. April." />
 
       <MockDraftApp slots={slots} prospects={prospects} initialMocks={mocks} draftResults={draftResults} />
     </div>
