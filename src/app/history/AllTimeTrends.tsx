@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MANAGERS } from "@/lib/constants";
+import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
 import type { MetricKey, TrendData } from "./trends";
 
-// Categorical slots (dark steps), validated as a set against the surface #111a2c.
-// Fixed per manager so a color always means the same person.
-const COLORS: Record<string, string> = {
-  Benni: "#3987e5", Erik: "#d95926", Juschka: "#199e70", Kessi: "#c98500",
-  Marv: "#d55181", Ritz: "#008300", Simi: "#9085e9", Tommy: "#e66767",
-};
+const COLORS = MANAGER_COLORS;
 
 const METRICS: { key: MetricKey; label: string; hint: string; format: (v: number) => string }[] = [
   { key: "wins", label: "Siege", hint: "Siege insgesamt inkl. Playoffs", format: (v) => `${v}` },

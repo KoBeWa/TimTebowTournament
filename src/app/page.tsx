@@ -1,33 +1,28 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
-import { LEAGUE_FOUNDED, MANAGERS, NAV_ITEMS } from "@/lib/constants";
+import { CURRENT_SEASON, MANAGER_COLORS } from "@/lib/constants";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Crown, Medal, TrendingDown } from "lucide-react";
-import NavIcon from "@/components/layout/NavIcon";
+import { ChevronRight, Crown } from "lucide-react";
+import ManagerName from "@/components/ui/ManagerName";
 
-async function getLeagueStats() {
-  const { data: matchups } = await supabase
-    .from("weekly_matchups")
-    .select("score_a, score_b");
+type Standing = { manager_id: string; reg_rank: number; wins: number; losses: number; ties: number; points_for: number };
+type Matchup = { week: number; manager_a: string; score_a: number; manager_b: string; score_b: number; is_playoff: boolean };
 
-  const totalGames = (matchups?.length ?? 0) * 2;
-  const totalPoints =
-    matchups?.reduce(
-      (sum, m) => sum + Number(m.score_a || 0) + Number(m.score_b || 0),
-      0
-    ) ?? 0;
-
-  return { totalGames, totalPoints };
-}
-
-async function getChampionRecord(year: number, champion: string) {
-  const { data } = await supabase
-    .from("season_results")
-    .select("wins, losses, points_for, points_against")
-    .eq("season_year", year)
-    .eq("manager_id", champion)
-    .single();
-  return data;
+async function getCurrentSeason() {
+  const [{ data: standings }, { data: matchups }] = await Promise.all([
+    supabase.from("season_results")
+      .select("manager_id, reg_rank, wins, losses, ties, points_for")
+      .eq("season_year", CURRENT_SEASON).order("reg_rank"),
+    supabase.from("weekly_matchups")
+      .select("week, manager_a, score_a, manager_b, score_b, is_playoff")
+      .eq("season_year", CURRENT_SEASON).order("week", { ascending: false }).order("id").limit(8),
+  ]);
+  const week = matchups?.[0]?.week ?? null;
+  return {
+    standings: (standings ?? []) as Standing[],
+    week,
+    games: ((matchups ?? []) as Matchup[]).filter((m) => m.week === week),
+  };
 }
 
 async function getLeagueRecords() {
@@ -40,235 +35,151 @@ async function getLeagueRecords() {
   return data ?? [];
 }
 
+const pts = (n: number) => Number(n).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function Side({ id, score, won, align }: { id: string; score: number; won: boolean; align: "left" | "right" }) {
+  return (
+    <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
+      <ManagerName id={id} plain className={`${align === "right" ? "flex-row-reverse" : ""} text-base ${won ? "font-semibold text-ink" : "text-text-muted"}`} />
+      <span className={`ml-auto display-title text-xl sm:text-2xl tabular-nums ${align === "right" ? "ml-0 mr-auto" : ""} ${won ? "text-ink" : "text-text-faint"}`}>{pts(score)}</span>
+    </div>
+  );
+}
+
 export default async function HomePage() {
-  const [seasons, stats, records] = await Promise.all([
-    getSeasonSummaries(),
-    getLeagueStats(),
-    getLeagueRecords(),
-  ]);
+  const [seasons, current, records] = await Promise.all([getSeasonSummaries(), getCurrentSeason(), getLeagueRecords()]);
 
-  // The newest season may still be running; champion sections use finished ones
-  const finishedSeasons = seasons.filter((s) => s.champion !== "—");
-  const latestSeason = finishedSeasons[0];
-  const totalSeasons = seasons.length;
+  const finished = seasons.filter((s) => s.champion !== "—");
+  const reigning = finished[0];
+  const running = current.standings.length > 0 && !finished.some((s) => s.year === CURRENT_SEASON);
+  const playoffTeams = seasons.find((s) => s.year === CURRENT_SEASON)?.playoff_teams ?? 4;
 
-  const championRecord = latestSeason
-    ? await getChampionRecord(latestSeason.year, latestSeason.champion)
-    : null;
-
-  // Title count per manager, most titles first
-  const titleCounts = Object.entries(
-    finishedSeasons.reduce<Record<string, number>>((acc, s) => {
-      acc[s.champion] = (acc[s.champion] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1] - a[1]);
-
-  const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
+  const titles = Object.entries(finished.reduce<Record<string, number>>((acc, s) => {
+    acc[s.champion] = (acc[s.champion] ?? 0) + 1;
+    return acc;
+  }, {})).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="space-y-10">
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface-2 via-surface to-cream">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-red/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-gold/10 blur-3xl" />
-
-        <div className="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-          <div>
-            <div className="chip mb-5">
-              <span className="h-1.5 w-1.5 rounded-full bg-red" />
-              Est. {LEAGUE_FOUNDED} · {totalSeasons} Seasons · {MANAGERS.length} Manager
+    <div className="space-y-12">
+      {/* What is happening right now */}
+      {running ? (
+        <section>
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-sm text-text-muted">Saison {CURRENT_SEASON}</p>
+              <h1 className="display-title text-5xl sm:text-6xl text-ink">Woche {current.week}</h1>
             </div>
-
-            {latestSeason ? (
-              <>
-                <div className="flex items-center gap-2 text-gold">
-                  <Crown size={18} />
-                  <span className="label-nav text-sm">Champion {latestSeason.year}</span>
-                </div>
-                <Link
-                  href={`/manager/${latestSeason.champion}`}
-                  className="mt-1 block display-title text-6xl sm:text-8xl text-ink uppercase hover:text-gold transition-colors"
-                >
-                  {latestSeason.champion}
-                </Link>
-                {championRecord && (
-                  <p className="mt-3 text-text-secondary">
-                    {championRecord.wins}–{championRecord.losses} in der Regular Season ·{" "}
-                    {titleCounts.find(([m]) => m === latestSeason.champion)?.[1] ?? 1}. Titel
-                  </p>
-                )}
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link
-                    href={`/history/${latestSeason.year}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-red px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red/25 hover:bg-red-soft transition-colors"
-                  >
-                    Season {latestSeason.year} ansehen <ArrowRight size={16} />
-                  </Link>
-                  <Link
-                    href="/history"
-                    className="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-surface/60 px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface-2 transition-colors"
-                  >
-                    Alle Seasons
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <h1 className="display-title text-5xl text-ink">Tim Tebow Tournament</h1>
+            {reigning && (
+              <Link href={`/history/${reigning.year}`} className="flex items-center gap-2 text-sm text-text-muted hover:text-ink transition-colors">
+                <Crown size={15} className="text-gold" /> Titelverteidiger <span className="font-semibold text-ink">{reigning.champion}</span>
+              </Link>
             )}
           </div>
 
-          {latestSeason && (
-            <div className="space-y-3">
-              {championRecord && (
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Punkte", value: fmt(Number(championRecord.points_for)) },
-                    { label: "Gegner", value: fmt(Number(championRecord.points_against)) },
-                    {
-                      label: "Diff",
-                      value: `${Number(championRecord.points_for) >= Number(championRecord.points_against) ? "+" : ""}${fmt(Number(championRecord.points_for) - Number(championRecord.points_against))}`,
-                    },
-                  ].map((cell) => (
-                    <div key={cell.label} className="rounded-2xl border border-border bg-cream/50 p-4 text-center">
-                      <div className="display-title text-2xl sm:text-3xl text-ink">{cell.value}</div>
-                      <div className="mt-1 text-xs text-text-muted">{cell.label}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href={`/manager/${latestSeason.runner_up}`}
-                  className="rounded-2xl border border-border bg-cream/50 p-4 hover:border-border-strong transition-colors"
-                >
-                  <div className="flex items-center gap-1.5 text-xs text-silver">
-                    <Medal size={14} /> Runner-Up
-                  </div>
-                  <div className="mt-1 text-lg font-semibold text-ink">{latestSeason.runner_up}</div>
+          <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
+            <div className="cell overflow-hidden">
+              {current.games.map((m) => (
+                <Link key={m.manager_a} href={`/gamecenter/${CURRENT_SEASON}/${m.week}?a=${m.manager_a}&b=${m.manager_b}`}
+                  className="flex items-center gap-2.5 sm:gap-4 border-b border-border-light px-4 py-4 last:border-0 hover:bg-surface-2 transition-colors sm:px-5">
+                  <Side id={m.manager_a} score={m.score_a} won={m.score_a > m.score_b} align="left" />
+                  <span className="text-xs text-text-faint">vs</span>
+                  <Side id={m.manager_b} score={m.score_b} won={m.score_b > m.score_a} align="right" />
                 </Link>
-                <Link
-                  href={`/manager/${latestSeason.sacko}`}
-                  className="rounded-2xl border border-border bg-cream/50 p-4 hover:border-border-strong transition-colors"
-                >
-                  <div className="flex items-center gap-1.5 text-xs text-negative">
-                    <TrendingDown size={14} /> Sacko
-                  </div>
-                  <div className="mt-1 text-lg font-semibold text-ink">{latestSeason.sacko}</div>
-                </Link>
-              </div>
+              ))}
+              <Link href="/gamecenter" className="flex items-center justify-center gap-1 px-4 py-2.5 text-sm text-text-muted hover:text-ink transition-colors">
+                Alle Wochen im Gamecenter <ChevronRight size={15} />
+              </Link>
             </div>
-          )}
-        </div>
-      </section>
 
-      {/* ── LEAGUE STATS ── */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: "Seasons", value: totalSeasons.toString() },
-          { label: "Manager", value: MANAGERS.length.toString() },
-          { label: "Spiele", value: fmt(stats.totalGames) },
-          { label: "Punkte gesamt", value: fmt(stats.totalPoints) },
-        ].map((cell) => (
-          <div key={cell.label} className="cell p-5">
-            <div className="text-xs text-text-muted">{cell.label}</div>
-            <div className="mt-1 display-title text-3xl md:text-4xl text-ink">{cell.value}</div>
+            <div className="cell overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-text-muted">
+                    <th className="py-2.5 pl-4 pr-2 font-medium sm:pl-5">Tabelle</th>
+                    <th className="px-2 py-2.5 text-right font-medium">Bilanz</th>
+                    <th className="py-2.5 pl-2 pr-4 text-right font-medium sm:pr-5">Punkte</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {current.standings.map((s) => (
+                    <tr key={s.manager_id}
+                      className={`border-t ${s.reg_rank === playoffTeams + 1 ? "border-border-strong border-dashed" : "border-border-light"}`}>
+                      <td className="py-2 pl-4 pr-2 sm:pl-5">
+                        <span className="flex items-center gap-3">
+                          <span className="w-4 text-right tabular-nums text-text-faint">{s.reg_rank}</span>
+                          <ManagerName id={s.manager_id} className="font-medium text-ink" />
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-right tabular-nums text-text-secondary">{s.wins}–{s.losses}{s.ties ? `–${s.ties}` : ""}</td>
+                      <td className="py-2 pl-2 pr-4 text-right tabular-nums text-text-secondary sm:pr-5">{pts(s.points_for)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Link href={`/history/${CURRENT_SEASON}`} className="flex items-center justify-center gap-1 border-t border-border-light px-4 py-2.5 text-sm text-text-muted hover:text-ink transition-colors">
+                Ganze Tabelle <ChevronRight size={15} />
+              </Link>
+            </div>
           </div>
-        ))}
-      </section>
+          <p className="mt-2 text-xs text-text-faint">Die gestrichelte Linie trennt die {playoffTeams} Playoff-Plätze.</p>
+        </section>
+      ) : reigning && (
+        <section>
+          <p className="flex items-center gap-2 text-sm text-gold"><Crown size={16} /> Champion {reigning.year}</p>
+          <Link href={`/manager/${reigning.champion}`} className="mt-1 block display-title text-7xl sm:text-8xl uppercase text-ink hover:text-gold transition-colors">
+            {reigning.champion}
+          </Link>
+          <p className="mt-3 text-text-secondary">
+            Finale gegen {reigning.runner_up}. <Link href={`/history/${reigning.year}`} className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-red">Zur Saison {reigning.year}</Link>
+          </p>
+        </section>
+      )}
 
-      {/* ── QUICK ACCESS ── */}
+      {/* Every title since the league started, in each champion's colour */}
       <section>
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <div className="kicker mb-1">Schnellzugriff</div>
-            <h2 className="section-title text-ink">Wohin willst du?</h2>
-          </div>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <h2 className="section-title text-ink">Alle Champions</h2>
+          <Link href="/history" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+            Zur History <ChevronRight size={15} />
+          </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {NAV_ITEMS.map((item) => (
-            <Link key={item.href} href={item.href} className="cell-hover group p-4 sm:p-5">
-              <div className="flex items-start justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red/10 text-red group-hover:bg-red group-hover:text-white transition-colors">
-                  <NavIcon name={item.icon} size={20} />
-                </span>
-                <ChevronRight size={18} className="text-text-faint group-hover:text-ink group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <div className="mt-4 font-semibold text-ink">{item.label}</div>
-              <div className="mt-0.5 text-xs text-text-muted">{item.desc}</div>
+        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 lg:grid-cols-[repeat(11,minmax(0,1fr))]">
+          {[...finished].reverse().map((s) => (
+            <Link key={s.year} href={`/history/${s.year}`}
+              className="group rounded-lg bg-surface px-2.5 pb-2.5 pt-2 transition-colors hover:bg-surface-2"
+              style={{ boxShadow: `inset 0 3px 0 ${MANAGER_COLORS[s.champion] ?? "var(--color-border-strong)"}` }}>
+              <div className="text-xs tabular-nums text-text-faint">{s.year}</div>
+              <div className="truncate font-semibold text-ink">{s.champion}</div>
             </Link>
+          ))}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-secondary">
+          {titles.map(([m, n]) => (
+            <span key={m} className="flex items-center gap-1.5">
+              <ManagerName id={m} /> <span className="tabular-nums text-text-faint">{n}×</span>
+            </span>
           ))}
         </div>
       </section>
 
-      {/* ── CHAMPIONS + RECORDS ── */}
-      <section className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="cell p-5 sm:p-6 lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="section-title text-ink">Champions</h2>
-            <Link href="/history" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
-              Alle <ChevronRight size={16} />
+      {records.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="section-title text-ink">Aktuelle Rekordhalter</h2>
+            <Link href="/trophies/records" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+              Alle Rekorde <ChevronRight size={15} />
             </Link>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {finishedSeasons.map((s, i) => (
-              <Link
-                key={s.year}
-                href={`/history/${s.year}`}
-                className="flex items-center gap-3 rounded-xl border border-border-light bg-cream/40 px-3 py-2.5 hover:border-border-strong hover:bg-surface-2 transition-colors"
-              >
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${i === 0 ? "bg-gold/15 text-gold" : "bg-surface-2 text-text-muted"}`}>
-                  <Crown size={15} />
-                </span>
-                <span className="font-semibold text-ink">{s.champion}</span>
-                <span className="ml-auto label-nav text-xs text-text-faint">{s.year}</span>
-              </Link>
+          <div className="cell grid sm:grid-cols-2">
+            {records.map((r) => (
+              <div key={r.record_label} className="flex items-center justify-between gap-3 border-b border-border-light px-4 py-3 sm:px-5 sm:[&:nth-last-child(-n+2)]:border-0 last:border-0 sm:odd:border-r">
+                <span className="truncate text-sm text-text-secondary">{r.record_label}</span>
+                <ManagerName id={r.manager_id} className="shrink-0 text-sm font-medium text-ink" />
+              </div>
             ))}
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="cell p-5 sm:p-6">
-            <h2 className="section-title text-ink mb-4">Titel-Ranking</h2>
-            <div className="space-y-2.5">
-              {titleCounts.map(([manager, count]) => (
-                <Link key={manager} href={`/manager/${manager}`} className="group block">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-ink group-hover:text-red transition-colors">{manager}</span>
-                    <span className="text-text-muted">{count}×</span>
-                  </div>
-                  <div className="mt-1 h-1.5 rounded-full bg-surface-2">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-red to-gold"
-                      style={{ width: `${(count / titleCounts[0][1]) * 100}%` }}
-                    />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {records.length > 0 && (
-            <div className="cell p-5 sm:p-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="section-title text-ink">Liga-Rekorde</h2>
-                <Link href="/trophies/records" className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
-                  Alle <ChevronRight size={16} />
-                </Link>
-              </div>
-              <div className="divide-y divide-border-light">
-                {records.map((r) => (
-                  <div key={r.record_label} className="flex items-center justify-between gap-3 py-2.5">
-                    <span className="text-sm text-text-secondary truncate">{r.record_label}</span>
-                    <span className="chip shrink-0">{r.manager_id}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
