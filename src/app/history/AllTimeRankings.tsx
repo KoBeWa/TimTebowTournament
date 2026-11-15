@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Tabs from "@/components/ui/Tabs";
+import ManagerName from "@/components/ui/ManagerName";
 
 type Rec = { w: number; l: number; t: number };
 
@@ -40,116 +41,92 @@ function byRecord(rows: AllTimeRow[], key: "total" | "regular" | "playoffs") {
   return [...rows].sort((a, b) => pct(b[key]) - pct(a[key]) || b[key].w - a[key].w || b.medalScore - a.medalScore);
 }
 
-const TH = "label-nav text-xs text-text-muted py-2";
+const TH = "px-3 py-3 text-xs font-medium text-text-muted";
+const TD = "px-3 py-3 text-right tabular-nums whitespace-nowrap";
 
 export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
   const [tab, setTab] = useState<Tab>("total");
   const sorted = byRecord(rows, tab);
 
   return (
-    <div className="mb-10">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div>
-          <div className="kicker">Alltime Rankings</div>
-          <p className="text-xs text-text-muted mt-0.5">
-            Sortiert nach Bilanz {tab === "total" ? "inkl. Playoffs" : tab === "regular" ? "der Regular Season" : "in den Playoffs (inkl. Platzierungsspiele)"}
-          </p>
-        </div>
-        <div className="flex" style={{ border: "1px solid var(--color-border)", borderRadius: "4px", overflow: "hidden" }}>
-          {TABS.map((t, i) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className="label-nav text-xs px-3 py-1.5 transition-colors"
-              style={{
-                background: tab === t.key ? "var(--color-ink)" : "transparent",
-                color: tab === t.key ? "var(--color-cream)" : "var(--color-text-muted)",
-                borderRight: i < TABS.length - 1 ? "1px solid var(--color-border)" : undefined,
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-text-muted">
+          Sortiert nach Bilanz {tab === "total" ? "inkl. Playoffs" : tab === "regular" ? "der Regular Season" : "in den Playoffs (inkl. Platzierungsspiele)"}
+        </p>
+        <Tabs tabs={TABS} value={tab} onChange={setTab} size="sm" label="Zeitraum" />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+      <div className="cell overflow-x-auto">
+        <table className="w-full text-sm">
           <thead>
-            <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
-              <th className={`${TH} text-left pr-4`}>#</th>
-              <th className={`${TH} text-left pr-6`}>Manager</th>
-              <th className={`${TH} text-right pr-6`}>Record</th>
-              <th className={`${TH} text-right pr-6`}>Win%</th>
+            <tr>
+              <th className={`${TH} pl-4 text-left sm:pl-5`}>#</th>
+              <th className={`${TH} text-left`}>Manager</th>
+              <th className={`${TH} text-right`}>Record</th>
+              <th className={`${TH} text-right`}>Win%</th>
               {tab === "total" && (
                 <>
-                  <th className={`${TH} text-right pr-6`}>Regular</th>
-                  <th className={`${TH} text-right pr-6`}>Playoffs</th>
-                  <th className={`${TH} text-right pr-6`} title="Punkte pro Spiel">PPG</th>
-                  <th className={`${TH} text-left pr-6`}>Titel</th>
-                  <th className={`${TH} text-right`}>ELO</th>
+                  <th className={`${TH} hidden text-right md:table-cell`}>Regular</th>
+                  <th className={`${TH} hidden text-right md:table-cell`}>Playoffs</th>
+                  <th className={`${TH} hidden text-right md:table-cell`} title="Punkte pro Spiel">PPG</th>
+                  <th className={`${TH} text-left`}>Titel</th>
+                  <th className={`${TH} pr-4 text-right sm:pr-5`}>ELO</th>
                 </>
               )}
               {tab === "regular" && (
                 <>
-                  <th className={`${TH} text-right pr-6`} title="Bilanz, wenn man jede Woche gegen alle spielen würde">All Play</th>
-                  <th className={`${TH} text-right pr-6`}>AP Win%</th>
-                  <th className={`${TH} text-right`}>ELO</th>
+                  <th className={`${TH} text-right`} title="Bilanz, wenn man jede Woche gegen alle spielen würde">All Play</th>
+                  <th className={`${TH} text-right`}>AP Win%</th>
+                  <th className={`${TH} pr-4 text-right sm:pr-5`}>ELO</th>
                 </>
               )}
               {tab === "playoffs" && (
                 <>
-                  <th className={`${TH} text-right pr-6`} title="Nur Spiele um die Meisterschaft">Titelrunde</th>
-                  <th className={`${TH} text-right pr-6`}>Teilnahmen</th>
-                  <th className={`${TH} text-right pr-6`} title="Gold 8 · Silber 5 · Bronze 2">Medal Score</th>
-                  <th className={`${TH} text-left`}>Trophäen</th>
+                  <th className={`${TH} text-right`} title="Nur Spiele um die Meisterschaft">Titelrunde</th>
+                  <th className={`${TH} text-right`}>Teilnahmen</th>
+                  <th className={`${TH} text-right`} title="Gold 8, Silber 5, Bronze 2">Medal Score</th>
+                  <th className={`${TH} pr-4 text-left sm:pr-5`}>Trophäen</th>
                 </>
               )}
             </tr>
           </thead>
           <tbody>
             {sorted.map((row, i) => (
-              <tr key={row.manager_id} style={{ borderBottom: "1px solid var(--color-border-light)" }}
-                className="hover:bg-border-light transition-colors">
-                <td className="py-3 pr-4 text-text-faint label-nav text-xs">{i + 1}</td>
-                <td className="py-3 pr-6">
-                  <Link href={`/manager/${row.manager_id}`} className="font-semibold text-ink hover:text-red transition-colors">
-                    {row.manager_id}
-                  </Link>
-                </td>
-                <td className="py-3 pr-6 text-right font-mono text-ink">{fmtRec(row[tab])}</td>
-                <td className="py-3 pr-6 text-right font-mono text-ink">{fmtPct(row[tab])}</td>
+              <tr key={row.manager_id} className="border-t border-border-light transition-colors hover:bg-surface-2">
+                <td className="py-3 pl-4 pr-2 text-xs tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+                <td className="px-3 py-3 font-semibold text-ink"><ManagerName id={row.manager_id} /></td>
+                <td className={`${TD} text-ink`}>{fmtRec(row[tab])}</td>
+                <td className={`${TD} text-ink`}>{fmtPct(row[tab])}</td>
                 {tab === "total" && (
                   <>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{fmtRec(row.regular)}</td>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{fmtRec(row.playoffs)}</td>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{row.ppg.toFixed(1)}</td>
-                    <td className="py-3 pr-6 text-text-secondary whitespace-nowrap">
-                      {row.gold > 0 ? <span className="text-gold font-semibold">{row.gold}× Champion</span> : "—"}
+                    <td className={`${TD} hidden text-text-secondary md:table-cell`}>{fmtRec(row.regular)}</td>
+                    <td className={`${TD} hidden text-text-secondary md:table-cell`}>{fmtRec(row.playoffs)}</td>
+                    <td className={`${TD} hidden text-text-secondary md:table-cell`}>{row.ppg.toFixed(1)}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text-secondary">
+                      {row.gold > 0 ? <span className="font-semibold text-gold">{row.gold}× Champion</span> : "—"}
                     </td>
-                    <td className="py-3 text-right font-mono text-text-secondary">{row.elo ?? "—"}</td>
+                    <td className={`${TD} pr-4 text-text-secondary sm:pr-5`}>{row.elo ?? "—"}</td>
                   </>
                 )}
                 {tab === "regular" && (
                   <>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{fmtRec(row.allPlay)}</td>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{fmtPct(row.allPlay)}</td>
-                    <td className="py-3 text-right font-mono text-text-secondary">{row.elo ?? "—"}</td>
+                    <td className={`${TD} text-text-secondary`}>{fmtRec(row.allPlay)}</td>
+                    <td className={`${TD} text-text-secondary`}>{fmtPct(row.allPlay)}</td>
+                    <td className={`${TD} pr-4 text-text-secondary sm:pr-5`}>{row.elo ?? "—"}</td>
                   </>
                 )}
                 {tab === "playoffs" && (
                   <>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{fmtRec(row.bracket)}</td>
-                    <td className="py-3 pr-6 text-right font-mono text-text-secondary">{row.playoffAppearances}</td>
-                    <td className="py-3 pr-6 text-right font-mono text-ink">{row.medalScore}</td>
-                    <td className="py-3">
-                      <span className="font-mono text-xs text-text-secondary">
-                        {[
-                          row.gold > 0 ? `${row.gold}x Gold` : null,
-                          row.silver > 0 ? `${row.silver}x Silber` : null,
-                          row.bronze > 0 ? `${row.bronze}x Bronze` : null,
-                        ].filter(Boolean).join(" · ") || "—"}
-                      </span>
+                    <td className={`${TD} text-text-secondary`}>{fmtRec(row.bracket)}</td>
+                    <td className={`${TD} text-text-secondary`}>{row.playoffAppearances}</td>
+                    <td className={`${TD} text-ink`}>{row.medalScore}</td>
+                    <td className="whitespace-nowrap px-3 py-3 pr-4 text-xs text-text-secondary sm:pr-5">
+                      {[
+                        row.gold > 0 ? `${row.gold}x Gold` : null,
+                        row.silver > 0 ? `${row.silver}x Silber` : null,
+                        row.bronze > 0 ? `${row.bronze}x Bronze` : null,
+                      ].filter(Boolean).join(", ") || "—"}
                     </td>
                   </>
                 )}

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import ManagerName from "@/components/ui/ManagerName";
 
 export type RankingRow = {
   manager_id: string;
@@ -50,66 +50,43 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
     return sortDesc ? -diff : diff;
   });
 
-  const col = COLS.find((c) => c.key === sortKey)!;
+  // Below lg only the season score and the currently sorted column stay visible
+  const colVis = (key: ColKey) => (key === "avg_season_score" || key === sortKey ? "" : "hidden lg:table-cell");
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+    <div className="cell overflow-x-auto">
+      <table className="w-full text-sm">
         <thead>
-          <tr style={{ borderBottom: "2px solid var(--color-border-strong)" }}>
-            <th className="label-nav text-xs text-text-muted text-left py-2 pr-4">#</th>
-            <th className="label-nav text-xs text-text-muted text-left py-2 pr-6">Manager</th>
-            {COLS.map((c) => (
+          <tr className="text-xs font-medium text-text-muted">
+            <th className="py-3 pl-4 pr-2 text-left sm:pl-5">#</th>
+            <th className="px-3 py-3 text-left">Manager</th>
+            {COLS.map((c, i) => (
               <th
                 key={c.key}
-                className="label-nav text-xs text-right py-2 px-3 cursor-pointer select-none whitespace-nowrap transition-colors"
-                style={{ color: c.key === sortKey ? "var(--color-ink)" : "var(--color-text-muted)" }}
+                aria-sort={c.key === sortKey ? (sortDesc ? "descending" : "ascending") : undefined}
+                className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-right transition-colors hover:text-ink ${
+                  i === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${c.key === sortKey ? "text-ink" : ""} ${colVis(c.key)}`}
                 onClick={() => handleSort(c.key)}
               >
                 {c.label}
-                {c.key === sortKey && (
-                  <span className="ml-1">{sortDesc ? "↓" : "↑"}</span>
-                )}
+                {c.key === sortKey && <span className="ml-1">{sortDesc ? "↓" : "↑"}</span>}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {sorted.map((row, i) => (
-            <tr
-              key={row.manager_id}
-              style={{ borderBottom: "1px solid var(--color-border-light)" }}
-              className="hover:bg-border-light transition-colors"
-            >
-              <td className="py-3 pr-4 text-text-faint label-nav text-xs">{i + 1}</td>
-              <td className="py-3 pr-6">
-                <Link
-                  href={`/manager/${row.manager_id}`}
-                  className="font-semibold text-ink hover:text-red transition-colors"
-                >
-                  {row.manager_id}
-                </Link>
-              </td>
-              {COLS.map((c) => {
+            <tr key={row.manager_id} className="border-t border-border-light transition-colors hover:bg-surface-2">
+              <td className="py-3 pl-4 pr-2 text-xs tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+              <td className="px-3 py-3 font-semibold text-ink"><ManagerName id={row.manager_id} /></td>
+              {COLS.map((c, ci) => {
                 const val = row[c.key] as number;
-                const isActive = c.key === sortKey;
-                const isPositive = c.key === "avg_draft" || c.key === "total_luck"
-                  ? val > 0
-                  : null;
+                const active = c.key === sortKey;
                 return (
                   <td
                     key={c.key}
-                    className="py-3 px-3 text-right font-mono"
-                    style={{
-                      color: isActive
-                        ? "var(--color-ink)"
-                        : isPositive === true
-                        ? "var(--color-text-secondary)"
-                        : isPositive === false
-                        ? "var(--color-text-muted)"
-                        : "var(--color-text-secondary)",
-                      fontWeight: isActive ? 600 : 400,
-                    }}
+                    className={`px-3 py-3 text-right tabular-nums ${ci === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${
+                      active ? "font-semibold text-ink" : "text-text-secondary"} ${colVis(c.key)}`}
                   >
                     {c.format(val)}
                   </td>
@@ -119,9 +96,6 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
           ))}
         </tbody>
       </table>
-      <p className="label-nav text-xs text-text-faint mt-3">
-        Sortiert nach: {col.label} · Klick auf Spalte zum Sortieren
-      </p>
     </div>
   );
 }

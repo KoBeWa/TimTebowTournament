@@ -3,6 +3,8 @@ import { getChampionsBySeason } from "@/lib/queries";
 import { SEASONS } from "@/lib/constants";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Crown } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import ManagerName from "@/components/ui/ManagerName";
 import { notFound } from "next/navigation";
 import { seasonScores } from "./seasonScore";
 
@@ -53,147 +55,123 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
   const prevSeason = SEASONS.includes(year - 1) ? year - 1 : null;
   const nextSeason = SEASONS.includes(year + 1) ? year + 1 : null;
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <nav className="mb-4 flex items-center gap-1.5 text-sm text-text-muted">
-          <Link href="/history" className="hover:text-ink transition-colors">History</Link>
-          <ChevronRight size={14} className="text-text-faint" />
-          <span className="text-ink">{year}</span>
-        </nav>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="kicker mb-1">Season {year - SEASONS[0] + 1}</div>
-            <h1 className="display-title text-4xl md:text-5xl text-ink">{year} Season</h1>
-            <p className="text-text-secondary mt-1">
-              {seasonInfo.total_managers} Teams · {seasonInfo.reg_season_weeks} Weeks · {seasonInfo.playoff_teams} Playoff Teams
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {prevSeason ? (
-              <Link href={`/history/${prevSeason}`} className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-secondary hover:text-ink hover:bg-surface-2 transition-colors">
-                <ChevronLeft size={16} /> {prevSeason}
-              </Link>
-            ) : null}
-            {nextSeason ? (
-              <Link href={`/history/${nextSeason}`} className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-secondary hover:text-ink hover:bg-surface-2 transition-colors">
-                {nextSeason} <ChevronRight size={16} />
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </div>
+  const navLink = "inline-flex items-center gap-1 rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2";
+  const th = "px-3 py-3 text-xs font-medium text-text-muted";
 
-      {/* Champion Banner */}
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={`Saison ${year}`}
+        crumbs={[{ label: "History", href: "/history" }]}
+        description={`${seasonInfo.total_managers} Teams, ${seasonInfo.reg_season_weeks} Wochen, ${seasonInfo.playoff_teams} Playoff-Teams`}
+      >
+        {prevSeason && (
+          <Link href={`/history/${prevSeason}`} className={navLink}><ChevronLeft size={16} /> {prevSeason}</Link>
+        )}
+        {nextSeason && (
+          <Link href={`/history/${nextSeason}`} className={navLink}>{nextSeason} <ChevronRight size={16} /></Link>
+        )}
+      </PageHeader>
+
       {champs && (
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface-2 via-surface to-cream p-8 text-center">
-          <div className="pointer-events-none absolute left-1/2 -top-24 h-56 w-56 -translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 text-gold">
-              <Crown size={18} />
-              <span className="label-nav text-sm">Champion</span>
-            </div>
-            <Link href={`/manager/${champs.champion}`} className="mt-1 block display-title text-5xl sm:text-7xl uppercase text-ink hover:text-gold transition-colors">
-              {champs.champion}
-            </Link>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="chip">Runner-Up: {champs.runner_up}</span>
-              <span className="chip">Sacko: {champs.sacko}</span>
-            </div>
+        <div className="cell flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-2">
+            <Crown size={16} className="text-gold" />
+            <span className="text-xs text-text-muted">Champion</span>
+            <ManagerName id={champs.champion} className="font-semibold text-ink" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">Runner-up</span>
+            <ManagerName id={champs.runner_up} className="text-ink" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">Sacko</span>
+            <ManagerName id={champs.sacko} className="text-ink" />
           </div>
         </div>
       )}
 
-      {/* Standings */}
       <section>
-        <div className="kicker mb-1">Standings</div>
-        <h2 className="section-title text-ink mb-1">Regular Season Standings</h2>
-        <p className="text-xs text-text-muted mb-4">
-          Score 0–100: All Play 35 % · Bilanz 25 % · Punkte (im Saisonvergleich) 15 % · Endplatzierung 25 %
-          {finalRank.size === 0 ? " (laufende Saison: aktueller Tabellenplatz)" : ""}
+        <h2 className="section-title text-ink">Regular Season</h2>
+        <p className="mb-3 mt-1 text-xs text-text-muted">
+          Score von 0 bis 100: All Play 35 %, Bilanz 25 %, Punkte im Saisonvergleich 15 %, Endplatzierung 25 %
+          {finalRank.size === 0 ? " (laufende Saison: aktueller Tabellenplatz)" : ""}.
         </p>
-        <div className="cell overflow-hidden">
+        <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-text-muted text-left">
-                <th className="p-4 w-12">#</th>
-                <th className="p-4">Manager</th>
-                <th className="p-4 text-center">Record</th>
-                <th className="p-4 text-center" title="Bilanz, wenn man jede Woche gegen alle gespielt hätte">All Play</th>
-                <th className="p-4 text-right" title="Siege minus erwartete Siege laut All Play">Luck</th>
-                <th className="p-4 text-right">PF</th>
-                <th className="p-4 text-right hidden sm:table-cell">PA</th>
-                <th className="p-4 text-right hidden lg:table-cell">Max PF</th>
-                <th className="p-4 text-right hidden lg:table-cell">Efficiency</th>
-                <th className="p-4 text-center" title="Endplatzierung">Final</th>
-                <th className="p-4 text-right" title="All Play 35 % · Bilanz 25 % · Punkte 15 % · Platzierung 25 %">Score</th>
+              <tr>
+                <th className={`${th} w-10 pl-4 text-left sm:pl-5`}>#</th>
+                <th className={`${th} text-left`}>Manager</th>
+                <th className={`${th} text-center`}>Bilanz</th>
+                <th className={`${th} hidden text-center md:table-cell`} title="Bilanz, wenn man jede Woche gegen alle gespielt hätte">All Play</th>
+                <th className={`${th} hidden text-right md:table-cell`} title="Siege minus erwartete Siege laut All Play">Luck</th>
+                <th className={`${th} text-right`}>PF</th>
+                <th className={`${th} hidden text-right md:table-cell`}>PA</th>
+                <th className={`${th} hidden text-right lg:table-cell`}>Max PF</th>
+                <th className={`${th} hidden text-right lg:table-cell`}>Efficiency</th>
+                <th className={`${th} hidden text-center md:table-cell`} title="Endplatzierung">Final</th>
+                <th className={`${th} pr-4 text-right sm:pr-5`} title="All Play 35 %, Bilanz 25 %, Punkte 15 %, Platzierung 25 %">Score</th>
               </tr>
             </thead>
             <tbody>
-              {results.map((r) => (
-                <tr key={r.manager_id} className="border-b border-border-light transition-colors">
-                  <td className="p-4 text-text-muted">{r.reg_rank === 1 ? "★" : r.reg_rank}</td>
-                  <td className="p-4">
-                    <Link href={`/manager/${r.manager_id}`} className="font-medium text-ink hover:text-red transition-colors">
-                      {r.manager_id}
-                    </Link>
-                  </td>
-                  <td className="p-4 text-center font-mono">
-                    <span className="win">{r.wins}</span>
-                    <span className="text-text-muted">-</span>
-                    <span className="loss">{r.losses}</span>
-                    {r.ties > 0 && <><span className="text-text-muted">-</span><span className="tie">{r.ties}</span></>}
-                  </td>
-                  <td className="p-4 text-center font-mono text-text-secondary whitespace-nowrap">
-                    {(() => {
-                      const ap = allPlay.get(r.manager_id);
-                      return ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
-                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "—";
-                    })()}
-                  </td>
-                  <td className={`p-4 text-right font-mono ${(luck.get(r.manager_id) ?? 0) > 0 ? "text-positive" : (luck.get(r.manager_id) ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
-                    {luck.has(r.manager_id) ? `${luck.get(r.manager_id)! > 0 ? "+" : ""}${luck.get(r.manager_id)!.toFixed(1)}` : "—"}
-                  </td>
-                  <td className="p-4 text-right font-mono">{Number(r.points_for).toFixed(1)}</td>
-                  <td className="p-4 text-right font-mono text-text-secondary hidden sm:table-cell">{Number(r.points_against).toFixed(1)}</td>
-                  <td className="p-4 text-right font-mono text-text-secondary hidden lg:table-cell">
-                    {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "—"}
-                  </td>
-                  <td className="p-4 text-right font-mono hidden lg:table-cell">
-                    {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "—"}
-                  </td>
-                  <td className="p-4 text-center font-mono text-text-secondary">
-                    {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "—"}
-                  </td>
-                  <td className="p-4 text-right">
-                    <span className="inline-block min-w-[2.5rem] rounded-md bg-surface-3 px-2 py-0.5 text-center font-mono font-semibold text-ink">
-                      {scores[r.manager_id]}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {results.map((r) => {
+                const ap = allPlay.get(r.manager_id);
+                const lk = luck.get(r.manager_id);
+                return (
+                  <tr key={r.manager_id} className="border-t border-border-light">
+                    <td className="py-3 pl-4 pr-2 tabular-nums text-text-muted sm:pl-5">{r.reg_rank === 1 ? "★" : r.reg_rank}</td>
+                    <td className="px-3 py-3 font-medium text-ink"><ManagerName id={r.manager_id} /></td>
+                    <td className="whitespace-nowrap px-3 py-3 text-center tabular-nums">
+                      <span className="win">{r.wins}</span>
+                      <span className="text-text-muted">-</span>
+                      <span className="loss">{r.losses}</span>
+                      {r.ties > 0 && <><span className="text-text-muted">-</span><span className="tie">{r.ties}</span></>}
+                    </td>
+                    <td className="hidden whitespace-nowrap px-3 py-3 text-center tabular-nums text-text-secondary md:table-cell">
+                      {ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
+                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "—"}
+                    </td>
+                    <td className={`hidden px-3 py-3 text-right tabular-nums md:table-cell ${(lk ?? 0) > 0 ? "text-positive" : (lk ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
+                      {lk !== undefined ? `${lk > 0 ? "+" : ""}${lk.toFixed(1)}` : "—"}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums">{Number(r.points_for).toFixed(1)}</td>
+                    <td className="hidden px-3 py-3 text-right tabular-nums text-text-secondary md:table-cell">{Number(r.points_against).toFixed(1)}</td>
+                    <td className="hidden px-3 py-3 text-right tabular-nums text-text-secondary lg:table-cell">
+                      {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "—"}
+                    </td>
+                    <td className="hidden px-3 py-3 text-right tabular-nums lg:table-cell">
+                      {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "—"}
+                    </td>
+                    <td className="hidden px-3 py-3 text-center tabular-nums text-text-secondary md:table-cell">
+                      {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "—"}
+                    </td>
+                    <td className="px-3 py-3 pr-4 text-right sm:pr-5">
+                      <span className="inline-block min-w-[2.5rem] rounded-md bg-surface-3 px-2 py-0.5 text-center font-semibold tabular-nums text-ink">
+                        {scores[r.manager_id]}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* Playoffs */}
       <section>
-        <div className="kicker mb-1">Postseason</div>
-        <h2 className="section-title text-ink mb-4">Playoffs</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <h2 className="section-title mb-3 text-ink">Playoffs</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {playoffs.slice(0, 4).map((p) => (
-            <div key={p.manager_id} className={`cell p-4 text-center`}>
-              <div className="kicker">
-                {p.final_rank === 1 ? "Champion" : p.final_rank === 2 ? "Runner-Up" : p.final_rank === 3 ? "3rd Place" : "4th Place"}
+            <div key={p.manager_id} className="cell p-3">
+              <div className="text-xs text-text-muted">
+                {p.final_rank === 1 ? "Champion" : p.final_rank === 2 ? "Runner-up" : p.final_rank === 3 ? "Platz 3" : "Platz 4"}
               </div>
-              <div
-                className={`section-title text-2xl mt-1 ${p.final_rank === 1 ? "text-red" : "text-ink"}`}
-              >
-                {p.manager_id}
+              <div className={`mt-0.5 text-base font-semibold ${p.final_rank === 1 ? "text-red" : "text-ink"}`}>
+                <ManagerName id={p.manager_id} plain />
               </div>
-              <div className="text-text-muted text-xs mt-1">
-                Seed #{p.seed} · {Number(p.week15_pts).toFixed(1)} + {Number(p.week16_pts).toFixed(1)} pts
+              <div className="mt-1 text-xs tabular-nums text-text-muted">
+                Seed {p.seed}, {Number(p.week15_pts).toFixed(1)} + {Number(p.week16_pts).toFixed(1)} Pkt.
               </div>
             </div>
           ))}

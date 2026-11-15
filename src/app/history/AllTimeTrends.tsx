@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
+import Tabs from "@/components/ui/Tabs";
 import type { MetricKey, TrendData } from "./trends";
 
 const COLORS = MANAGER_COLORS;
@@ -106,20 +107,10 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
   }
 
   return (
-    <div className="mb-10">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div>
-          <div className="kicker">Verlauf seit 2015</div>
-          <p className="text-xs text-text-muted mt-0.5">{m.hint}</p>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {METRICS.map((opt) => (
-            <button key={opt.key} onClick={() => { setMetric(opt.key); setHover(null); }}
-              className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${metric === opt.key ? "bg-red text-white font-semibold" : "bg-cream text-text-secondary hover:text-ink border border-border"}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-text-muted">{m.hint}</p>
+        <Tabs tabs={METRICS} value={metric} onChange={(k) => { setMetric(k); setHover(null); }} size="sm" label="Kennzahl" />
       </div>
 
       <div className="cell p-3 sm:p-4">
@@ -185,14 +176,14 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
             <div className={`pointer-events-none rounded-xl border border-border bg-surface-2 px-3 py-2 text-xs ${
               W < 500 ? "mt-2 grid grid-cols-2 gap-x-4" : "absolute top-2 z-10 shadow-lg min-w-[10rem]"}`}
               style={W < 500 ? undefined : tipLeft > 55 ? { right: `${100 - tipLeft + 2}%` } : { left: `${tipLeft + 2}%` }}>
-              <div className="kicker mb-1 col-span-2">{data.weeks[hover].season} · Woche {data.weeks[hover].week}</div>
+              <div className="col-span-2 mb-1 text-text-muted">{data.weeks[hover].season}, Woche {data.weeks[hover].week}</div>
               {tooltipRows.map((r) => (
                 <div key={r.mgr} className={`flex items-center justify-between gap-4 py-0.5 ${focus && focus !== r.mgr ? "opacity-40" : ""}`}>
                   <span className="flex items-center gap-1.5 text-text-secondary">
                     <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[r.mgr] }} />
                     {r.mgr}
                   </span>
-                  <span className="font-mono text-ink tabular-nums">{m.format(r.v)}</span>
+                  <span className="text-ink tabular-nums">{m.format(r.v)}</span>
                 </div>
               ))}
             </div>
