@@ -30,7 +30,7 @@ export default function Tabs<T extends string | number>({ tabs, value, onChange,
           <button key={String(t.key)} ref={active ? activeRef : undefined} type="button" role="tab" aria-selected={active}
             onClick={() => onChange(t.key)}
             className={`${pad} whitespace-nowrap rounded-full font-medium transition-colors ${
-              active ? "bg-white/15 text-ink" : "text-text-secondary hover:text-ink"}`}>
+              active ? "bg-white text-[#12141c] shadow-sm" : "text-text-secondary hover:text-ink"}`}>
             {t.label}
             {t.count !== undefined && <span className="ml-1.5 tabular-nums text-text-faint">{t.count}</span>}
           </button>

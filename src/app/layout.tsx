@@ -31,15 +31,15 @@ export default function RootLayout({
     <html lang="de">
       <body className={`${display.variable} ${inter.variable}`}>
         <Navbar />
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
-          {children}
-        </main>
-        <footer className="mt-12 border-t border-border-light pb-24 md:pb-0">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-text-faint">
-            <span className="label-nav">Tim Tebow Tournament · Est. 2015</span>
-            <span>Die offizielle Ligachronik</span>
-          </div>
-        </footer>
+        {/* The sidebar is fixed from lg up; the content column makes room for it */}
+        <div className="lg:pl-[17.5rem]">
+          <main className="mx-auto max-w-[76rem] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            {children}
+          </main>
+          <footer className="mx-auto max-w-[76rem] px-4 pb-28 pt-8 text-xs text-text-faint sm:px-6 lg:px-8 lg:pb-8">
+            Tim Tebow Tournament, die Ligachronik seit 2015
+          </footer>
+        </div>
       </body>
     </html>
   );
