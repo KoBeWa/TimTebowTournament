@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { SEASONS, CURRENT_SEASON } from "@/lib/constants";
 import Link from "next/link";
@@ -204,14 +204,18 @@ export default function GamecenterPage() {
     setLoadedKey(`${s}-${w}`);
   }, []);
 
-  // Detect the latest week whenever the season changes (also on mount)
+  // Detect the latest week whenever the season changes (also on mount). A retry
+  // only repeats the detection if it never succeeded for this season, so it
+  // reloads the week the user picked instead of jumping to the latest one.
+  const detectedSeason = useRef<number | null>(null);
   useEffect(() => {
+    if (detectedSeason.current === season) return;
     let cancelled = false;
     (async () => {
       const latest = await detectLatestWeek(season);
       if (cancelled) return;
       if (latest === null) setError(true);
-      else setWeek(latest);
+      else { detectedSeason.current = season; setWeek(latest); }
     })();
     return () => { cancelled = true; };
   }, [season, attempt, detectLatestWeek]);

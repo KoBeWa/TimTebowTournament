@@ -10,16 +10,20 @@ export default function Tabs<T extends string | number>({ tabs, value, onChange,
   size?: "sm" | "md";
   label?: string;
 }) {
-  // Keep the selected tab in view when the strip is wider than the screen
+  // Keep the selected tab in view when the strip is wider than the screen.
+  // Only the strip scrolls: scrollIntoView would also move the page.
   const activeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+    const btn = activeRef.current;
+    const strip = btn?.parentElement;
+    if (!btn || !strip) return;
+    strip.scrollLeft = btn.offsetLeft - (strip.clientWidth - btn.offsetWidth) / 2;
   }, [value]);
 
   const pad = size === "sm" ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
   return (
     <div role="tablist" aria-label={label}
-      className="glass inline-flex max-w-full gap-1 overflow-x-auto rounded-full p-1 shadow-none [scrollbar-width:none]">
+      className="glass relative inline-flex max-w-full gap-1 overflow-x-auto rounded-full p-1 shadow-none [scrollbar-width:none]">
       {tabs.map((t) => {
         const active = t.key === value;
         return (
