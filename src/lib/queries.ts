@@ -37,7 +37,7 @@ export interface SeasonSummary {
 
 export async function getSeasonSummaries(): Promise<SeasonSummary[]> {
   const [{ data: seasons }, champMap] = await Promise.all([
-    supabase.from("seasons").select("*").order("year", { ascending: false }),
+    supabase.from("seasons").select("year, reg_season_weeks, total_managers, playoff_teams").order("year", { ascending: false }),
     getChampionsBySeason(),
   ]);
 

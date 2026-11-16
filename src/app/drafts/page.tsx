@@ -5,7 +5,6 @@ import { type DraftPick } from "./DraftBrowser";
 import { type PositionData } from "./PositionStats";
 import DraftsTabs from "./DraftsTabs";
 
-export const dynamic = "force-dynamic";
 
 // NFL team name → abbreviation (for DST picks whose player_name IS the team name)
 const DST_ABBREVS: Record<string, string> = {

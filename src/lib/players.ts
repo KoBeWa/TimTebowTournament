@@ -85,26 +85,74 @@ export async function fetchAll<T>(
   }
 }
 
-export function loadPlayerSummaries() {
-  return fetchAll<PlayerSummary>((from, to) =>
-    supabase.from("mv_player_summary").select("*").order("player_key").range(from, to));
+// Columns the players table, its search and its filters use (the full view has more and is ~1,500 rows)
+const LIST_COLS = "player_key, player_name, position, headshot, starter_points, starts, avg_start, managers, times_drafted, adds, drops, trades, first_season, last_season, top_manager, top_manager_weeks";
+
+export type PlayerListRow = Pick<PlayerSummary,
+  "player_key" | "player_name" | "position" | "headshot" | "starter_points" | "starts" | "avg_start" | "managers"
+  | "times_drafted" | "first_season" | "last_season" | "top_manager" | "top_manager_weeks"> & { moves: number };
+
+/** Slim rows for the players list; adds, drops and trades are folded into `moves`. */
+export async function loadPlayerList(): Promise<PlayerListRow[]> {
+  const rows = await fetchAll<PlayerSummary>((from, to) =>
+    supabase.from("mv_player_summary").select(LIST_COLS).order("player_key").range(from, to));
+  return rows.map(({ adds, drops, trades, ...p }) => ({ ...p, moves: adds + drops + trades }));
 }
 
+export type PlayerInfo = Pick<PlayerSummary, "player_key" | "player_name" | "position" | "headshot">;
+
+/** Name, position and headshot of the given players (chunked so the request URL stays short). */
+export async function loadPlayerInfo(keys: string[]): Promise<PlayerInfo[]> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < keys.length; i += 150) chunks.push(keys.slice(i, i + 150));
+  const parts = await Promise.all(chunks.map(async (chunk) => {
+    const { data, error } = await supabase.from("mv_player_summary")
+      .select("player_key, player_name, position, headshot").in("player_key", chunk);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as PlayerInfo[];
+  }));
+  return parts.flat();
+}
+
+const SUMMARY_COLS = "player_key, player_name, position, headshot, latest_team, weeks_rostered, starts, starter_points, avg_start, best_start, seasons, first_season, last_season, managers, top_manager, top_manager_weeks, times_drafted, adds, drops, trades";
+const MANAGER_COLS = "manager_id, weeks_rostered, starts, starter_points, avg_start, best_start, seasons, first_season, last_season";
+const EVENT_COLS = "season_year, week, event_at, kind, manager_id, round, overall_pick, value";
+
+export type PlayerData = Awaited<ReturnType<typeof loadPlayer>>;
+
+/** Everything on a player's page. Throws when a query fails. */
 export async function loadPlayer(key: string) {
   const [summary, managers, events, games] = await Promise.all([
-    supabase.from("mv_player_summary").select("*").eq("player_key", key).maybeSingle(),
-    supabase.from("mv_player_manager_stats").select("*").eq("player_key", key),
-    supabase.from("mv_player_events").select("*").eq("player_key", key),
+    supabase.from("mv_player_summary").select(SUMMARY_COLS).eq("player_key", key).maybeSingle(),
+    supabase.from("mv_player_manager_stats").select(MANAGER_COLS).eq("player_key", key),
+    supabase.from("mv_player_events").select(EVENT_COLS).eq("player_key", key),
     fetchAll<PlayerGame>((from, to) =>
       supabase.from("mv_player_games").select("season_year, week, manager_id, slot, is_starter, points")
         .eq("player_key", key).order("season_year").order("week").range(from, to)),
   ]);
+  const failed = summary.error ?? managers.error ?? events.error;
+  if (failed) throw new Error(failed.message);
   return {
     summary: summary.data ? toNumbers<PlayerSummary>(summary.data) : null,
     managers: (managers.data ?? []).map((r) => toNumbers<PlayerManagerStats>(r)),
     events: (events.data ?? []).map((r) => toNumbers<PlayerEvent>(r)),
     games,
   };
+}
+
+/** The manager's rows of the player tables, for the manager page. Throws when a query fails. */
+export async function loadManagerPlayers(manager: string) {
+  const [stats, events, teams] = await Promise.all([
+    fetchAll<PlayerManagerStats & { player_key: string }>((f, t) =>
+      supabase.from("mv_player_manager_stats").select(`player_key, ${MANAGER_COLS}`).eq("manager_id", manager).order("player_key").range(f, t)),
+    fetchAll<{ player_key: string; kind: string }>((f, t) =>
+      supabase.from("mv_player_events").select("player_key, kind").eq("manager_id", manager).order("player_key").range(f, t)),
+    fetchAll<{ player_key: string; teams: string }>((f, t) =>
+      supabase.from("mv_player_manager_teams").select("player_key, teams").eq("manager_id", manager).order("player_key").range(f, t)),
+  ]);
+  const keys = [...new Set([...stats.map((s) => s.player_key), ...events.map((e) => e.player_key)])];
+  const info = await loadPlayerInfo(keys);
+  return { stats, events, teams, info };
 }
 
 export const playerHref = (key: string) => `/players/${encodeURIComponent(key)}`;

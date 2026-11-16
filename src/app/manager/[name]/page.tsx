@@ -5,17 +5,21 @@ import { notFound } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import StatTile from "@/components/ui/StatTile";
 import ManagerTabs from "./ManagerTabs";
+import { buildRows, type Row } from "./rows";
+import { loadManagerPlayers } from "@/lib/players";
 
 export function generateStaticParams() {
   return MANAGERS.map((name) => ({ name }));
 }
 
+const MATCHUP_COLS = "season_year, week, manager_a, manager_b, score_a, score_b, is_playoff";
+
 async function getManagerData(id: string) {
   const [{ data: results }, { data: playoffs }, { data: matchupsA }, { data: matchupsB }] = await Promise.all([
-    supabase.from("season_results").select("*").eq("manager_id", id).order("season_year", { ascending: false }),
-    supabase.from("playoff_results").select("*").eq("manager_id", id).order("season_year", { ascending: false }),
-    supabase.from("weekly_matchups").select("*").eq("manager_a", id).order("season_year", { ascending: false }).order("week", { ascending: false }),
-    supabase.from("weekly_matchups").select("*").eq("manager_b", id).order("season_year", { ascending: false }).order("week", { ascending: false }),
+    supabase.from("season_results").select("season_year, reg_rank, wins, losses, ties, points_for").eq("manager_id", id).order("season_year", { ascending: false }),
+    supabase.from("playoff_results").select("season_year, final_rank, seed").eq("manager_id", id).order("season_year", { ascending: false }),
+    supabase.from("weekly_matchups").select(MATCHUP_COLS).eq("manager_a", id).order("season_year", { ascending: false }).order("week", { ascending: false }),
+    supabase.from("weekly_matchups").select(MATCHUP_COLS).eq("manager_b", id).order("season_year", { ascending: false }).order("week", { ascending: false }),
   ]);
 
   // Normalize matchups so manager is always "me"
@@ -29,11 +33,21 @@ async function getManagerData(id: string) {
   return { results: results ?? [], playoffs: playoffs ?? [], matchups, championships };
 }
 
+// If the player tables fail to load, the page still builds and the browser loads the list itself
+async function getPlayerRows(id: string): Promise<Row[] | null> {
+  try {
+    const data = await loadManagerPlayers(id);
+    return data.info.length > 0 ? buildRows(data) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default async function ManagerPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   if (!MANAGERS.includes(name as (typeof MANAGERS)[number])) notFound();
 
-  const data = await getManagerData(name);
+  const [data, players] = await Promise.all([getManagerData(name), getPlayerRows(name)]);
 
   const totalWins = data.results.reduce((s, r) => s + (r.wins || 0), 0);
   const totalLosses = data.results.reduce((s, r) => s + (r.losses || 0), 0);
@@ -76,7 +90,7 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
       </div>
 
       <ManagerTabs manager={name} results={data.results} playoffs={data.playoffs}
-        matchups={data.matchups.slice(0, 20)} secondary={secondary} />
+        matchups={data.matchups.slice(0, 20)} secondary={secondary} players={players} />
     </div>
   );
 }

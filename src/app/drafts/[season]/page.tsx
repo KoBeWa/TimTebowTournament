@@ -14,7 +14,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
   if (isNaN(season)) notFound();
 
   const { data: picks } = await supabase
-    .from("draft_picks").select("*").eq("season_year", season).order("overall_pick", { ascending: true });
+    .from("draft_picks").select("round, overall_pick, player_name, position, manager_id, vorp, grade4").eq("season_year", season).order("overall_pick", { ascending: true });
 
   if (!picks?.length) notFound();
   const rounds = [...new Set(picks.map((p) => p.round))].sort((a, b) => a - b);

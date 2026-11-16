@@ -2,13 +2,8 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/ui/PageHeader";
 import RecordsBrowser, { type OwnerRow, type TimelineEntry } from "./RecordsBrowser";
 
-export default async function RecordsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ key?: string }>;
-}) {
-  const { key } = await searchParams;
-
+// The record to open first comes from ?key= and is read in the browser, so this page can be static
+export default async function RecordsPage() {
   const [{ data: timeline }, { data: ownerValues }] = await Promise.all([
     supabase
       .from("record_timeline")
@@ -44,7 +39,6 @@ export default async function RecordsPage({
       <RecordsBrowser
         ownerValues={typedOwners}
         timeline={typedTimeline}
-        initialKey={key ?? null}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import ManagerPlayers from "./ManagerPlayers";
+import type { Row } from "./rows";
 
 type SeasonRow = { season_year: number; reg_rank: number; wins: number; losses: number; ties: number; points_for: number | string };
 type PlayoffRow = { season_year: number; final_rank: number };
@@ -17,12 +18,13 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
-export default function ManagerTabs({ manager, results, playoffs, matchups, secondary }: {
+export default function ManagerTabs({ manager, results, playoffs, matchups, secondary, players }: {
   manager: string;
   results: SeasonRow[];
   playoffs: PlayoffRow[];
   matchups: MatchupRow[];
   secondary: { label: string; value: string }[];
+  players: Row[] | null;
 }) {
   const [tab, setTab] = useState<Tab>("seasons");
 
@@ -81,7 +83,7 @@ export default function ManagerTabs({ manager, results, playoffs, matchups, seco
 
       {/* Stays mounted so the player data is loaded only once */}
       <div className={tab === "players" ? "" : "hidden"}>
-        <ManagerPlayers manager={manager} />
+        <ManagerPlayers manager={manager} initialRows={players} />
       </div>
 
       {tab === "matchups" && (

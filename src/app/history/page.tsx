@@ -12,7 +12,7 @@ import { getTrendData } from "./trends";
 async function getSeasonResults() {
   const { data } = await supabase
     .from("season_results")
-    .select("*")
+    .select("season_year, reg_rank, manager_id, wins, losses")
     .order("season_year", { ascending: false })
     .order("reg_rank", { ascending: true });
   return data ?? [];

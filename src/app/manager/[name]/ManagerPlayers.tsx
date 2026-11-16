@@ -1,32 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import Tabs from "@/components/ui/Tabs";
-import TeamChart, { DST_TEAM, NFL_TEAMS } from "./TeamChart";
-import { fetchAll, loadPlayerSummaries, playerHref, POSITIONS, type PlayerManagerStats, type PlayerSummary } from "@/lib/players";
-
-interface Row {
-  key: string;
-  name: string;
-  position: string | null;
-  team: string | null;
-  headshot: string | null;
-  weeks: number;
-  starts: number;
-  points: number;
-  avg: number | null;
-  best: number | null;
-  first: number | null;
-  last: number | null;
-  drafted: number;
-  adds: number;
-  drops: number;
-  trades: number;
-}
+import TeamChart, { NFL_TEAMS } from "./TeamChart";
+import { loadManagerPlayers, playerHref, POSITIONS } from "@/lib/players";
+import { buildRows, type Row } from "./rows";
 
 type Filter = "all" | "started" | "drafted" | "waiver" | "trade" | "bench";
 type SortKey = "name" | "position" | "team" | "first" | "weeks" | "starts" | "points" | "avg" | "best" | "drafted" | "adds" | "trades";
@@ -55,17 +36,12 @@ const COLUMNS: { key: SortKey; label: string; title?: string; align?: "left" }[]
   { key: "trades", label: "Trades", title: "Per Trade bekommen" },
 ];
 
-// Old codes of relocated teams -> current code (as in NFL_TEAMS)
-const OLD_CODES: Record<string, string> = { OAK: "LV", SD: "LAC", STL: "LA", LAR: "LA", WSH: "WAS", JAC: "JAX" };
-const normTeams = (teams: string | undefined) =>
-  teams ? [...new Set(teams.split("/").map((t) => OLD_CODES[t] ?? t))].join("/") : null;
-
 const TEXT_KEYS = new Set<SortKey>(["name", "position", "team"]);
 const PAGE = 100;
 
-export default function ManagerPlayers({ manager }: { manager: string }) {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ManagerPlayers({ manager, initialRows }: { manager: string; initialRows: Row[] | null }) {
+  const [rows, setRows] = useState<Row[]>(initialRows ?? []);
+  const [loading, setLoading] = useState(initialRows === null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
@@ -74,55 +50,23 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "weeks", desc: true });
   const [limit, setLimit] = useState(PAGE);
   const [team, setTeam] = useState<string | null>(null);
+  // The server already sent the rows; only a retry (or missing rows) loads them in the browser
+  const skipFirst = useRef(initialRows !== null);
 
   useEffect(() => {
+    if (skipFirst.current) {
+      skipFirst.current = false;
+      return;
+    }
     let cancelled = false;
-    Promise.all([
-      fetchAll<PlayerManagerStats & { player_key: string }>((f, t) =>
-        supabase.from("mv_player_manager_stats").select("*").eq("manager_id", manager).order("player_key").range(f, t)),
-      fetchAll<{ player_key: string; kind: string }>((f, t) =>
-        supabase.from("mv_player_events").select("player_key, kind").eq("manager_id", manager).order("player_key").range(f, t)),
-      loadPlayerSummaries(),
-      fetchAll<{ player_key: string; teams: string }>((f, t) =>
-        supabase.from("mv_player_manager_teams").select("player_key, teams").eq("manager_id", manager).order("player_key").range(f, t)),
-    ]).then(([stats, events, summaries, teams]) => {
+    loadManagerPlayers(manager).then((data) => {
       if (cancelled) return;
-      const teamOf = new Map(teams.map((t) => [t.player_key, t.teams]));
-      const info = new Map<string, PlayerSummary>(summaries.map((s) => [s.player_key, s]));
-      const byKey = new Map<string, Row>();
-      const row = (key: string): Row => {
-        let r = byKey.get(key);
-        if (!r) {
-          const s = info.get(key);
-          r = {
-            key, name: s?.player_name ?? key.replace(/^(DST|N):/, ""), position: s?.position ?? null,
-            team: normTeams(teamOf.get(key)) ?? (s?.position === "DST" ? DST_TEAM[s.player_name] ?? null : null),
-            headshot: s?.headshot ?? null,
-            weeks: 0, starts: 0, points: 0, avg: null, best: null, first: null, last: null,
-            drafted: 0, adds: 0, drops: 0, trades: 0,
-          };
-          byKey.set(key, r);
-        }
-        return r;
-      };
-      for (const s of stats) {
-        Object.assign(row(s.player_key), {
-          weeks: s.weeks_rostered, starts: s.starts, points: s.starter_points ?? 0, avg: s.avg_start,
-          best: s.best_start, first: s.first_season, last: s.last_season,
-        });
-      }
-      for (const e of events) {
-        const r = row(e.player_key);
-        if (e.kind === "draft") r.drafted += 1;
-        else if (e.kind === "add") r.adds += 1;
-        else if (e.kind === "drop") r.drops += 1;
-        else if (e.kind === "trade_in") r.trades += 1;
-      }
-      // The loaders swallow query errors, so no summaries at all means the load failed
-      if (summaries.length === 0) {
+      const built = buildRows(data);
+      // No player info at all means the load failed
+      if (data.info.length === 0) {
         setError(true);
       } else {
-        setRows([...byKey.values()].filter((r) => r.name));
+        setRows(built);
         setError(false);
       }
       setLoading(false);

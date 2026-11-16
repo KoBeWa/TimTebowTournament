@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import Tabs from "@/components/ui/Tabs";
@@ -49,10 +49,9 @@ function fmtPeriod(
 interface Props {
   ownerValues: OwnerRow[];
   timeline: TimelineEntry[];
-  initialKey: string | null;
 }
 
-export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Props) {
+export default function RecordsBrowser({ ownerValues, timeline }: Props) {
   // Build indexes
   const labelMap = useMemo(() => {
     const m: Record<string, string> = {};
@@ -87,10 +86,16 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
   }, [labelMap]);
 
   const [activeCat, setActiveCat] = useState<Category>("League");
-  const [selectedKey, setSelectedKey] = useState<string | null>(() => {
-    if (initialKey && labelMap[initialKey]) return initialKey;
-    return categoryRecords["League"][0]?.key ?? null;
-  });
+  const [selectedKey, setSelectedKey] = useState<string | null>(categoryRecords["League"][0]?.key ?? null);
+
+  // ?key= opens that record. It is read here, not on the server, so the page itself stays static.
+  useEffect(() => {
+    const key = new URLSearchParams(window.location.search).get("key");
+    if (key && labelMap[key]) {
+      setSelectedKey(key);
+      setActiveCat(RECORD_CATEGORY[key] ?? "Milestones");
+    }
+  }, [labelMap]);
 
   // Ensure selected key is in active category; if not, pick first
   const recordsInCat = categoryRecords[activeCat];

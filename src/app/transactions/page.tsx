@@ -2,7 +2,6 @@ import { supabase } from "@/lib/supabase";
 import { fetchAll } from "@/lib/players";
 import TransactionDashboard, { type VTxRow, type FaTxRow } from "./TransactionDashboard";
 
-export const dynamic = "force-dynamic";
 
 const VTX_COLS = "season_year,transaction_id,transaction_type,team_name,transaction_week,transaction_at,add_players,add_positions,drop_players,drop_positions,gain_value,loss_value,net_value,scored_value,is_meaningful";
 const FATX_COLS = "season_year,team_name,transaction_type,item_direction,player_name,position,nfl_team,item_value,transaction_week";
