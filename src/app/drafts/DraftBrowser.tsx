@@ -57,7 +57,7 @@ function sortValue(p: DraftPick, key: SortKey): number | string {
   return p[key] as number;
 }
 
-const SELECT = "rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink";
+const SELECT = "rounded-full border border-border bg-surface px-3 py-2 text-sm text-ink";
 
 export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
   const [season, setSeason] = useState<number | "all">("all");
@@ -100,35 +100,49 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <select aria-label="Saison" value={season}
-          onChange={(e) => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
-          className={SELECT}>
-          <option value="all">Alle Saisons</option>
-          {SEASONS.slice().reverse().map((s) => (
-            <option key={s} value={s}>Draft #{draftNumber(s)}, {s}</option>
-          ))}
-        </select>
-        <select aria-label="Owner" value={manager} onChange={(e) => setManager(e.target.value)} className={SELECT}>
-          <option value="all">Alle Owner</option>
-          {MANAGERS.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-        <span className="text-sm text-text-muted">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
+          Saison
+          <select value={season}
+            onChange={(e) => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
+            className={SELECT}>
+            <option value="all">Alle Saisons</option>
+            {SEASONS.slice().reverse().map((s) => (
+              <option key={s} value={s}>Draft #{draftNumber(s)}, {s}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
+          Owner
+          <select value={manager} onChange={(e) => setManager(e.target.value)} className={SELECT}>
+            <option value="all">Alle Owner</option>
+            {MANAGERS.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </label>
+        <span className="py-3 text-sm text-text-muted">
           {filtered.length} Picks
           {avgGrade !== null && (
             <>, Ø Grade <span className={avgGrade >= 0 ? "text-positive" : "text-negative"}>{avgGrade >= 0 ? "+" : ""}{avgGrade.toFixed(2)}</span></>
           )}
         </span>
         {season !== "all" && (
-          <Link href={`/drafts/${season}`} className="ml-auto flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+          <Link href={`/drafts/${season}`} className="ml-auto inline-flex min-h-11 items-center gap-1 px-3 text-sm text-text-muted transition-colors hover:text-ink">
             Ganze Saison {season} ansehen <ChevronRight size={15} />
           </Link>
         )}
       </div>
 
+      {filtered.length === 0 && (
+        <div className="cell flex flex-col items-center gap-3 py-12 text-center text-sm text-text-muted">
+          Für diese Auswahl gibt es keine Picks.
+          <button type="button" className="btn" onClick={() => { setSeason("all"); setManager("all"); }}>Filter zurücksetzen</button>
+        </div>
+      )}
+
       {/* Table */}
+      {filtered.length > 0 && (
       <div className="cell overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -183,6 +197,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }
