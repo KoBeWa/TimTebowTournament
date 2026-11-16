@@ -17,11 +17,22 @@ a written brief. Keep design decisions, anything touching the production databas
 review of a change with the lead model.
 
 ## Design system
-- Navigation groups live in `NAV_GROUPS` (`src/lib/constants.ts`).
-- Every page uses `PageHeader`; every tab, pill or segmented control uses `Tabs`; stat tiles use
-  `StatTile`; manager names use `ManagerName` (`src/components/ui/`).
+- Two layers, after Apple's Liquid Glass guidance: controls and navigation float on the `.glass`
+  material (top bar, phone tab bar, menus, sheets, `Tabs`); content sits on opaque `.cell` cards.
+  Do not put glass on content, and do not stack glass on glass.
+- Navigation groups live in `NAV_GROUPS` (`src/lib/constants.ts`). Desktop: floating bar with
+  menus. Phones: tab bar at the bottom, a tab opens its pages in a sheet.
+- Every page uses `PageHeader` (the home page is the exception: its title is the current week);
+  every tab, pill or segmented control uses `Tabs`; stat tiles use `StatTile`; manager names use
+  `ManagerName` (`src/components/ui/`).
+- Buttons are `.btn` (quiet) or `.btn-primary`; one primary action per section.
 - One colour per manager: `MANAGER_COLORS`. Use it for anything drawn per manager.
-- At most about three content blocks visible at once; split longer pages into tabs.
+- One purpose per view, at most about three content blocks visible at once; split longer pages
+  into tabs. Related things sit together, unrelated things get space, not borders.
+- Every control is at least 44px tall on touch screens (handled in `globals.css` for buttons,
+  inputs, selects and tabs; give other tap targets `min-h-11`).
+- Every action answers at once: `loading.tsx` covers navigation; client components keep the old
+  content dimmed while new data loads, and show what went wrong with a retry button on failure.
 - Tables sit in `<div className="cell overflow-x-auto">`; secondary columns are hidden on phones
   with `hidden md:table-cell`.
 - No uppercase labels above headings. German, sentence case, plain words.

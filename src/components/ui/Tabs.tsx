@@ -1,6 +1,8 @@
 "use client";
 
-// The one tab control of the site. `size="sm"` for filters inside a card.
+import { useEffect, useRef } from "react";
+
+// The one tab control of the site: a glass capsule. `size="sm"` for filters inside a card.
 export default function Tabs<T extends string | number>({ tabs, value, onChange, size = "md", label }: {
   tabs: readonly { key: T; label: React.ReactNode; count?: number }[];
   value: T;
@@ -8,17 +10,23 @@ export default function Tabs<T extends string | number>({ tabs, value, onChange,
   size?: "sm" | "md";
   label?: string;
 }) {
-  const pad = size === "sm" ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-sm";
+  // Keep the selected tab in view when the strip is wider than the screen
+  const activeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [value]);
+
+  const pad = size === "sm" ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
   return (
     <div role="tablist" aria-label={label}
-      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1">
+      className="glass inline-flex max-w-full gap-1 overflow-x-auto rounded-full p-1 shadow-none [scrollbar-width:none]">
       {tabs.map((t) => {
         const active = t.key === value;
         return (
-          <button key={String(t.key)} type="button" role="tab" aria-selected={active}
+          <button key={String(t.key)} ref={active ? activeRef : undefined} type="button" role="tab" aria-selected={active}
             onClick={() => onChange(t.key)}
-            className={`${pad} whitespace-nowrap rounded-lg font-medium transition-colors ${
-              active ? "bg-surface-3 text-ink" : "text-text-muted hover:text-ink"}`}>
+            className={`${pad} whitespace-nowrap rounded-full font-medium transition-colors ${
+              active ? "bg-white/15 text-ink" : "text-text-secondary hover:text-ink"}`}>
             {t.label}
             {t.count !== undefined && <span className="ml-1.5 tabular-nums text-text-faint">{t.count}</span>}
           </button>

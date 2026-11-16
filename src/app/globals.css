@@ -30,7 +30,7 @@
   --color-accent-red: #f87171;
   --color-accent-blue: #60a5fa;
 
-  --radius-card: 14px;
+  --radius-card: 20px;
 }
 
 @layer base {
@@ -70,13 +70,14 @@
     background-color: var(--color-surface-2);
     color: var(--color-ink);
     border-color: var(--color-border);
-    border-radius: 10px;
+    border-radius: 14px;
+    min-height: 2.5rem;
   }
   select option { background-color: var(--color-surface); color: var(--color-ink); }
 
   table th { font-weight: 600; }
 
-  button { border-radius: 10px; cursor: pointer; }
+  button { border-radius: 14px; cursor: pointer; }
 
   td.font-mono { white-space: nowrap; }
 }
@@ -172,6 +173,46 @@
   .win { color: var(--color-positive); font-weight: 600; }
   .loss { color: var(--color-negative); }
   .tie { color: var(--color-text-muted); }
+}
+
+/*
+ * Glass: the material of the control layer (navigation, tab bars, menus,
+ * sheets). Content stays on opaque cards underneath, so use it sparingly.
+ */
+.glass {
+  background-color: color-mix(in srgb, var(--color-surface-2) 58%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background-color: var(--color-surface-2); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background-color: var(--color-surface-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* Buttons: one primary action per section, everything else quiet */
+.btn, .btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 2.5rem; padding: 0 1rem; border-radius: 999px;
+  font-size: 0.875rem; font-weight: 600; white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn { border: 1px solid var(--color-border); color: var(--color-ink); background: transparent; }
+.btn:hover { background-color: var(--color-surface-2); border-color: var(--color-border-strong); }
+.btn-primary { background-color: var(--color-red); color: #fff; }
+.btn-primary:hover { background-color: var(--color-red-soft); }
+
+/* Touch screens: every control at least 44px tall, rows with room for a thumb */
+@media (pointer: coarse) {
+  .btn, .btn-primary, select, input, [role="tab"] { min-height: 2.75rem; }
+  table tbody td { padding-block: 0.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
 /* Scrollbar */

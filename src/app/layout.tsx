@@ -34,7 +34,7 @@ export default function RootLayout({
         <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
           {children}
         </main>
-        <footer className="mt-12 border-t border-border-light">
+        <footer className="mt-12 border-t border-border-light pb-24 md:pb-0">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-text-faint">
             <span className="label-nav">Tim Tebow Tournament · Est. 2015</span>
             <span>Die offizielle Ligachronik</span>
