@@ -20,8 +20,9 @@ function fmtDate(ts: string) {
   return new Date(ts).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-export default function LogTab({ rows, showOwner, showSeason }: {
+export default function LogTab({ rows, showOwner, showSeason, onReset }: {
   rows: VTxRow[];
+  onReset: () => void;
   showOwner: boolean;
   showSeason: boolean;
 }) {
@@ -78,7 +79,12 @@ export default function LogTab({ rows, showOwner, showSeason }: {
   }
 
   if (rows.length === 0) {
-    return <div className="cell py-12 text-center text-sm text-text-faint">Keine Transaktionen</div>;
+    return (
+      <div className="cell flex flex-col items-center gap-3 py-12 text-center text-sm text-text-muted">
+        Für diese Auswahl gibt es keine Transaktionen.
+        <button type="button" className="btn" onClick={onReset}>Filter zurücksetzen</button>
+      </div>
+    );
   }
 
 

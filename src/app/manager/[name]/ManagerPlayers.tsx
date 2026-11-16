@@ -66,6 +66,8 @@ const PAGE = 100;
 export default function ManagerPlayers({ manager }: { manager: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [pos, setPos] = useState("all");
   const [query, setQuery] = useState("");
@@ -74,6 +76,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
   const [team, setTeam] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     Promise.all([
       fetchAll<PlayerManagerStats & { player_key: string }>((f, t) =>
         supabase.from("mv_player_manager_stats").select("*").eq("manager_id", manager).order("player_key").range(f, t)),
@@ -83,6 +86,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
       fetchAll<{ player_key: string; teams: string }>((f, t) =>
         supabase.from("mv_player_manager_teams").select("player_key, teams").eq("manager_id", manager).order("player_key").range(f, t)),
     ]).then(([stats, events, summaries, teams]) => {
+      if (cancelled) return;
       const teamOf = new Map(teams.map((t) => [t.player_key, t.teams]));
       const info = new Map<string, PlayerSummary>(summaries.map((s) => [s.player_key, s]));
       const byKey = new Map<string, Row>();
@@ -114,10 +118,34 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
         else if (e.kind === "drop") r.drops += 1;
         else if (e.kind === "trade_in") r.trades += 1;
       }
-      setRows([...byKey.values()].filter((r) => r.name));
+      // The loaders swallow query errors, so no summaries at all means the load failed
+      if (summaries.length === 0) {
+        setError(true);
+      } else {
+        setRows([...byKey.values()].filter((r) => r.name));
+        setError(false);
+      }
+      setLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setError(true);
       setLoading(false);
     });
-  }, [manager]);
+    return () => { cancelled = true; };
+  }, [manager, attempt]);
+
+  const retry = () => {
+    setError(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
+  const resetFilters = () => {
+    setFilter("all");
+    setPos("all");
+    setQuery("");
+    setTeam(null);
+    setLimit(PAGE);
+  };
 
   const counts = useMemo(
     () => Object.fromEntries(FILTERS.map((f) => [f.key, rows.filter(f.test).length])) as Record<Filter, number>,
@@ -168,10 +196,10 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 className="section-title text-ink">Spieler</h2>
-        {!loading && <span className="text-sm text-text-muted">{rows.length} Spieler seit 2015 im Kader</span>}
+        {!loading && !error && <span className="text-sm text-text-muted">{rows.length} Spieler seit 2015 im Kader</span>}
       </div>
 
-      {!loading && rows.length > 0 && (
+      {!loading && !error && rows.length > 0 && (
         <TeamChart counts={teamCounts} selected={team} onSelect={(t) => { setTeam(t); setLimit(PAGE); }} />
       )}
 
@@ -184,19 +212,36 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative flex-1 min-w-[12rem]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Spieler suchen…"
-            className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2 text-sm text-ink placeholder:text-text-faint focus:border-red focus:outline-none" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Spieler suchen…" aria-label="Spieler suchen"
+            className="w-full bg-surface border border-border rounded-full pl-9 pr-3 py-2 text-sm text-ink placeholder:text-text-faint focus:border-red focus:outline-none" />
         </label>
         {team && (
-          <button onClick={() => setTeam(null)}
-            className="rounded-lg border border-border-strong bg-surface-3 px-2.5 py-1 text-xs text-ink">
+          <button type="button" onClick={() => setTeam(null)} className="btn" aria-label={`Teamfilter ${team} entfernen`}>
             Team: {team} ✕
           </button>
         )}
       </div>
 
-      {loading ? (
-        <div className="py-10 text-center text-text-muted">Lade Spieler…</div>
+      {error ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Die Spieler dieses Managers konnten nicht geladen werden.</p>
+          <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
+        </div>
+      ) : loading ? (
+        <div className="cell animate-pulse divide-y divide-border-light" aria-busy="true">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <div className="h-7 w-7 shrink-0 rounded-full bg-surface-3" />
+              <div className="h-3.5 w-40 max-w-full flex-1 rounded-lg bg-surface-3" />
+              <div className="h-3.5 w-12 rounded-lg bg-surface-2" />
+            </div>
+          ))}
+        </div>
+      ) : shown.length === 0 ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Keine Spieler für diese Auswahl.</p>
+          <button type="button" onClick={resetFilters} className="btn">Filter zurücksetzen</button>
+        </div>
       ) : (
         <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
@@ -205,7 +250,7 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
                 {COLUMNS.map((c, i) => (
                   <th key={c.key} title={c.title}
                     className={`${thBase} ${vis(c.key)} ${i === 0 ? "pl-4 sm:pl-5" : ""} ${i === COLUMNS.length - 1 ? "pr-4 sm:pr-5" : ""} ${c.align === "left" ? "text-left" : "text-right"}`}>
-                    <button onClick={() => sortBy(c.key)} className={sort.key === c.key ? "text-red" : "hover:text-ink"}>
+                    <button onClick={() => sortBy(c.key)} className={`inline-flex min-h-11 items-center ${sort.key === c.key ? "text-red" : "hover:text-ink"}`}>
                       {c.label}{sort.key === c.key ? (sort.desc ? " ↓" : " ↑") : ""}
                     </button>
                   </th>
@@ -236,14 +281,11 @@ export default function ManagerPlayers({ manager }: { manager: string }) {
                   <td className="hidden py-2 pl-3 pr-4 text-right tabular-nums sm:pr-5 lg:table-cell">{r.trades || "–"}</td>
                 </tr>
               ))}
-              {shown.length === 0 && (
-                <tr><td colSpan={COLUMNS.length} className="px-3 py-6 text-center text-text-muted">Keine Spieler für diese Auswahl.</td></tr>
-              )}
             </tbody>
           </table>
           {shown.length > limit && (
             <button onClick={() => setLimit((l) => l + PAGE)}
-              className="w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:bg-surface-2 hover:text-ink">
+              className="min-h-11 w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:bg-surface-2 hover:text-ink">
               {Math.min(PAGE, shown.length - limit)} weitere anzeigen ({shown.length - limit} übrig)
             </button>
           )}

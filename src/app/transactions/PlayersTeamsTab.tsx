@@ -209,7 +209,7 @@ export default function PlayersTeamsTab({ vtx, filt, filtFatx, isFiltered }: {
       <section>
         <h2 className="section-title mb-3 text-ink">{isFiltered ? "Trades" : "Top-Trades aller Zeiten"}</h2>
         {tradePairs.length === 0 ? (
-          <div className="cell py-8 text-center text-sm text-text-faint">Keine Trades im gewählten Zeitraum</div>
+          <div className="cell py-8 text-center text-sm text-text-muted">Für diese Auswahl gibt es keine Trades. Wähle oben einen anderen Zeitraum oder Owner.</div>
         ) : (
           <div className="cell overflow-x-auto">
             <table className="w-full text-sm">

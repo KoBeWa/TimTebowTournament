@@ -27,24 +27,61 @@ export default function PlayerDetail({ playerKey }: { playerKey: string }) {
   const [events, setEvents] = useState<PlayerEvent[]>([]);
   const [games, setGames] = useState<PlayerGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [tab, setTab] = useState<Tab>("managers");
 
   useEffect(() => {
-    loadPlayer(playerKey).then((d) => {
-      setSummary(d.summary);
-      setManagers(d.managers.sort((a, b) => b.weeks_rostered - a.weeks_rostered || (b.starter_points ?? 0) - (a.starter_points ?? 0)));
-      setEvents(d.events);
-      setGames(d.games);
-      setLoading(false);
-    });
-  }, [playerKey]);
+    let cancelled = false;
+    loadPlayer(playerKey)
+      .then((d) => {
+        if (cancelled) return;
+        setSummary(d.summary);
+        setManagers(d.managers.sort((a, b) => b.weeks_rostered - a.weeks_rostered || (b.starter_points ?? 0) - (a.starter_points ?? 0)));
+        setEvents(d.events);
+        setGames(d.games);
+        setError(false);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError(true);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [playerKey, attempt]);
 
-  if (loading) return <div className="text-text-muted text-center py-12">Lade Spieler…</div>;
+  if (error) {
+    return (
+      <div className="cell flex flex-col items-start gap-3 p-5">
+        <p className="text-sm text-text-secondary">Der Spieler konnte nicht geladen werden.</p>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => { setError(false); setLoading(true); setAttempt((n) => n + 1); }}
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-6" aria-busy="true">
+        <div className="h-10 w-1/2 rounded-lg bg-surface-3" />
+        <div className="cell h-32 bg-surface-2" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => <div key={i} className="cell h-20 bg-surface-2" />)}
+        </div>
+        <div className="cell h-56 bg-surface-2" />
+      </div>
+    );
+  }
   if (!summary) {
     return (
-      <div className="space-y-4 py-12 text-center">
-        <p className="text-text-muted">Spieler nicht gefunden.</p>
-        <Link href="/players" className="text-red hover:underline">Zur Spieler-Datenbank</Link>
+      <div className="cell flex flex-col items-start gap-3 p-5">
+        <p className="text-sm text-text-secondary">Diesen Spieler gibt es nicht.</p>
+        <Link href="/players" className="btn">Zur Spieler-Datenbank</Link>
       </div>
     );
   }

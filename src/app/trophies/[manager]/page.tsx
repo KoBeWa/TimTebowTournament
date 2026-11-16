@@ -108,7 +108,7 @@ export default async function ManagerTrophyPage({
         description={`Trophy Room: ${positive.length} Achievements, ${blunders.length} Blunders, ${achievements.length} Badges gesamt`}
         crumbs={[{ label: "Trophy Room", href: "/trophies" }]}
       >
-        <Link href={`/manager/${name}`} className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Profil</Link>
+        <Link href={`/manager/${name}`} className="btn">Profil</Link>
       </PageHeader>
 
       <TrophyTabs

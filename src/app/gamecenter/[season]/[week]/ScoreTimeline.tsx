@@ -188,7 +188,7 @@ export default function ScoreTimeline({
 
   const empty = (text: string) => <div className="cell p-6 text-sm text-text-muted">{text}</div>;
   if (failed) return empty("Für diese Woche gibt es keinen Spielverlauf.");
-  if (!data) return empty("Lade Punkteverlauf…");
+  if (!data) return <div className="cell h-80 animate-pulse bg-surface-2" aria-busy="true" />;
   if (!chart) return empty("Für diese Woche gibt es keinen Spielverlauf.");
 
   const { seriesA, seriesB, x, y, fromX, ticks, path, endT, leadChanges } = chart;

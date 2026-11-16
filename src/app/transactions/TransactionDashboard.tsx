@@ -18,12 +18,14 @@ export type { VTxRow, FaTxRow };
 
 type TabKey = "overview" | "rankings" | "moves" | "positions" | "players" | "log";
 
-const SELECT = "rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink";
+const SELECT = "rounded-full border border-border bg-surface px-3 py-2 text-sm text-ink";
 
 export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fatx: FaTxRow[] }) {
   const [season, setSeason] = useState<number | "all">("all");
   const [owner, setOwner]   = useState<string>("all");
   const [tab, setTab]       = useState<TabKey>("overview");
+
+  function resetFilters() { setSeason("all"); setOwner("all"); }
 
   const ownerFiltered  = owner !== "all";
   const seasonFiltered = season !== "all";
@@ -99,26 +101,37 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
 
   return (
     <div>
-      <PageHeader title="Transactions" description="Waiver-Moves und Trades mit Wertanalyse">
-        <select aria-label="Saison" value={season} onChange={e => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
-          className={SELECT}>
-          <option value="all">Alle Saisons</option>
-          {SEASONS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select aria-label="Owner" value={owner} onChange={e => setOwner(e.target.value)} className={SELECT}>
-          <option value="all">Alle Owner</option>
-          {MANAGERS.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </PageHeader>
+      <PageHeader title="Transactions" description="Waiver-Moves und Trades mit Wertanalyse" />
 
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Tabs tabs={tabs} value={activeTab} onChange={setTab} label="Transaktions-Bereiche" />
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
+            Saison
+            <select value={season} onChange={e => setSeason(e.target.value === "all" ? "all" : Number(e.target.value))}
+              className={SELECT}>
+              <option value="all">Alle Saisons</option>
+              {SEASONS.slice().reverse().map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
+            Owner
+            <select value={owner} onChange={e => setOwner(e.target.value)} className={SELECT}>
+              <option value="all">Alle Owner</option>
+              {MANAGERS.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
+          {isFiltered && (
+            <button type="button" className="btn" onClick={resetFilters}>Filter zurücksetzen</button>
+          )}
           {seasonFiltered && (
-            <Link href={`/transactions/${season}`} className="flex items-center gap-1 text-sm text-text-muted hover:text-ink transition-colors">
+            <Link href={`/transactions/${season}`} className="ml-auto inline-flex min-h-11 items-center gap-1 px-3 text-sm text-text-muted transition-colors hover:text-ink">
               Ganze Saison {season} ansehen <ChevronRight size={15} />
             </Link>
           )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs tabs={tabs} value={activeTab} onChange={setTab} label="Transaktions-Bereiche" />
         </div>
 
         {activeTab === "overview" && (
@@ -135,7 +148,7 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
         {activeTab === "moves" && <MovesTab filt={filt} />}
         {activeTab === "positions" && <PositionsTab filtFatx={filtFatx} />}
         {activeTab === "players" && <PlayersTeamsTab vtx={vtx} filt={filt} filtFatx={filtFatx} isFiltered={isFiltered} />}
-        {activeTab === "log" && <LogTab rows={filt} showOwner={!ownerFiltered} showSeason={!seasonFiltered} />}
+        {activeTab === "log" && <LogTab rows={filt} showOwner={!ownerFiltered} showSeason={!seasonFiltered} onReset={resetFilters} />}
       </div>
     </div>
   );

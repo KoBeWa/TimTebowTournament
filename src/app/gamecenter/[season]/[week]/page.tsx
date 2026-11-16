@@ -320,6 +320,8 @@ export default function MatchupDetailPage({
   const [statsB, setStatsB] = useState<TeamWeekStats | null>(null);
   const [h2h, setH2H] = useState<H2HData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [tab, setTab] = useState<TabKey>("lineups");
 
   useEffect(() => { params.then(setResolvedParams); }, [params]);
@@ -337,14 +339,14 @@ export default function MatchupDetailPage({
 
       // ── Parallel fetches ──
       const [
-        { data: matchupData },
-        { data: lineups },
-        { data: weekScores },
-        { data: seasonResults },
-        { data: coachData },
-        { data: luckData },
-        { data: h2hHistory },
-        { data: h2hRecord },
+        { data: matchupData, error: matchupErr },
+        { data: lineups, error: lineupsErr },
+        { data: weekScores, error: e3 },
+        { data: seasonResults, error: e4 },
+        { data: coachData, error: e5 },
+        { data: luckData, error: e6 },
+        { data: h2hHistory, error: e7 },
+        { data: h2hRecord, error: e8 },
       ] = await Promise.all([
         supabase.from("weekly_matchups").select("*").eq("season_year", season).eq("week", week).eq("manager_a", a!).eq("manager_b", b!).single(),
         supabase.from("weekly_lineups").select("*").eq("season_year", season).eq("week", week).in("manager_id", [a!, b!]),
@@ -357,6 +359,14 @@ export default function MatchupDetailPage({
           .order("season_year", { ascending: false }).order("week", { ascending: false }),
         supabase.from("v_head_to_head").select("*").eq("manager_id", a!).eq("opponent_id", b!),
       ]);
+
+      // PGRST116 = no row found, which is the "not found" case, not a failure
+      if ((matchupErr && matchupErr.code !== "PGRST116") || lineupsErr || e3 || e4 || e5 || e6 || e7 || e8) {
+        setError(true);
+        setLoading(false);
+        return;
+      }
+      setError(false);
 
       if (matchupData) {
         setMatchup({ ...matchupData, score_a: Number(matchupData.score_a), score_b: Number(matchupData.score_b) });
@@ -486,10 +496,43 @@ export default function MatchupDetailPage({
     }
 
     fetchData();
-  }, [resolvedParams, searchParams]);
+  }, [resolvedParams, searchParams, attempt]);
 
-  if (loading || !resolvedParams) return <div className="text-text-muted text-center py-20">Lade Matchup...</div>;
-  if (!matchup) return <div className="text-text-muted text-center py-20">Matchup nicht gefunden</div>;
+  if (error) {
+    return (
+      <div className="cell flex flex-col items-start gap-3 p-5">
+        <p className="text-sm text-text-secondary">Das Matchup konnte nicht geladen werden.</p>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => { setError(false); setLoading(true); setAttempt((n) => n + 1); }}
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    );
+  }
+  if (loading || !resolvedParams) {
+    return (
+      <div className="animate-pulse space-y-6" aria-busy="true">
+        <div className="h-10 w-2/3 rounded-lg bg-surface-3" />
+        <div className="cell h-32 bg-surface-2" />
+        <div className="h-11 w-72 max-w-full rounded-full bg-surface-3" />
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="cell h-96 flex-1 bg-surface-2" />
+          <div className="cell h-96 flex-1 bg-surface-2" />
+        </div>
+      </div>
+    );
+  }
+  if (!matchup) {
+    return (
+      <div className="cell flex flex-col items-start gap-3 p-5">
+        <p className="text-sm text-text-secondary">Dieses Matchup gibt es nicht.</p>
+        <Link href="/gamecenter" className="btn">Zum Gamecenter</Link>
+      </div>
+    );
+  }
 
   const season = parseInt(resolvedParams.season);
   const week = parseInt(resolvedParams.week);

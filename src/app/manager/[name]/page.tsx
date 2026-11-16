@@ -64,8 +64,8 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
         </span>}
         description={`${numSeasons} Seasons, ${data.championships} Titel, seit 2015`}
       >
-        <Link href="/h2h" className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Head to Head</Link>
-        <Link href={`/trophies/${name}`} className="rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2">Trophäen</Link>
+        <Link href="/h2h" className="btn">Head to Head</Link>
+        <Link href={`/trophies/${name}`} className="btn">Trophäen</Link>
       </PageHeader>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

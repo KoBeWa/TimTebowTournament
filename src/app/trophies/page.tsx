@@ -44,22 +44,58 @@ export default function TrophyRoomPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [records, setRecords] = useState<RecordHolder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
-      setLoading(true);
-      const [{ data: ach }, { data: current }] = await Promise.all([
+      const [{ data: ach, error: achError }, { data: current, error: curError }] = await Promise.all([
         supabase.from("achievements").select("*").order("season_year", { ascending: false }),
         supabase.from("record_timeline").select("*").eq("is_current", true).order("record_label"),
       ]);
-      setAchievements(ach ?? []);
-      setRecords(current ?? []);
+      if (achError || curError) {
+        setFailed(true);
+      } else {
+        setFailed(false);
+        setAchievements(ach ?? []);
+        setRecords(current ?? []);
+      }
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [attempt]);
 
-  if (loading) return <div className="py-20 text-center text-text-muted">Lade Trophy Room…</div>;
+  function retry() {
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6" aria-busy="true">
+        <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
+        <div className="h-11 w-72 max-w-full animate-pulse rounded-full bg-surface-3" />
+        <div className="cell space-y-3 p-4 sm:p-5">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="h-8 animate-pulse rounded-lg bg-surface-3" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-ink">Das Trophy Room konnte nicht geladen werden.</p>
+          <button type="button" className="btn" onClick={retry}>Erneut versuchen</button>
+        </div>
+      </div>
+    );
+  }
 
   // === ACHIEVEMENTS TAB DATA ===
   const achByManager: Record<string, { positive: Achievement[]; blunders: Achievement[] }> = {};
@@ -133,7 +169,7 @@ export default function TrophyRoomPage() {
                 <th className={th}>Blunders</th>
                 <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
                 <th className={th}>Badges gesamt</th>
-                <th className="w-10 py-3 pr-4 sm:pr-5"><span className="sr-only">Trophäen</span></th>
+                <th className="w-12 py-3 pr-2 sm:pr-3"><span className="sr-only">Trophäen</span></th>
               </tr>
             </thead>
             <tbody>
@@ -147,9 +183,9 @@ export default function TrophyRoomPage() {
                   <td className="px-3 py-3 text-center font-semibold tabular-nums text-negative">{row.blunderTypes}</td>
                   <td className="hidden px-3 py-3 text-center text-xs tabular-nums text-text-muted sm:table-cell">{row.blunderTotal}</td>
                   <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.total}</td>
-                  <td className="py-3 pr-4 text-right sm:pr-5">
+                  <td className="py-0 pr-2 text-right sm:pr-3">
                     <Link href={`/trophies/${encodeURIComponent(row.manager)}`} aria-label={`Trophäen von ${row.manager}`}
-                      className="inline-flex text-text-muted hover:text-red"><ChevronRight size={16} /></Link>
+                      className="inline-flex h-11 w-11 items-center justify-center text-text-muted hover:text-red"><ChevronRight size={16} /></Link>
                   </td>
                 </tr>
               ))}

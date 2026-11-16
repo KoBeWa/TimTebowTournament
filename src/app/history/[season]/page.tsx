@@ -55,7 +55,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
   const prevSeason = SEASONS.includes(year - 1) ? year - 1 : null;
   const nextSeason = SEASONS.includes(year + 1) ? year + 1 : null;
 
-  const navLink = "inline-flex items-center gap-1 rounded-lg border border-border px-3.5 py-2 text-sm text-ink hover:bg-surface-2";
+  const navLink = "btn gap-1";
   const th = "px-3 py-3 text-xs font-medium text-text-muted";
 
   return (

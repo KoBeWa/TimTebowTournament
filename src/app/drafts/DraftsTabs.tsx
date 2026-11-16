@@ -107,7 +107,7 @@ export default function DraftsTabs({ avgPickValue, avgTeamValue, avgSeasonValue,
 
       {tab === "overview" && (
         <div className="space-y-8">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
             <StatTile label="Ø Pick-Wert" value={sign(avgPickValue)} hint="pro einzelnem Pick" />
             <StatTile label="Ø Team-Wert" value={sign(avgTeamValue)} hint="pro Draft und Owner" />
             <StatTile label="Ø Saison-Wert" value={sign(avgSeasonValue)} hint="pro Saison gesamt" />

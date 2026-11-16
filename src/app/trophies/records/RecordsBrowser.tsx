@@ -136,11 +136,13 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
 
         {/* Record list */}
         <div className="border-b border-border p-3 md:hidden">
-          <select value={selectedKey ?? ""} onChange={(e) => setSelectedKey(e.target.value)}
-            aria-label="Record"
-            className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-red focus:outline-none">
-            {recordsInCat.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
-          </select>
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
+            Record
+            <select value={selectedKey ?? ""} onChange={(e) => setSelectedKey(e.target.value)}
+              className="w-full rounded-full border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-red focus:outline-none">
+              {recordsInCat.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </label>
         </div>
         <div className="hidden w-56 shrink-0 overflow-y-auto border-r border-border md:block">
           {recordsInCat.map(({ key, label }) => {
@@ -151,7 +153,7 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
               <button
                 key={key}
                 onClick={() => setSelectedKey(key)}
-                className={`w-full border-b border-border-light px-3 py-2.5 text-left transition-colors ${
+                className={`min-h-11 w-full border-b border-border-light px-3 py-2.5 text-left transition-colors ${
                   isSelected ? "bg-surface-3" : "hover:bg-surface-2"
                 }`}
               >
@@ -175,12 +177,12 @@ export default function RecordsBrowser({ ownerValues, timeline, initialKey }: Pr
               <div className="border-b border-border-light px-4 pb-3 pt-4">
                 <div className="text-xs text-text-muted">{activeCat}</div>
                 <div className="display-title text-xl leading-tight text-ink">{selectedLabel}</div>
-                <div className="mt-1 flex items-center gap-3">
+                <div className="mt-1 flex items-center gap-1">
                   <span className={`rounded px-2 py-0.5 text-xs ${isNeg ? "bg-red/10 text-red" : "bg-surface-3 text-text-muted"}`}>
                     {isNeg ? "Negativ" : "Positiv"}
                   </span>
                   <Link href={`/trophies/records/${selectedKey}`}
-                    className="inline-flex items-center gap-0.5 text-xs text-text-muted transition-colors hover:text-ink">
+                    className="inline-flex min-h-11 items-center gap-0.5 px-3 text-xs text-text-muted transition-colors hover:text-ink">
                     Detail <ChevronRight size={12} />
                   </Link>
                 </div>

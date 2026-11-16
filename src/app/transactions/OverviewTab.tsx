@@ -91,7 +91,7 @@ export default function OverviewTab({ waiverCount, tradeCount, totalCount, owner
 }) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <StatTile label="Waiver-Moves" value={waiverCount.toLocaleString("de-DE")} hint="Adds und Add/Drops" />
         <StatTile label="Trades" value={tradeCount.toLocaleString("de-DE")} hint="Einzigartige Trades" />
         <StatTile label="Transaktionen" value={totalCount.toLocaleString("de-DE")} hint="Waiver plus Trades" />
