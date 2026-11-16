@@ -83,8 +83,8 @@ export default function Navbar() {
       <div className="top-0 z-50 px-3 pt-3 sm:px-6 md:sticky">
         <div ref={barRef} className="relative mx-auto max-w-7xl">
           <nav aria-label="Hauptnavigation" className="glass flex h-14 items-center justify-between gap-4 rounded-full pl-2.5 pr-2">
-            <Link href="/" onClick={close} className="group flex shrink-0 items-center gap-2.5 rounded-full pr-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red display-title text-base text-white">TTT</span>
+            <Link href="/" onClick={close} className="group flex min-h-11 shrink-0 items-center gap-2.5 rounded-full pr-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red display-title text-base text-white">TTT</span>
               <span className="display-title text-lg text-ink group-hover:text-red transition-colors">Tim Tebow Tournament</span>
             </Link>
 
@@ -95,7 +95,7 @@ export default function Navbar() {
                 return (
                   <button key={g.label} type="button" aria-expanded={isOpen} aria-haspopup="true"
                     onClick={(e) => toggle(g, e.currentTarget)}
-                    className={`flex h-10 items-center gap-1 rounded-full px-4 text-sm font-medium transition-colors ${
+                    className={`flex h-11 items-center gap-1 rounded-full px-4 text-sm font-medium transition-colors ${
                       isOpen || active ? "bg-white/10 text-ink" : "text-text-secondary hover:bg-white/5 hover:text-ink"}`}>
                     {g.label}
                     <ChevronDown size={14} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
