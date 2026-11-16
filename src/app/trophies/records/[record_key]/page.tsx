@@ -49,6 +49,11 @@ const MATCHUP_RECORDS = new Set([
 // PAGE COMPONENT
 // ============================================================
 
+// Records are generated on first visit and then served as static pages, revalidated with the layout
+export function generateStaticParams() {
+  return [];
+}
+
 export default async function RecordDetailPage({
   params,
 }: {
@@ -56,12 +61,15 @@ export default async function RecordDetailPage({
 }) {
   const { record_key } = await params;
 
-  const { data: timeline } = await supabase
-    .from("record_timeline")
-    .select("*")
-    .eq("record_key", record_key)
-    .order("from_year", { ascending: true })
-    .order("from_week", { ascending: true });
+  const [{ data: timeline }, rawRanking] = await Promise.all([
+    supabase
+      .from("record_timeline")
+      .select("id, record_label, manager_id, record_value, from_year, from_week, to_year, to_week, is_current, weeks_held")
+      .eq("record_key", record_key)
+      .order("from_year", { ascending: true })
+      .order("from_week", { ascending: true }),
+    getOwnerRanking(record_key),
+  ]);
 
   if (!timeline?.length) notFound();
 
@@ -70,7 +78,6 @@ export default async function RecordDetailPage({
   const negative = isNegativeRecord(record_key);
   const isMatchupRecord = MATCHUP_RECORDS.has(record_key);
 
-  const rawRanking = await getOwnerRanking(record_key);
   const ranking = rawRanking
     ? rawRanking.sort((a, b) => negative ? a.value - b.value : b.value - a.value)
     : null;
@@ -78,25 +85,24 @@ export default async function RecordDetailPage({
   // For matchup records, fetch matchup links for timeline entries with specific weeks
   const matchupLinks: Record<number, { season: number; week: number; a: string; b: string }> = {};
   if (isMatchupRecord) {
-    for (const entry of timeline) {
-      if (entry.from_week > 0 && entry.from_week <= 16) {
-        const { data: matchup } = await supabase
-          .from("weekly_matchups")
-          .select("season_year, week, manager_a, manager_b")
-          .eq("season_year", entry.from_year)
-          .eq("week", entry.from_week)
-          .or(`manager_a.eq.${entry.manager_id},manager_b.eq.${entry.manager_id}`)
-          .limit(1);
-        if (matchup?.[0]) {
-          matchupLinks[entry.id] = {
-            season: matchup[0].season_year,
-            week: matchup[0].week,
-            a: matchup[0].manager_a,
-            b: matchup[0].manager_b,
-          };
-        }
+    // One query per entry, all at once
+    await Promise.all(timeline.filter((entry) => entry.from_week > 0 && entry.from_week <= 16).map(async (entry) => {
+      const { data: matchup } = await supabase
+        .from("weekly_matchups")
+        .select("season_year, week, manager_a, manager_b")
+        .eq("season_year", entry.from_year)
+        .eq("week", entry.from_week)
+        .or(`manager_a.eq.${entry.manager_id},manager_b.eq.${entry.manager_id}`)
+        .limit(1);
+      if (matchup?.[0]) {
+        matchupLinks[entry.id] = {
+          season: matchup[0].season_year,
+          week: matchup[0].week,
+          a: matchup[0].manager_a,
+          b: matchup[0].manager_b,
+        };
       }
-    }
+    }));
   }
 
   return (

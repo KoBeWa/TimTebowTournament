@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeftRight, ListOrdered, LogIn, LogOut, Users } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
@@ -9,7 +9,7 @@ import StatTile from "@/components/ui/StatTile";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import { MANAGER_COLORS } from "@/lib/constants";
-import { loadPlayer, type PlayerEvent, type PlayerGame, type PlayerManagerStats, type PlayerSummary } from "@/lib/players";
+import { loadPlayer, type PlayerData, type PlayerEvent } from "@/lib/players";
 import { timeline } from "./timeline";
 
 const TABS = [
@@ -21,23 +21,32 @@ type Tab = (typeof TABS)[number]["key"];
 
 const fmt = (n: number | null | undefined, d = 1) => (n == null ? "–" : n.toFixed(d));
 
-export default function PlayerDetail({ playerKey }: { playerKey: string }) {
-  const [summary, setSummary] = useState<PlayerSummary | null>(null);
-  const [managers, setManagers] = useState<PlayerManagerStats[]>([]);
-  const [events, setEvents] = useState<PlayerEvent[]>([]);
-  const [games, setGames] = useState<PlayerGame[]>([]);
-  const [loading, setLoading] = useState(true);
+const byWeeks = (a: PlayerData["managers"][number], b: PlayerData["managers"][number]) =>
+  b.weeks_rostered - a.weeks_rostered || (b.starter_points ?? 0) - (a.starter_points ?? 0);
+
+export default function PlayerDetail({ playerKey, initial }: { playerKey: string; initial: PlayerData }) {
+  const [summary, setSummary] = useState(initial.summary);
+  const [managers, setManagers] = useState(() => [...initial.managers].sort(byWeeks));
+  const [events, setEvents] = useState(initial.events);
+  const [games, setGames] = useState(initial.games);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [tab, setTab] = useState<Tab>("managers");
+  // The server already sent the player; the browser only loads it again on a retry
+  const skipFirst = useRef(true);
 
   useEffect(() => {
+    if (skipFirst.current) {
+      skipFirst.current = false;
+      return;
+    }
     let cancelled = false;
     loadPlayer(playerKey)
       .then((d) => {
         if (cancelled) return;
         setSummary(d.summary);
-        setManagers(d.managers.sort((a, b) => b.weeks_rostered - a.weeks_rostered || (b.starter_points ?? 0) - (a.starter_points ?? 0)));
+        setManagers(d.managers.sort(byWeeks));
         setEvents(d.events);
         setGames(d.games);
         setError(false);

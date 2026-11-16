@@ -319,7 +319,7 @@ export default function ScoreTimeline({
 
         {hover && hoverT !== null && (
           <div
-            className="pointer-events-none absolute top-2 z-10 w-56 rounded-xl border border-border-strong bg-surface-2/95 p-3 text-xs shadow-xl backdrop-blur"
+            className="pointer-events-none absolute top-2 z-10 w-56 rounded-xl border border-border-strong bg-solid p-3 text-xs shadow-xl backdrop-blur"
             style={{ left: tooltipLeft(hoverX, width) }}
           >
             <div className="mb-2 text-text-muted">{formatTime(data.start + hoverT)}, Stand und letzte Aktion</div>
@@ -352,7 +352,7 @@ export default function ScoreTimeline({
       <h2 className="section-title mb-4 text-ink">Alle Punkte-Aktionen</h2>
       <div className="cell max-h-[28rem] overflow-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-surface-2">
+          <thead className="sticky top-0 bg-solid">
             <tr className="text-left text-xs font-medium text-text-muted">
               <th className="py-2.5 pl-4 pr-2 font-medium sm:pl-5">Zeit</th>
               <th className="px-2 py-2.5 font-medium">Spieler</th>

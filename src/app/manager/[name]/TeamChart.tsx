@@ -8,20 +8,6 @@ export const NFL_TEAMS = [
   "LA", "LAC", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS",
 ] as const;
 
-// Defense names (incl. old names) -> team code
-export const DST_TEAM: Record<string, string> = {
-  "Arizona Cardinals": "ARI", "Atlanta Falcons": "ATL", "Baltimore Ravens": "BAL", "Buffalo Bills": "BUF",
-  "Carolina Panthers": "CAR", "Chicago Bears": "CHI", "Cincinnati Bengals": "CIN", "Cleveland Browns": "CLE",
-  "Dallas Cowboys": "DAL", "Denver Broncos": "DEN", "Detroit Lions": "DET", "Green Bay Packers": "GB",
-  "Houston Texans": "HOU", "Indianapolis Colts": "IND", "Jacksonville Jaguars": "JAX", "Kansas City Chiefs": "KC",
-  "Los Angeles Rams": "LA", "St. Louis Rams": "LA", "Los Angeles Chargers": "LAC", "San Diego Chargers": "LAC",
-  "Las Vegas Raiders": "LV", "Oakland Raiders": "LV", "Miami Dolphins": "MIA", "Minnesota Vikings": "MIN",
-  "New England Patriots": "NE", "New Orleans Saints": "NO", "New York Giants": "NYG", "New York Jets": "NYJ",
-  "Philadelphia Eagles": "PHI", "Pittsburgh Steelers": "PIT", "Seattle Seahawks": "SEA", "San Francisco 49ers": "SF",
-  "Tampa Bay Buccaneers": "TB", "Tennessee Titans": "TEN", "Washington Commanders": "WAS",
-  "Washington Football Team": "WAS", "Washington Redskins": "WAS",
-};
-
 export interface TeamCount {
   team: string;
   players: string[];

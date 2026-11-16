@@ -4,6 +4,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import { notFound } from "next/navigation";
 
+type Pickup = { first_week: number; manager_id: string; player_name: string; position: string | null; pickup_score: number | string | null };
+
 export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
 }
@@ -13,18 +15,19 @@ export default async function TransactionDetailPage({ params }: { params: Promis
   const season = parseInt(seasonStr);
   if (isNaN(season)) notFound();
 
-  const { data: pickups } = await supabase
+  const { data } = await supabase
     .from("fa_pickups")
-    .select("*")
+    .select("first_week, manager_id, player_name, position, pickup_score")
     .eq("season_year", season)
     .order("first_week", { ascending: true })
     .order("pickup_score", { ascending: false });
 
-  const byWeek = (pickups ?? []).reduce((acc, p) => {
+  const pickups = (data ?? []) as Pickup[];
+  const byWeek = pickups.reduce((acc, p) => {
     if (!acc[p.first_week]) acc[p.first_week] = [];
     acc[p.first_week].push(p);
     return acc;
-  }, {} as Record<number, typeof pickups>);
+  }, {} as Record<number, Pickup[]>);
 
   const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
 
@@ -32,7 +35,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
     <div>
       <PageHeader
         title={`Transactions ${season}`}
-        description={`${pickups?.length ?? 0} Pickups`}
+        description={`${pickups.length} Pickups`}
         crumbs={[{ label: "Transactions", href: "/transactions" }]}
       />
       <div className="space-y-8">
@@ -50,7 +53,7 @@ export default async function TransactionDetailPage({ params }: { params: Promis
                   </tr>
                 </thead>
                 <tbody>
-                  {byWeek[week].map((p: NonNullable<typeof pickups>[number], i: number) => (
+                  {byWeek[week].map((p: Pickup, i: number) => (
                     <tr key={`${p.manager_id}-${p.player_name}-${i}`} className="border-t border-border-light">
                       <td className="py-2.5 pl-4 pr-3 font-medium text-ink sm:pl-5"><ManagerName id={p.manager_id} /></td>
                       <td className="py-2.5 pr-3 text-ink">{p.player_name}</td>

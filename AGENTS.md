@@ -17,11 +17,16 @@ a written brief. Keep design decisions, anything touching the production databas
 review of a change with the lead model.
 
 ## Design system
-- Two layers, after Apple's Liquid Glass guidance: controls and navigation float on the `.glass`
-  material (top bar, phone tab bar, menus, sheets, `Tabs`); content sits on opaque `.cell` cards.
-  Do not put glass on content, and do not stack glass on glass.
-- Navigation groups live in `NAV_GROUPS` (`src/lib/constants.ts`). Desktop: floating bar with
-  menus. Phones: tab bar at the bottom, a tab opens its pages in a sheet.
+- Glass dashboard. A fixed colour backdrop (`body::before`) sits behind everything. Cards are
+  `.cell`: a translucent fill with a light top edge and no blur of their own, so long pages scroll
+  smoothly. Real blur (`.glass`) is for the control layer only: sidebar, phone tab bar, sheets
+  and `Tabs`. `.cell-accent` is the one highlighted card of a view; use it at most once.
+- `surface`, `surface-2`, `surface-3` and the border tokens are translucent whites. Anything that
+  must cover what is behind it (tooltips, sticky table heads, native menus) uses `bg-solid`.
+- The selected state is a white pill with dark text (navigation, `Tabs`). Red is the brand accent
+  and the primary button.
+- Navigation groups live in `NAV_GROUPS` (`src/lib/constants.ts`). From `lg` up a fixed sidebar
+  shows every destination. Below that: tab bar at the bottom, a tab opens its pages in a sheet.
 - Every page uses `PageHeader` (the home page is the exception: its title is the current week);
   every tab, pill or segmented control uses `Tabs`; stat tiles use `StatTile`; manager names use
   `ManagerName` (`src/components/ui/`).

@@ -21,9 +21,9 @@ async function getSeasonData(year: number) {
     { data: allPlay },
     { data: luck },
   ] = await Promise.all([
-    supabase.from("seasons").select("*").eq("year", year).single(),
-    supabase.from("season_results").select("*").eq("season_year", year).order("reg_rank", { ascending: true }),
-    supabase.from("playoff_results").select("*").eq("season_year", year).order("final_rank", { ascending: true }),
+    supabase.from("seasons").select("reg_season_weeks, total_managers, playoff_teams").eq("year", year).single(),
+    supabase.from("season_results").select("manager_id, reg_rank, wins, losses, ties, points_for, points_against, max_points_for, lineup_efficiency").eq("season_year", year).order("reg_rank", { ascending: true }),
+    supabase.from("playoff_results").select("manager_id, final_rank, seed, week15_pts, week16_pts").eq("season_year", year).order("final_rank", { ascending: true }),
     getChampionsBySeason(),
     supabase.from("v_all_play").select("manager_id, ap_wins, ap_losses, ap_ties, ap_win_pct").eq("season_year", year),
     supabase.from("v_luck").select("manager_id, luck").eq("season_year", year),

@@ -112,7 +112,7 @@ function ProspectDetailModal({
             <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-surface-2 border border-border overflow-hidden"
               style={{ borderRadius: "4px" }}>
               {headshotSrc(prospect.headshot_url) ? (
-                <img src={headshotSrc(prospect.headshot_url)!} alt={prospect.player_name}
+                <img loading="lazy" decoding="async" width={96} height={96} src={headshotSrc(prospect.headshot_url)!} alt={prospect.player_name}
                   className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-text-faint text-2xl font-bold">
@@ -138,7 +138,7 @@ function ProspectDetailModal({
                   {prospect.position}
                 </span>
                 {prospect.college_logo_url && (
-                  <img src={prospect.college_logo_url} alt="" className="w-4 h-4 object-contain" />
+                  <img loading="lazy" decoding="async" width={16} height={16} src={prospect.college_logo_url} alt="" className="w-4 h-4 object-contain" />
                 )}
                 <span className="text-sm text-text-muted">{prospect.college}</span>
               </div>
@@ -647,7 +647,7 @@ export default function MockDraftApp({
                       </span>
                       {/* Team logo */}
                       {slot.team_logo ? (
-                        <img src={slot.team_logo} alt={slot.team_abbr}
+                        <img loading="lazy" decoding="async" width={20} height={20} src={slot.team_logo} alt={slot.team_abbr}
                           className="w-5 h-5 object-contain flex-shrink-0" />
                       ) : (
                         <span className="label-nav text-xs w-5 flex-shrink-0 text-center"
@@ -659,7 +659,7 @@ export default function MockDraftApp({
                         <div className="flex-1 min-w-0 flex items-center gap-1.5">
                           {/* Prospect headshot mini */}
                           {headshotSrc(prospect.headshot_url) && (
-                            <img src={headshotSrc(prospect.headshot_url)!} alt=""
+                            <img loading="lazy" decoding="async" width={24} height={24} src={headshotSrc(prospect.headshot_url)!} alt=""
                               className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-border" />
                           )}
                           <div className="min-w-0">
@@ -699,7 +699,7 @@ export default function MockDraftApp({
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       {activeSlot.team_logo && (
-                        <img src={activeSlot.team_logo} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
+                        <img loading="lazy" decoding="async" width={48} height={48} src={activeSlot.team_logo} alt="" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
                       )}
                       <div>
                         <div className="kicker text-xs mb-0.5">Round 1, Pick {activeSlot.pick_number}</div>
@@ -739,14 +739,14 @@ export default function MockDraftApp({
                       <div className="mt-2.5 flex items-center gap-3 p-2.5"
                         style={{ border: "1px solid var(--color-border-strong)", background: "rgba(255,255,255,0.06)" }}>
                         {headshotSrc(p.headshot_url) && (
-                          <img src={headshotSrc(p.headshot_url)!} alt=""
+                          <img loading="lazy" decoding="async" width={40} height={40} src={headshotSrc(p.headshot_url)!} alt=""
                             className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-border" />
                         )}
                         <div className="min-w-0 flex-1">
                           <div className="font-semibold text-ink text-sm truncate">{p.player_name}</div>
                           <div className="flex items-center gap-1">
                             <span className="label-nav text-xs" style={{ color: posColor(p.position) }}>{p.position}</span>
-                            {p.college_logo_url && <img src={p.college_logo_url} alt="" className="w-3.5 h-3.5 object-contain" />}
+                            {p.college_logo_url && <img loading="lazy" decoding="async" width={14} height={14} src={p.college_logo_url} alt="" className="w-3.5 h-3.5 object-contain" />}
                             <span className="text-xs text-text-muted">{p.college}</span>
                           </div>
                         </div>
@@ -798,7 +798,7 @@ export default function MockDraftApp({
                           className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex-shrink-0 border border-border bg-surface-2 hover:border-ink transition-colors"
                           disabled={isPicked}>
                           {headshotSrc(p.headshot_url) ? (
-                            <img src={headshotSrc(p.headshot_url)!} alt="" className="w-full h-full object-cover" />
+                            <img loading="lazy" decoding="async" width={36} height={36} src={headshotSrc(p.headshot_url)!} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-text-faint" style={{ fontSize: "10px" }}>
                               {p.first_name?.[0]}{p.last_name?.[0]}
@@ -818,7 +818,7 @@ export default function MockDraftApp({
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="label-nav font-semibold" style={{ fontSize: "10px", color: posColor(p.position) }}>{p.position}</span>
-                            {p.college_logo_url && <img src={p.college_logo_url} alt="" className="w-3.5 h-3.5 object-contain" />}
+                            {p.college_logo_url && <img loading="lazy" decoding="async" width={14} height={14} src={p.college_logo_url} alt="" className="w-3.5 h-3.5 object-contain" />}
                             <span className="text-text-muted truncate" style={{ fontSize: "10px" }}>{p.college}</span>
                             {p.draft_grade && (
                               <span className="text-text-faint ml-auto hidden sm:inline" style={{ fontSize: "10px" }}>
@@ -994,7 +994,7 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
                 <span className="font-mono text-xs text-text-faint w-5 text-right flex-shrink-0">{s.pick_number}</span>
                 {/* Team logo */}
                 {slot?.team_logo ? (
-                  <img src={slot.team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
+                  <img loading="lazy" decoding="async" width={20} height={20} src={slot.team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
                 ) : (
                   <span className="label-nav text-xs text-text-secondary font-semibold w-5 flex-shrink-0">
                     {slot?.team_abbr?.slice(0, 2)}
@@ -1005,7 +1005,7 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
                   <button onClick={() => onProspectClick(s.prospect!)}
                     className="flex items-center gap-1.5 flex-1 min-w-0 text-left hover:underline">
                     {headshotSrc(s.prospect.headshot_url) && (
-                      <img src={headshotSrc(s.prospect.headshot_url)!} alt=""
+                      <img loading="lazy" decoding="async" width={24} height={24} src={headshotSrc(s.prospect.headshot_url)!} alt=""
                         className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-border" />
                     )}
                     <span className="text-sm font-medium text-ink truncate">{s.prospect.player_name}</span>
@@ -1112,7 +1112,7 @@ function MockCard({
                 </span>
           
                 {slot.team_logo ? (
-                  <img src={slot.team_logo} className="w-5 h-5 object-contain" />
+                  <img loading="lazy" decoding="async" width={20} height={20} src={slot.team_logo} className="w-5 h-5 object-contain" />
                 ) : (
                   <span className="label-nav text-xs">
                     {slot.team_abbr.slice(0, 2)}
@@ -1137,7 +1137,7 @@ function MockCard({
                       className="flex items-center gap-2 text-left hover:underline"
                     >
                       {headshotSrc(prospect.headshot_url) && (
-                        <img
+                        <img loading="lazy" decoding="async" width={24} height={24}
                           src={headshotSrc(prospect.headshot_url)!}
                           className="w-6 h-6 rounded-full object-cover border border-border"
                         />
