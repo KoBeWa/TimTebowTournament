@@ -103,7 +103,7 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-center gap-1 border-t border-border-light px-4 py-2 text-xs text-text-muted transition-colors hover:text-ink"
+        className="flex min-h-11 w-full items-center justify-center gap-1 border-t border-border-light px-3 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-ink"
       >
         {open ? "Weniger" : "Details"}
         <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
@@ -119,14 +119,17 @@ export default function GamecenterPage() {
   const [playoffWeeks, setPlayoffWeeks] = useState<number[]>([]);
   const [matchups, setMatchups] = useState<MatchupWithStats[]>([]);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   // Detect latest week for a season
   const detectLatestWeek = useCallback(async (s: number) => {
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from("weekly_matchups")
       .select("week, is_playoff")
       .eq("season_year", s)
       .order("week", { ascending: false });
+    if (err) return null;
     const latest = data?.[0]?.week ?? 1;
     setMaxWeek(latest);
     setPlayoffWeeks([...new Set((data ?? []).filter((r) => r.is_playoff).map((r) => r.week as number))].sort((x, y) => x - y));
@@ -136,11 +139,11 @@ export default function GamecenterPage() {
   // Fetch week data + compute stats
   const fetchWeekData = useCallback(async (s: number, w: number) => {
     const [
-      { data: rawMatchups },
-      { data: weekScores },
-      { data: seasonResults },
-      { data: coachData },
-      { data: luckData },
+      { data: rawMatchups, error: e1 },
+      { data: weekScores, error: e2 },
+      { data: seasonResults, error: e3 },
+      { data: coachData, error: e4 },
+      { data: luckData, error: e5 },
     ] = await Promise.all([
       supabase.from("weekly_matchups").select("*").eq("season_year", s).eq("week", w),
       supabase.from("v_weekly_scores").select("*").eq("season_year", s).eq("week", w),
@@ -148,6 +151,11 @@ export default function GamecenterPage() {
       supabase.from("v_coach_rank").select("manager_id, coach_score").eq("season_year", s).order("coach_score", { ascending: false }),
       supabase.from("v_luck").select("manager_id, luck").eq("season_year", s),
     ]);
+
+    if (e1 || e2 || e3 || e4 || e5) {
+      setError(true);
+      return;
+    }
 
     // Week-level aggregates
     const scores = (weekScores ?? []).map((r) => Number(r.score));
@@ -192,6 +200,7 @@ export default function GamecenterPage() {
     }));
 
     setMatchups(enriched);
+    setError(false);
     setLoadedKey(`${s}-${w}`);
   }, []);
 
@@ -200,16 +209,23 @@ export default function GamecenterPage() {
     let cancelled = false;
     (async () => {
       const latest = await detectLatestWeek(season);
-      if (!cancelled) setWeek(latest);
+      if (cancelled) return;
+      if (latest === null) setError(true);
+      else setWeek(latest);
     })();
     return () => { cancelled = true; };
-  }, [season, detectLatestWeek]);
+  }, [season, attempt, detectLatestWeek]);
 
   // Fetch data when week is known
   useEffect(() => {
     if (week === null) return;
     (async () => { await fetchWeekData(season, week); })();
-  }, [season, week, fetchWeekData]);
+  }, [season, week, attempt, fetchWeekData]);
+
+  const retry = () => {
+    setError(false);
+    setAttempt((n) => n + 1);
+  };
 
   const loading = week === null || loadedKey !== `${season}-${week}`;
 
@@ -243,8 +259,29 @@ export default function GamecenterPage() {
       </div>
 
       {/* Keep the previous cards visible (dimmed) while the next week loads */}
-      {matchups.length === 0 && loading ? (
-        <div className="py-12 text-center text-text-muted">Lade Matchups...</div>
+      {error ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Die Matchups konnten nicht geladen werden.</p>
+          <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
+        </div>
+      ) : matchups.length === 0 && loading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-busy="true">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="cell animate-pulse space-y-3 p-4 sm:p-5">
+              <div className="h-8 rounded-lg bg-surface-3" />
+              <div className="h-4 rounded-lg bg-surface-3" />
+              <div className="h-4 rounded-lg bg-surface-3" />
+              <div className="h-8 rounded-lg bg-surface-2" />
+            </div>
+          ))}
+        </div>
+      ) : !loading && matchups.length === 0 ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Für diese Woche gibt es keine Matchups.</p>
+          {season !== CURRENT_SEASON && (
+            <button type="button" onClick={() => setSeason(CURRENT_SEASON)} className="btn">Zur aktuellen Saison</button>
+          )}
+        </div>
       ) : (
         <div className={`grid grid-cols-1 items-start gap-4 transition-opacity md:grid-cols-2 ${loading ? "opacity-50" : ""}`}>
           {matchups.map((m) => (

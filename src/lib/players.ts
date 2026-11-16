@@ -72,13 +72,14 @@ function toNumbers<T>(row: Record<string, unknown>): T {
   return out as T;
 }
 
-/** All rows of a query, in pages of 1000 (the API maximum). */
+/** All rows of a query, in pages of 1000 (the API maximum). Throws when a page fails to load. */
 export async function fetchAll<T>(
-  build: (from: number, to: number) => PromiseLike<{ data: Record<string, unknown>[] | null }>,
+  build: (from: number, to: number) => PromiseLike<{ data: Record<string, unknown>[] | null; error?: { message: string } | null }>,
 ): Promise<T[]> {
   const rows: T[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data } = await build(from, from + 999);
+    const { data, error } = await build(from, from + 999);
+    if (error) throw new Error(error.message);
     rows.push(...(data ?? []).map((r) => toNumbers<T>(r)));
     if (!data || data.length < 1000) return rows;
   }

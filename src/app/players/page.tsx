@@ -32,6 +32,8 @@ const value = (p: PlayerSummary, k: SortKey) =>
 export default function PlayersPage() {
   const [players, setPlayers] = useState<PlayerSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
   const [pos, setPos] = useState<string>("all");
   const [manager, setManager] = useState<string>("all");
@@ -40,11 +42,36 @@ export default function PlayersPage() {
   const [limit, setLimit] = useState(50);
 
   useEffect(() => {
-    loadPlayerSummaries().then((rows) => {
-      setPlayers(rows);
-      setLoading(false);
-    });
-  }, []);
+    let cancelled = false;
+    // The loader swallows query errors, so an empty list counts as a failed load
+    loadPlayerSummaries()
+      .then((rows) => {
+        if (cancelled) return;
+        if (rows.length === 0) setError(true);
+        else {
+          setPlayers(rows);
+          setError(false);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError(true);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [attempt]);
+
+  const retry = () => {
+    setError(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
+  const resetFilters = () => {
+    setQuery("");
+    setPos("all");
+    setManager("all");
+  };
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,21 +98,45 @@ export default function PlayersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Spieler suchen…"
-            className="w-full bg-surface border border-border rounded-xl pl-9 pr-3 py-2.5 text-ink placeholder:text-text-faint focus:border-red focus:outline-none"
+            aria-label="Spieler suchen"
+            className="w-full bg-surface border border-border rounded-full pl-9 pr-3 py-2.5 text-ink placeholder:text-text-faint focus:border-red focus:outline-none"
           />
         </label>
         <Tabs size="sm" label="Position" value={pos} onChange={setPos}
           tabs={["all", ...POSITIONS].map((p) => ({ key: p, label: p === "all" ? "Alle" : p }))} />
-        <select value={manager} onChange={(e) => setManager(e.target.value)}
-          className="bg-surface border border-border rounded-xl px-3 py-2 text-sm text-ink focus:border-red focus:outline-none"
-          title="Manager, der ihn am längsten im Kader hatte">
-          <option value="all">Meist bei: alle</option>
-          {MANAGERS.map((m) => <option key={m} value={m}>Meist bei {m}</option>)}
-        </select>
+        <label className="flex items-center gap-2 text-sm text-text-muted" title="Manager, der ihn am längsten im Kader hatte">
+          Meist bei
+          <select value={manager} onChange={(e) => setManager(e.target.value)}
+            className="bg-surface border border-border rounded-full px-3 py-2 text-sm text-ink focus:border-red focus:outline-none">
+            <option value="all">Alle</option>
+            {MANAGERS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </label>
       </div>
 
-      {loading ? (
-        <div className="text-text-muted text-center py-12">Lade Spieler…</div>
+      {error ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Die Spielerliste konnte nicht geladen werden.</p>
+          <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
+        </div>
+      ) : loading ? (
+        <div className="cell animate-pulse divide-y divide-border-light" aria-busy="true">
+          {Array.from({ length: 10 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <div className="h-9 w-9 shrink-0 rounded-full bg-surface-3" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 w-40 max-w-full rounded-lg bg-surface-3" />
+                <div className="h-3 w-24 rounded-lg bg-surface-2" />
+              </div>
+              <div className="h-4 w-12 rounded-lg bg-surface-3" />
+            </div>
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Kein Spieler passt zu diesen Filtern.</p>
+          <button type="button" onClick={resetFilters} className="btn">Filter zurücksetzen</button>
+        </div>
       ) : (
         <div className="cell overflow-x-auto">
           <table className="w-full text-sm">
@@ -95,7 +146,7 @@ export default function PlayersPage() {
                 {COLUMNS.map((c) => (
                   <th key={c.key} title={c.title}
                     className={`px-3 py-3 font-medium ${c.key === "player_name" ? "pl-4 text-left sm:pl-5 md:pl-3" : "text-right"} ${PHONE.has(c.key) ? "" : "hidden lg:table-cell"}`}>
-                    <button onClick={() => setSort(c.key)} className={sort === c.key ? "text-red" : "hover:text-ink"}>
+                    <button onClick={() => setSort(c.key)} className={`inline-flex min-h-11 items-center ${sort === c.key ? "text-red" : "hover:text-ink"}`}>
                       {c.label}
                     </button>
                   </th>
@@ -133,7 +184,7 @@ export default function PlayersPage() {
           </table>
           {rows.length > shown.length && (
             <button type="button" onClick={() => setLimit(limit + 100)}
-              className="w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:text-ink transition-colors sm:px-5">
+              className="min-h-11 w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:text-ink transition-colors sm:px-5">
               100 weitere anzeigen ({rows.length - shown.length} übrig)
             </button>
           )}

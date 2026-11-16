@@ -32,7 +32,10 @@ export default function HeadToHeadPage() {
   const [pairs, setPairs] = useState<PairRecord[]>([]);
   const [matchups, setMatchups] = useState<H2HMatchup[]>([]);
   const [lineups, setLineups] = useState<LineupRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [tab, setTab] = useState<Tab>("overview");
 
   // League-wide records of every pairing (for the matrix and own averages)
@@ -40,12 +43,18 @@ export default function HeadToHeadPage() {
     supabase
       .from("v_head_to_head")
       .select("manager_id, opponent_id, total_games, wins, losses, ties, avg_score_for")
-      .then(({ data }) => setPairs((data ?? []).map((r) => ({
-        ...r,
-        total_games: Number(r.total_games), wins: Number(r.wins), losses: Number(r.losses),
-        ties: Number(r.ties), avg_score_for: Number(r.avg_score_for),
-      }))));
-  }, []);
+      .then(({ data, error: err }) => {
+        if (err) {
+          setError(true);
+          return;
+        }
+        setPairs((data ?? []).map((r) => ({
+          ...r,
+          total_games: Number(r.total_games), wins: Number(r.wins), losses: Number(r.losses),
+          ties: Number(r.ties), avg_score_for: Number(r.avg_score_for),
+        })));
+      });
+  }, [attempt]);
 
   useEffect(() => {
     if (m1 === m2) return;
@@ -61,7 +70,7 @@ export default function HeadToHeadPage() {
         .range(from, from + 999);
 
       // Matchups can be in either direction (manager_a/manager_b)
-      const [{ data: asA }, { data: asB }, l1, l2] = await Promise.all([
+      const [{ data: asA, error: eA }, { data: asB, error: eB }, l1, l2] = await Promise.all([
         supabase.from("weekly_matchups").select("season_year, week, score_a, score_b, is_playoff")
           .eq("manager_a", m1).eq("manager_b", m2),
         supabase.from("weekly_matchups").select("season_year, week, score_a, score_b, is_playoff")
@@ -70,6 +79,12 @@ export default function HeadToHeadPage() {
         lineupQuery(1000),
       ]);
 
+      if (eA || eB || l1.error || l2.error) {
+        setError(true);
+        setLoading(false);
+        return;
+      }
+
       const all: H2HMatchup[] = [
         ...(asA ?? []).map((m) => ({ season_year: m.season_year, week: m.week, myScore: Number(m.score_a), theirScore: Number(m.score_b), is_playoff: m.is_playoff })),
         ...(asB ?? []).map((m) => ({ season_year: m.season_year, week: m.week, myScore: Number(m.score_b), theirScore: Number(m.score_a), is_playoff: m.is_playoff })),
@@ -77,10 +92,17 @@ export default function HeadToHeadPage() {
 
       setMatchups(all);
       setLineups([...(l1.data ?? []), ...(l2.data ?? [])].map((r) => ({ ...r, points: Number(r.points) })));
+      setLoaded(true);
       setLoading(false);
     }
     fetchH2H();
-  }, [m1, m2]);
+  }, [m1, m2, attempt]);
+
+  const retry = () => {
+    setError(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
 
   const { wins, losses, ties } = record(matchups);
   const reg = record(matchups.filter((m) => !m.is_playoff));
@@ -111,30 +133,51 @@ export default function HeadToHeadPage() {
 
   const c1 = MANAGER_COLORS[m1];
   const c2 = MANAGER_COLORS[m2];
-  const pair = m1 !== m2 && !loading;
+  const pair = m1 !== m2 && loaded;
   const hasGames = pair && matchups.length > 0 && games;
-  const empty = (
-    <div className="py-10 text-center text-text-muted">
-      {m1 === m2 ? "Bitte wähle zwei verschiedene Manager aus." : loading ? "Lade Daten…" : "Keine Matchups gefunden."}
+  const skeleton = (
+    <div className="animate-pulse space-y-4" aria-busy="true">
+      <div className="cell h-40 bg-surface-2" />
+      <div className="cell h-56 bg-surface-2" />
     </div>
   );
+  const empty = m1 === m2 || loaded ? (
+    <div className="cell p-5 text-sm text-text-secondary">
+      {m1 === m2
+        ? "Bitte wähle zwei verschiedene Manager aus."
+        : "Diese beiden Manager haben noch nie gegeneinander gespielt. Wähle oben ein anderes Duell."}
+    </div>
+  ) : skeleton;
 
   return (
     <div className="space-y-6">
       <PageHeader title="Head to Head" description="Wähle zwei Manager für den direkten Vergleich oder klick ein Feld in der Liga-Matrix." />
 
-      <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-        <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
-          className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-lg w-full sm:w-52 focus:border-red focus:outline-none">
-          {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
-        </select>
-        <span className="text-3xl text-red tracking-wider display-title">VS</span>
-        <select value={m2} onChange={(e) => setM2(e.target.value as ManagerId)}
-          className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-lg w-full sm:w-52 focus:border-red focus:outline-none">
-          {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m1}>{m}</option>)}
-        </select>
+      <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:items-end">
+        <label className="flex w-full flex-col gap-1 text-sm text-text-muted sm:w-52">
+          Manager 1
+          <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
+            className="bg-surface border border-border rounded-full px-4 py-3 text-ink text-lg focus:border-red focus:outline-none">
+            {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
+          </select>
+        </label>
+        <span className="text-3xl text-red tracking-wider display-title sm:pb-2">VS</span>
+        <label className="flex w-full flex-col gap-1 text-sm text-text-muted sm:w-52">
+          Manager 2
+          <select value={m2} onChange={(e) => setM2(e.target.value as ManagerId)}
+            className="bg-surface border border-border rounded-full px-4 py-3 text-ink text-lg focus:border-red focus:outline-none">
+            {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m1}>{m}</option>)}
+          </select>
+        </label>
       </div>
 
+      {error ? (
+        <div className="cell flex flex-col items-start gap-3 p-5">
+          <p className="text-sm text-text-secondary">Der Vergleich konnte nicht geladen werden.</p>
+          <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
+        </div>
+      ) : (
+      <div className={`space-y-6 transition-opacity ${loading && loaded ? "opacity-50" : ""}`}>
       {pair && (
       <div className="cell p-6 sm:p-8">
         <div className="mb-5 text-center text-sm text-text-muted">Direkter Vergleich, {matchups.length} Matchups</div>
@@ -227,7 +270,7 @@ export default function HeadToHeadPage() {
             const r = record(bySeason[s]);
             const leadColor = r.wins > r.losses ? c1 : r.losses > r.wins ? c2 : null;
             return (
-              <div key={s} className="rounded-xl border border-border bg-surface px-3 py-2 text-center"
+              <div key={s} className="rounded-lg border border-border bg-surface px-3 py-2 text-center"
                 style={leadColor ? { borderColor: leadColor } : undefined}>
                 <div className="text-xs text-text-muted">{s}</div>
                 <div className="text-sm text-ink tabular-nums">{fmtDiff(r.wins - r.losses)}</div>
@@ -349,6 +392,8 @@ export default function HeadToHeadPage() {
       {tab === "matrix" && (
         <LeagueMatrix pairs={pairs} m1={m1} m2={m2} onSelect={(a, b) => { setM1(a); setM2(b); setTab("overview"); }} />
       )}
+      </div>
+      )}
     </div>
   );
 }
@@ -415,7 +460,7 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                     <td key={c} className="p-0.5">
                       <button
                         onClick={() => onSelect(r, c)}
-                        className={`w-full rounded-md px-2 py-1.5 tabular-nums text-ink hover:ring-1 hover:ring-border-strong ${selected ? "ring-2 ring-red" : ""}`}
+                        className={`min-h-11 w-full rounded-md px-2 py-1.5 tabular-nums text-ink hover:ring-1 hover:ring-border-strong ${selected ? "ring-2 ring-red" : ""}`}
                         style={{ backgroundColor: tone }}
                         title={`${r} vs ${c}: ${p?.wins ?? 0}–${p?.losses ?? 0}${p?.ties ? `–${p.ties}` : ""}`}
                       >
