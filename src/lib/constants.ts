@@ -15,6 +15,11 @@ export const MANAGERS = [
  
 export type ManagerId = (typeof MANAGERS)[number];
  
+// The mock draft runs in the weeks before the NFL draft (late April). Outside that window the
+// page shows a short notice and the game is hidden from the navigation. To reopen it, see
+// "Mock draft" in AGENTS.md.
+export const MOCK_DRAFT_OPEN = false;
+
 export const SEASONS = Array.from(
   { length: CURRENT_SEASON - LEAGUE_FOUNDED + 1 },
   (_, i) => LEAGUE_FOUNDED + i
@@ -49,7 +54,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "History", href: "/history", icon: "history", desc: "Ewige Tabelle und alle Seasons" },
       { label: "Rankings", href: "/rankings", icon: "ranking", desc: "Wer draftet, managt und coacht am besten" },
       { label: "Trophy Room", href: "/trophies", icon: "award", desc: "Rekorde und Achievements" },
-      { label: "Mock Draft", href: "/mock-draft", icon: "target", desc: "Den NFL Draft tippen" },
+      ...(MOCK_DRAFT_OPEN ? [{ label: "Mock Draft", href: "/mock-draft", icon: "target" as const, desc: "Den NFL Draft tippen" }] : []),
     ],
   },
   {

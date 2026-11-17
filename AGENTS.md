@@ -41,3 +41,19 @@ review of a change with the lead model.
 - Tables sit in `<div className="cell overflow-x-auto">`; secondary columns are hidden on phones
   with `hidden md:table-cell`.
 - No uppercase labels above headings. German, sentence case, plain words.
+
+## Mock draft
+The game runs before the NFL draft in late April and is closed the rest of the year
+(`MOCK_DRAFT_OPEN = false` in `src/lib/constants.ts`: the page shows a notice and the navigation
+hides it). The game lives in `src/app/mock-draft/MockDraftPage.tsx` and `MockDraftApp.tsx`.
+To reopen it for a new year:
+1. Load the new draft order, results table, team needs and prospects. The page reads
+   `nfl_draft_order_2026`, `nfl_draft_results_2026` and `mock_drafts.draft_year = 2026`; switch these
+   to the new year in `MockDraftPage.tsx`.
+2. Writes from the browser are switched off in the database while the game is closed (anon has
+   only SELECT on `mock_drafts` and `mock_draft_picks`). Reopening needs write access again; do it
+   per mock draft (for example a secret edit token per mock, checked in an RPC function), not with
+   an open `ALL ... USING (true)` policy, so nobody can overwrite someone else's mock.
+3. Set `MOCK_DRAFT_OPEN = true` and add `export const dynamic = "force-dynamic";` to
+   `src/app/mock-draft/page.tsx`. The page still uses the older styling; bring it to the design
+   system above when reopening.

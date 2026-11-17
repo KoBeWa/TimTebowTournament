@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import type { DraftSlot, Prospect, MockDraftSummary, DraftResult } from "./page";
+import type { DraftSlot, Prospect, MockDraftSummary, DraftResult } from "./MockDraftPage";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const POS_COLORS: Record<string, string> = {
