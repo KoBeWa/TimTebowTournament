@@ -183,7 +183,7 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
                 <div className="text-xs text-text-muted">{activeCat}</div>
                 <div className="display-title text-xl leading-tight text-ink">{selectedLabel}</div>
                 <div className="mt-1 flex items-center gap-1">
-                  <span className={`rounded px-2 py-0.5 text-xs ${isNeg ? "bg-red/10 text-red" : "bg-surface-3 text-text-muted"}`}>
+                  <span className={`rounded px-2 py-0.5 text-xs ${isNeg ? "bg-negative/10 text-negative" : "bg-surface-3 text-text-muted"}`}>
                     {isNeg ? "Negativ" : "Positiv"}
                   </span>
                   <Link href={`/trophies/records/${selectedKey}`}

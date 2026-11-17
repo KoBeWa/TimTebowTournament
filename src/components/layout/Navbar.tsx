@@ -30,7 +30,7 @@ const groupActive = (g: NavGroup, pathname: string) => g.links.some((l) => linkA
 function Brand({ onClick }: { onClick?: () => void }) {
   return (
     <Link href="/" onClick={onClick} className="group flex min-h-11 items-center gap-2.5 rounded-full pr-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red display-title text-base text-white">TTT</span>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red display-title text-base text-on-accent">TTT</span>
       <span className="leading-tight">
         <span className="block display-title text-lg text-ink">Tim Tebow Tournament</span>
         <span className="block text-xs text-text-muted">Saison {CURRENT_SEASON}</span>
@@ -49,8 +49,8 @@ function NavRow({ link, active, onClick, roomy }: { link: NavLink; active: boole
   return (
     <Link href={link.href} onClick={onClick} aria-current={active ? "page" : undefined}
       className={`flex items-center gap-3 rounded-2xl px-3 text-sm font-medium transition-colors ${roomy ? "min-h-12" : "min-h-10"} ${
-        active ? "bg-white text-[#12141c] shadow-sm" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
-      {Icon && <Icon size={17} className={active ? "text-red" : "text-text-muted"} />}
+        active ? "bg-red text-on-accent shadow-sm" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
+      {Icon && <Icon size={17} className={active ? "text-on-accent" : "text-text-muted"} />}
       {link.label}
     </Link>
   );
@@ -64,7 +64,7 @@ function ManagerGrid({ links, pathname, onClick, roomy }: { links: NavLink[]; pa
         return (
           <Link key={l.href} href={l.href} onClick={onClick} aria-current={active ? "page" : undefined}
             className={`flex items-center gap-2 rounded-xl px-3 text-sm transition-colors ${roomy ? "min-h-11" : "min-h-9"} ${
-              active ? "bg-white font-medium text-[#12141c]" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
+              active ? "bg-red font-medium text-on-accent" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
             <ManagerDot id={l.label} />{l.label}
           </Link>
         );

@@ -442,8 +442,8 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                   const p = get(r, c);
                   const pct = p && p.total_games ? (p.wins + p.ties / 2) / p.total_games : 0.5;
                   const selected = r === m1 && c === m2;
-                  // red = row leads, blue = row trails
-                  const tone = pct > 0.5 ? `rgba(255,91,58,${(pct - 0.5) * 1.2})` : `rgba(96,165,250,${(0.5 - pct) * 1.2})`;
+                  // gold = row leads, steel = row trails
+                  const tone = pct > 0.5 ? `rgba(214,168,66,${(pct - 0.5) * 1.1})` : `rgba(143,163,184,${(0.5 - pct) * 1.1})`;
                   return (
                     <td key={c} className="p-0.5">
                       <button

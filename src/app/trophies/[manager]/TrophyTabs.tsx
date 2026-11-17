@@ -69,11 +69,11 @@ export default function TrophyTabs({ medals, categories, blunders }: {
 
 function AchievementCard({ card, blunder }: { card: TrophyCard; blunder: boolean }) {
   return (
-    <div className={`cell p-4 ${blunder ? "border border-red/60" : ""}`}>
+    <div className={`cell p-4 ${blunder ? "border border-negative/60" : ""}`}>
       <div className="mb-1 flex items-start justify-between gap-2">
         <span className="text-sm font-semibold leading-snug text-ink">{card.title}</span>
         {card.count > 1 && (
-          <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${blunder ? "bg-red/10 text-negative" : "bg-surface-3 text-text-muted"}`}>
+          <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${blunder ? "bg-negative/10 text-negative" : "bg-surface-3 text-text-muted"}`}>
             ×{card.count}
           </span>
         )}
