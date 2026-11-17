@@ -5,6 +5,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import RecordTabs from "./RecordTabs";
 import RecordChart from "../RecordChart";
+import RecordRaceChart, { type RecordHistory } from "../RecordRaceChart";
 import { fmtPeriod, fmtVal, higherWins, recordDescription, type TimelineEntry } from "../recordUtils";
 import { notFound } from "next/navigation";
 
@@ -49,13 +50,14 @@ export default async function RecordDetailPage({
 }) {
   const { record_key } = await params;
 
-  const [{ data: timelineRaw }, rawRanking] = await Promise.all([
+  const [{ data: timelineRaw }, rawRanking, { data: history }] = await Promise.all([
     supabase
       .from("record_timeline")
       .select("id, period_id, record_key, record_label, manager_id, record_value, from_year, from_week, to_year, to_week, is_current, weeks_held")
       .eq("record_key", record_key)
       .order("period_id", { ascending: true }),
     getOwnerRanking(record_key),
+    supabase.rpc("record_history", { p_record_key: record_key }),
   ]);
 
   if (!timelineRaw?.length) notFound();
@@ -124,7 +126,9 @@ export default async function RecordDetailPage({
         </div>
       )}
 
-      <RecordChart periods={timeline} label={recordLabel} />
+      {history
+        ? <RecordRaceChart history={history as RecordHistory} label={recordLabel} higher={higher} />
+        : <RecordChart periods={timeline} label={recordLabel} />}
 
       <RecordTabs
         ranking={ranking ? (
