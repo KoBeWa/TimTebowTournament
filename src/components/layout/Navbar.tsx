@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeftRight, Award, CalendarDays, ChartNoAxesColumn, History, House, ListOrdered, Shirt, Swords,
+  ArrowLeftRight, Award, CalendarDays, ChartNoAxesColumn, History, House, ListOrdered, Percent, Shirt, Swords,
   Table2, Target, Trophy, Tv, Users, type LucideIcon,
 } from "lucide-react";
 import {
@@ -14,7 +14,7 @@ import {
 const GROUP_ICONS = { calendar: CalendarDays, trophy: Trophy, users: Users, shirt: Shirt } as const;
 const LINK_ICONS: Record<NavIconName, LucideIcon> = {
   home: House, tv: Tv, table: Table2, history: History, ranking: ChartNoAxesColumn, award: Award, target: Target,
-  swords: Swords, players: Shirt, draft: ListOrdered, moves: ArrowLeftRight,
+  swords: Swords, players: Shirt, draft: ListOrdered, moves: ArrowLeftRight, odds: Percent,
 };
 
 const isManager = (l: NavLink) => l.href.startsWith("/manager/");

@@ -1,10 +1,11 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
-import { CURRENT_SEASON, MANAGER_COLORS } from "@/lib/constants";
+import { CURRENT_SEASON, MANAGERS, MANAGER_COLORS } from "@/lib/constants";
 import Link from "next/link";
 import { ChevronRight, Crown } from "lucide-react";
 import ManagerName from "@/components/ui/ManagerName";
 import StatTile from "@/components/ui/StatTile";
+import { closestToHalf, fmtPct } from "@/lib/playoffs";
 
 type Standing = { manager_id: string; reg_rank: number; wins: number; losses: number; ties: number; points_for: number };
 type Matchup = { week: number; manager_a: string; score_a: number; manager_b: string; score_b: number; is_playoff: boolean };
@@ -36,6 +37,14 @@ async function getLeagueRecords() {
   return data ?? [];
 }
 
+// Latest playoff odds, for the "Playoff-Rennen" tile; empty before the first odds exist
+async function getRaceOdds() {
+  const { data } = await supabase.from("playoff_odds").select("week, manager_id, playoff_pct")
+    .eq("season_year", CURRENT_SEASON).order("week", { ascending: false }).limit(MANAGERS.length);
+  const week = data?.[0]?.week;
+  return (data ?? []).filter((r) => r.week === week).map((r) => ({ week: r.week as number, manager_id: r.manager_id as string, playoff_pct: Number(r.playoff_pct) }));
+}
+
 const pts = (n: number) => Number(n).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 function Side({ id, score, won, align }: { id: string; score: number; won: boolean; align: "left" | "right" }) {
@@ -48,7 +57,8 @@ function Side({ id, score, won, align }: { id: string; score: number; won: boole
 }
 
 export default async function HomePage() {
-  const [seasons, current, records] = await Promise.all([getSeasonSummaries(), getCurrentSeason(), getLeagueRecords()]);
+  const [seasons, current, records, raceOdds] = await Promise.all([getSeasonSummaries(), getCurrentSeason(), getLeagueRecords(), getRaceOdds()]);
+  const race = closestToHalf(raceOdds);
 
   const finished = seasons.filter((s) => s.champion !== "—");
   const reigning = finished[0];
@@ -158,7 +168,11 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
           <StatTile label="Tabellenführer" value={leader.manager_id} hint={`Bilanz ${rec(leader)}`} />
           <StatTile label="Meiste Punkte" value={scorer.manager_id} hint={`${pts(scorer.points_for)} Punkte`} />
-          {bubble && <StatTile label={`Letzter Playoff-Platz (${playoffTeams}.)`} value={bubble.manager_id} hint={`Bilanz ${rec(bubble)}`} />}
+          {race ? (
+            <Link href="/playoffs" className="block transition-opacity hover:opacity-85">
+              <StatTile label="Playoff-Rennen" value={race.manager_id} hint={`${fmtPct(race.playoff_pct)} Playoff-Chance`} />
+            </Link>
+          ) : bubble && <StatTile label={`Letzter Playoff-Platz (${playoffTeams}.)`} value={bubble.manager_id} hint={`Bilanz ${rec(bubble)}`} />}
           {reigning && <StatTile label="Titelverteidiger" value={reigning.champion} hint={`Champion ${reigning.year}`} tone="gold" />}
         </div>
       )}
