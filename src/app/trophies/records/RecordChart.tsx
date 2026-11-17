@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGER_COLORS } from "@/lib/constants";
-import { fmtPeriod, fmtVal, type TimelineEntry } from "./recordUtils";
+import { fmtPeriod, fmtVal, RUNNING_RECORDS, type TimelineEntry } from "./recordUtils";
 
 const PAD = { l: 44, r: 14, t: 14, b: 26 };
 const RIBBON_H = 44;
@@ -41,6 +41,9 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
   }, []);
 
   const rows = useMemo(() => [...periods].sort((a, b) => a.period_id - b.period_id), [periods]);
+  // Running totals and averages move while a holder keeps the record; only the value at the end of
+  // each period is known, so those records are drawn as a line through the end values.
+  const running = RUNNING_RECORDS.has(rows[0]?.record_key ?? "");
   const PH = Math.round(Math.min(260, Math.max(170, W * 0.3)));
   const H = PAD.t + PH + GAP + RIBBON_H + PAD.b;
   const plotBottom = PAD.t + PH;
@@ -64,7 +67,7 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
     const segs = rows.map((r, i) => {
       const a = starts[i];
       const b = i < rows.length - 1 ? starts[i + 1] : t1;
-      return { r, a, b: Math.max(b, a + 0.5), v: vals[i] };
+      return { r, a, b: Math.max(b, a + 0.5), v: vals[i], v0: running && i > 0 ? vals[i - 1] : vals[i] };
     });
     const totals = new Map<string, number>();
     rows.forEach((r) => totals.set(r.manager_id, (totals.get(r.manager_id) ?? 0) + r.weeks_held));
@@ -72,7 +75,7 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
     const years: number[] = [];
     for (let y = Math.ceil(2015 + (t0 - 1) / 18); idx(y, 1) <= t1; y++) years.push(y);
     return { t0, t1, sc, segs, legend, years };
-  }, [rows]);
+  }, [rows, running]);
 
   const { t0, t1, sc, segs, legend, years } = model;
   const inner = W - PAD.l - PAD.r;
@@ -133,14 +136,14 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
           ))}
 
           {/* connectors */}
-          {segs.slice(1).map((s, i) => (
+          {!running && segs.slice(1).map((s, i) => (
             <line key={`c${i}`} x1={x(s.a)} x2={x(s.a)} y1={y(segs[i].v)} y2={y(s.v)} stroke={NEUTRAL} strokeWidth={1}
               opacity={active == null || active === i || active === i + 1 ? 1 : 0.25} />
           ))}
           {/* steps */}
           {segs.map((s, i) => (
-            <line key={`s${i}`} x1={x(s.a)} x2={x(s.b)} y1={y(s.v)} y2={y(s.v)} stroke={colorOf(s.r.manager_id)}
-              strokeWidth={active === i ? 5 : 3.5} strokeLinecap="butt"
+            <line key={`s${i}`} x1={x(s.a)} x2={x(s.b)} y1={y(s.v0)} y2={y(s.v)} stroke={colorOf(s.r.manager_id)}
+              strokeWidth={active === i ? 5 : 3.5} strokeLinecap={running ? "round" : "butt"}
               className="transition-opacity duration-150 motion-reduce:transition-none" opacity={dim(i)} />
           ))}
           <circle cx={x(lastSeg.b)} cy={y(lastSeg.v)} r={4.5} fill={colorOf(lastSeg.r.manager_id)}
@@ -180,11 +183,15 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
               {a.r.manager_id}
               <span className="ml-auto pl-4 tabular-nums">{fmtVal(a.v)}</span>
             </div>
+            {running && <div className="text-text-faint">Stand am Ende der Phase</div>}
             <div className="mt-1 text-text-muted">{fmtPeriod(a.r)}</div>
             <div className="text-text-faint">{a.r.weeks_held} {a.r.weeks_held === 1 ? "Woche" : "Wochen"} gehalten</div>
           </div>
         )}
       </div>
+      {running && segs.length > 1 && (
+        <p className="mt-1 px-1 text-xs text-text-faint">Laufender Wert: die Linie verbindet den Stand am Ende jeder Halter-Phase.</p>
+      )}
       {segs.length === 1 && <p className="mt-1 px-1 text-xs text-text-faint">Der Rekord hat bisher nicht den Besitzer gewechselt.</p>}
     </div>
   );

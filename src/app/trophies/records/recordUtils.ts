@@ -77,3 +77,41 @@ export function recordDescription(key: string, label: string, higher: boolean): 
   return RECORD_DESCRIPTIONS[key]
     ?? `Rekord für «${label}»: ${higher ? "der höchste" : "der niedrigste"} Wert zählt.`;
 }
+
+// Records built from running totals or averages (record_defs.agg other than max/min). The stored
+// value of a holder period is the one at its end, because the sync updates it every week.
+export const RUNNING_RECORDS = new Set([
+  "allplay_losses", "allplay_win_pct", "allplay_wins", "best_playoff_win_pct", "best_trade_value",
+  "blowout_losses", "blowout_wins", "bottom_half", "bottom_half_pct", "bottom_score_pct", "bottom_scores",
+  "career_ppg", "championships", "coach_score_alltime", "coach_score_worst_alltime", "consol_wins",
+  "dst_avg_pts_all", "dst_avg_pts_worst", "dst_draft_value", "easiest_sos", "fewest_bench_all_points",
+  "fewest_h2h_losses", "fewest_h2h_points", "fewest_h2h_wins", "fewest_playoff_appearances", "hardest_sos",
+  "high_score_pct", "high_scores", "highest_avg_draft_pos", "highest_median_score", "k_avg_pts_all",
+  "k_avg_pts_worst", "k_draft_value", "least_consistent_team", "losing_record_seasons",
+  "lowest_avg_draft_pos", "lowest_median_score", "luckiest", "medal_score", "most_150plus_games",
+  "most_200plus_games", "most_bench_all_points", "most_bench_pts_in_loss", "most_bench_pts_in_win",
+  "most_consistent_team", "most_dst_all_points", "most_expected_wins_all", "most_finals_appearances",
+  "most_first_overall_picks", "most_first_round_qbs", "most_first_round_rbs", "most_first_round_tes",
+  "most_first_round_wrs", "most_games_vs_bottom_scorer", "most_games_vs_top_half",
+  "most_games_vs_top_scorer", "most_h2h_losses", "most_h2h_points", "most_h2h_wins", "most_k_all_points",
+  "most_losses_above_avg", "most_playoff_appearances_no_title", "most_playoff_ppg", "most_qb_all_points",
+  "most_rb_all_points", "most_semifinal_appearances", "most_semifinal_wins", "most_sub80_games",
+  "most_te_all_points", "most_trades", "most_transactions", "most_underdog_wins",
+  "most_weekly_leaders_dst_all", "most_weekly_leaders_flex_all", "most_weekly_leaders_k_all",
+  "most_weekly_leaders_qb_all", "most_weekly_leaders_rb_all", "most_weekly_leaders_te_all",
+  "most_weekly_leaders_wr_all", "most_weeks_above_avg", "most_weeks_below_avg", "most_weeks_first_place",
+  "most_weeks_last_place", "most_weeks_second_scorer", "most_weeks_top_quarter", "most_weeks_top_scorer",
+  "most_weeks_top3", "most_wins_below_avg", "most_wr_all_points", "narrow_losses", "narrow_wins",
+  "opp_points_share_avg", "optimal_pts_missed_all", "overall_draft_value", "overall_manager_value",
+  "playoff_appearances", "playoff_losses", "playoff_opp_points", "playoff_points", "playoff_wins",
+  "points_share_avg", "qb_avg_pts_all", "qb_avg_pts_worst", "qb_draft_value", "rb_avg_pts_all",
+  "rb_avg_pts_worst", "rb_draft_value", "reg_season_titles", "reg_season_wins", "runner_up_finishes",
+  "season_ap_titles", "season_pts_titles", "seasons_played", "te_avg_pts_all", "te_avg_pts_worst",
+  "te_draft_value", "third_place_finishes", "toiletbowl_finishes", "top_half", "top_half_pct",
+  "top_score_pct", "top_scores", "top_seed_losses_final", "top_seed_losses_semifinal",
+  "top_seed_losses_total", "top_waiver_value", "total_losses", "total_medals", "total_opp_points",
+  "total_playoff_pts", "total_points", "total_wins", "underdog_wins_final", "underdog_wins_semifinal",
+  "unluckiest", "win_pct", "winning_record_seasons", "wire_to_wire_champion", "worst_playoff_win_pct",
+  "worst_score_pct", "worst_scores", "worst_trade_value", "worst_waivers", "wr_avg_pts_all",
+  "wr_avg_pts_worst", "wr_draft_value",
+]);
