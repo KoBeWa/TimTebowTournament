@@ -33,7 +33,7 @@ export const MANAGER_COLORS: Record<string, string> = {
 };
 
 export type NavIconName =
-  | "home" | "tv" | "table" | "history" | "ranking" | "award" | "target" | "swords" | "players" | "draft" | "moves";
+  | "home" | "tv" | "table" | "history" | "ranking" | "award" | "target" | "swords" | "players" | "draft" | "moves" | "odds";
 export type NavLink = { label: string; href: string; desc?: string; icon?: NavIconName };
 export type NavGroup = { label: string; icon: "calendar" | "trophy" | "users" | "shirt"; links: NavLink[] };
 
@@ -44,6 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: "calendar",
     links: [
       { label: "Gamecenter", href: "/gamecenter", icon: "tv", desc: "Matchups und Lineups jeder Woche" },
+      { label: "Playoff-Chancen", href: "/playoffs", icon: "odds", desc: "Chancen und Path to Playoffs" },
       { label: `Tabelle ${CURRENT_SEASON}`, href: `/history/${CURRENT_SEASON}`, icon: "table", desc: "Standings und Playoffs" },
     ],
   },
