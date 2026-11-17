@@ -1,36 +1,38 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — dark "sports app" theme.
- * Token names are kept from the previous editorial theme so existing
- * utility classes keep working: `cream` = page background, `ink` = primary
- * text, `red` = brand accent.
+ * Design tokens: the league colours, gold on black and graphite.
+ * Token names are kept from earlier themes so existing utility classes keep
+ * working: `cream` = page background, `ink` = primary text, `red` = brand
+ * accent (now gold). Losses and blunders use `negative`, never the accent.
  */
 @theme {
-  --color-cream: #0b0d14;
+  --color-cream: #0a0a0b;
   /* Opaque stand-in for things that must cover what is behind them (native menus, tooltips) */
-  --color-solid: #1b1d27;
+  --color-solid: #1b1a19;
   --color-surface: rgb(255 255 255 / 0.055);
   --color-surface-2: rgb(255 255 255 / 0.09);
   --color-surface-3: rgb(255 255 255 / 0.15);
-  --color-ink: #eef2fa;
-  --color-red: #ff5b3a;
-  --color-red-soft: #ff8a70;
-  --color-gold: #f5b83d;
-  --color-gold-dark: #f5b83d;
-  --color-silver: #b8c2d4;
+  --color-ink: #f5f3ef;
+  --color-red: #d6a842;
+  /* Text and icons on a gold fill */
+  --color-on-accent: #17130a;
+  --color-red-soft: #e8c672;
+  --color-gold: #e6be62;
+  --color-gold-dark: #b8892a;
+  --color-silver: #c3c1bc;
   --color-bronze: #d08a52;
   --color-border: rgb(255 255 255 / 0.11);
   --color-border-light: rgb(255 255 255 / 0.065);
   --color-border-strong: rgb(255 255 255 / 0.22);
-  --color-text-secondary: #c9cdd8;
-  --color-text-muted: #a2a8b8;
-  --color-text-faint: #7d8496;
+  --color-text-secondary: #cdcac4;
+  --color-text-muted: #a09c95;
+  --color-text-faint: #77736c;
   --color-positive: #34d399;
   --color-negative: #f87171;
   --color-accent-green: #34d399;
   --color-accent-red: #f87171;
-  --color-accent-blue: #60a5fa;
+  --color-accent-blue: #8fa3b8;
 
   --radius-card: 24px;
 }
@@ -55,10 +57,11 @@
     inset: 0;
     z-index: -1;
     background:
-      radial-gradient(60vw 55vh at 88% -8%, rgba(255, 106, 61, 0.42), transparent 65%),
-      radial-gradient(50vw 50vh at 100% 55%, rgba(214, 81, 129, 0.20), transparent 70%),
-      radial-gradient(55vw 60vh at -8% 100%, rgba(57, 111, 229, 0.30), transparent 68%),
-      radial-gradient(45vw 45vh at 28% 8%, rgba(245, 184, 61, 0.10), transparent 70%);
+      radial-gradient(70vw 60vh at 92% -12%, rgba(214, 168, 66, 0.26), transparent 62%),
+      radial-gradient(45vw 45vh at 104% 60%, rgba(184, 137, 42, 0.10), transparent 70%),
+      radial-gradient(60vw 60vh at -10% 108%, rgba(214, 168, 66, 0.12), transparent 66%),
+      radial-gradient(50vw 40vh at 30% -5%, rgba(255, 255, 255, 0.05), transparent 70%),
+      linear-gradient(180deg, #0f0f10 0%, #0a0a0b 60%, #080808 100%);
   }
 
   h1, h2, h3 {
@@ -67,7 +70,7 @@
     letter-spacing: 0.01em;
   }
 
-  ::selection { background: rgba(255, 91, 58, 0.35); color: #fff; }
+  ::selection { background: rgba(214, 168, 66, 0.4); color: #fff; }
 
   a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 
@@ -149,11 +152,11 @@
 
   /* The one highlighted card of a view */
   .cell-accent {
-    border: 1px solid rgb(255 255 255 / 0.22);
-    background: linear-gradient(140deg, #ff7a52 0%, #f0532f 45%, #c9391f 100%);
+    border: 1px solid rgb(255 236 186 / 0.45);
+    background: linear-gradient(135deg, #f1d58a 0%, #d6a842 42%, #a87a22 100%);
     border-radius: var(--radius-card);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 18px 40px rgb(240 83 47 / 0.28);
-    color: #fff;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 18px 44px rgb(214 168 66 / 0.22);
+    color: var(--color-on-accent);
   }
 
   /* Cards inside a list share a container — avoid double rounding */
@@ -221,7 +224,7 @@
 }
 .btn { border: 1px solid var(--color-border); color: var(--color-ink); background: transparent; }
 .btn:hover { background-color: var(--color-surface-2); border-color: var(--color-border-strong); }
-.btn-primary { background-color: var(--color-red); color: #fff; }
+.btn-primary { background-color: var(--color-red); color: var(--color-on-accent); }
 .btn-primary:hover { background-color: var(--color-red-soft); }
 
 /* Touch screens: every control at least 44px tall, rows with room for a thumb */

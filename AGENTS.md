@@ -23,8 +23,10 @@ review of a change with the lead model.
   and `Tabs`. `.cell-accent` is the one highlighted card of a view; use it at most once.
 - `surface`, `surface-2`, `surface-3` and the border tokens are translucent whites. Anything that
   must cover what is behind it (tooltips, sticky table heads, native menus) uses `bg-solid`.
-- The selected state is a white pill with dark text (navigation, `Tabs`). Red is the brand accent
-  and the primary button.
+- League colours: gold on black and graphite. The accent token is still called `red`
+  (`bg-red`, `text-red`) but is gold; text on a gold fill uses `text-on-accent`. The selected state
+  (navigation, `Tabs`) and the primary button are gold with dark text. Losses, blunders and errors
+  use `negative`, never the accent. Keep greys neutral (no blue tint).
 - Navigation groups live in `NAV_GROUPS` (`src/lib/constants.ts`). From `lg` up a fixed sidebar
   shows every destination. Below that: tab bar at the bottom, a tab opens its pages in a sheet.
 - Every page uses `PageHeader` (the home page is the exception: its title is the current week);

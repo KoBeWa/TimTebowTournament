@@ -80,9 +80,9 @@ export default async function HomePage() {
         {running && top ? (
           <section className="cell-accent flex flex-col justify-between gap-8 p-6 sm:p-8 xl:col-span-2">
             <div>
-              <p className="text-sm text-white/80">Saison {CURRENT_SEASON}</p>
+              <p className="text-sm text-on-accent/75">Saison {CURRENT_SEASON}</p>
               <h1 className="mt-1 display-title text-5xl sm:text-6xl">Woche {current.week}</h1>
-              <p className="mt-3 max-w-md text-lg text-white/90">
+              <p className="mt-3 max-w-md text-lg text-on-accent/90">
                 {top.id} holt mit {pts(top.score)} Punkten den Wochensieg.
               </p>
             </div>
@@ -90,20 +90,20 @@ export default async function HomePage() {
               <dl className="flex flex-wrap gap-x-8 gap-y-4">
                 <div>
                   <dd className="display-title text-3xl tabular-nums">{pts(top.score)}</dd>
-                  <dt className="text-sm text-white/75">Höchster Score</dt>
+                  <dt className="text-sm text-on-accent/70">Höchster Score</dt>
                 </div>
                 {closest && (
                   <div>
                     <dd className="display-title text-3xl tabular-nums">{pts(Math.abs(closest.score_a - closest.score_b))}</dd>
-                    <dt className="text-sm text-white/75">Knappstes Spiel, {closest.manager_a} gegen {closest.manager_b}</dt>
+                    <dt className="text-sm text-on-accent/70">Knappstes Spiel, {closest.manager_a} gegen {closest.manager_b}</dt>
                   </div>
                 )}
                 <div>
                   <dd className="display-title text-3xl tabular-nums">{pts(avg)}</dd>
-                  <dt className="text-sm text-white/75">Schnitt der Liga</dt>
+                  <dt className="text-sm text-on-accent/70">Schnitt der Liga</dt>
                 </div>
               </dl>
-              <Link href="/gamecenter" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-5 text-sm font-semibold text-[#12141c] hover:bg-white/90 transition-colors">
+              <Link href="/gamecenter" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-on-accent px-5 text-sm font-semibold text-gold hover:bg-black transition-colors">
                 Zum Gamecenter <ChevronRight size={16} />
               </Link>
             </div>
@@ -111,11 +111,11 @@ export default async function HomePage() {
         ) : reigning && (
           <section className="cell-accent flex flex-col justify-between gap-8 p-6 sm:p-8 xl:col-span-2">
             <div>
-              <p className="flex items-center gap-2 text-sm text-white/80"><Crown size={16} /> Champion {reigning.year}</p>
+              <p className="flex items-center gap-2 text-sm text-on-accent/75"><Crown size={16} /> Champion {reigning.year}</p>
               <h1 className="mt-1 display-title text-6xl sm:text-7xl uppercase">{reigning.champion}</h1>
-              <p className="mt-3 text-lg text-white/90">Finale gegen {reigning.runner_up}.</p>
+              <p className="mt-3 text-lg text-on-accent/90">Finale gegen {reigning.runner_up}.</p>
             </div>
-            <Link href={`/history/${reigning.year}`} className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full bg-white px-5 text-sm font-semibold text-[#12141c]">
+            <Link href={`/history/${reigning.year}`} className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full bg-on-accent px-5 text-sm font-semibold text-gold">
               Zur Saison {reigning.year} <ChevronRight size={16} />
             </Link>
           </section>
