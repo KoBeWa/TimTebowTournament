@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
-import RecordChart from "./RecordChart";
+import RecordHistoryPanel from "./RecordHistoryPanel";
 import { fmtVal, higherWins, recordDescription, type OwnerRow, type TimelineEntry } from "./recordUtils";
 import { CATEGORIES, RECORD_CATEGORY, type Category } from "./categories";
 
@@ -136,7 +136,7 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
                 <p className="mt-1 max-w-2xl text-sm text-text-muted">{recordDescription(selectedKey, selectedLabel, higher)}</p>
               </div>
 
-              {periods.length > 0 && <RecordChart key={selectedKey} periods={periods} label={selectedLabel} />}
+              <RecordHistoryPanel key={selectedKey} recordKey={selectedKey} periods={periods} label={selectedLabel} higher={higher} />
 
               <div>
                 <h3 className="mb-2 text-sm font-medium text-text-muted">Aktuelle Rangliste</h3>
