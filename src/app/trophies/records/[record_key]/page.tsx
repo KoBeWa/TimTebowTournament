@@ -1,10 +1,11 @@
 import { supabase } from "@/lib/supabase";
-import { isNegativeRecord } from "@/lib/classifications";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import RecordTabs from "./RecordTabs";
+import RecordChart from "../RecordChart";
+import { fmtPeriod, fmtVal, higherWins, recordDescription, type TimelineEntry } from "../recordUtils";
 import { notFound } from "next/navigation";
 
 type RankingRow = { manager: string; value: number };
@@ -16,19 +17,6 @@ async function getOwnerRanking(recordKey: string): Promise<RankingRow[] | null> 
     .eq("record_key", recordKey);
   if (!data || data.length === 0) return null;
   return data.map((r) => ({ manager: r.manager_id, value: Number(r.current_value ?? 0) }));
-}
-
-// ============================================================
-// TIMELINE PERIOD FORMATTING
-// ============================================================
-
-function formatPeriod(fromYear: number, fromWeek: number, toYear: number | null, toWeek: number | null, isCurrent: boolean): string {
-  const from = `${fromYear} W${fromWeek}`;
-  const to = toYear && toWeek ? `${toYear} W${toWeek}` : "";
-
-  if (isCurrent) return `seit ${from}`;
-  if (fromYear === toYear && fromWeek === toWeek) return from;
-  return `${from} – ${to}`;
 }
 
 // ============================================================
@@ -61,25 +49,25 @@ export default async function RecordDetailPage({
 }) {
   const { record_key } = await params;
 
-  const [{ data: timeline }, rawRanking] = await Promise.all([
+  const [{ data: timelineRaw }, rawRanking] = await Promise.all([
     supabase
       .from("record_timeline")
-      .select("id, record_label, manager_id, record_value, from_year, from_week, to_year, to_week, is_current, weeks_held")
+      .select("id, period_id, record_key, record_label, manager_id, record_value, from_year, from_week, to_year, to_week, is_current, weeks_held")
       .eq("record_key", record_key)
-      .order("from_year", { ascending: true })
-      .order("from_week", { ascending: true }),
+      .order("period_id", { ascending: true }),
     getOwnerRanking(record_key),
   ]);
 
-  if (!timeline?.length) notFound();
+  if (!timelineRaw?.length) notFound();
+  const timeline = timelineRaw as TimelineEntry[];
 
   const currentHolder = timeline.find((t) => t.is_current);
   const recordLabel = timeline[0]?.record_label ?? record_key;
-  const negative = isNegativeRecord(record_key);
+  const higher = higherWins(record_key, timeline, (rawRanking ?? []).map((r) => ({ current_value: r.value })));
   const isMatchupRecord = MATCHUP_RECORDS.has(record_key);
 
   const ranking = rawRanking
-    ? rawRanking.sort((a, b) => negative ? a.value - b.value : b.value - a.value)
+    ? rawRanking.sort((a, b) => higher ? b.value - a.value : a.value - b.value)
     : null;
 
   // For matchup records, fetch matchup links for timeline entries with specific weeks
@@ -110,28 +98,33 @@ export default async function RecordDetailPage({
       <PageHeader
         title={recordLabel}
         crumbs={[{ label: "Trophy Room", href: "/trophies" }, { label: "Records", href: "/trophies/records" }]}
-        description={
-          <span className="inline-flex flex-wrap items-center gap-2">
-            <span className={`rounded px-2 py-0.5 text-xs font-semibold ${negative ? "bg-accent-red/15 text-negative" : "bg-accent-green/15 text-positive"}`}>
-              {negative ? "Negativer Record" : "Positiver Record"}
-            </span>
-            {isMatchupRecord && (
-              <span className="rounded bg-accent-blue/10 px-2 py-0.5 text-xs font-semibold text-accent-blue">Matchup-Record</span>
-            )}
-          </span>
-        }
+        description={recordDescription(record_key, recordLabel, higher)}
       />
 
       {currentHolder && (
-        <div className="cell p-6 text-center sm:p-8" style={{ borderColor: negative ? "var(--color-accent-red)" : "var(--color-gold-dark)", borderWidth: "1px" }}>
-          <div className="mb-2 text-sm text-text-muted">Aktueller Rekordhalter</div>
-          <div className="display-title text-4xl text-ink sm:text-5xl"><ManagerName id={currentHolder.manager_id} /></div>
-          <div className="mt-2 display-title text-2xl tabular-nums text-ink">{Number(currentHolder.record_value).toFixed(2)}</div>
-          <div className="mt-2 text-sm text-text-muted">
-            {formatPeriod(currentHolder.from_year, currentHolder.from_week, currentHolder.to_year, currentHolder.to_week, true)}, {currentHolder.weeks_held} Wochen
+        <div className="cell-accent grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-end sm:p-6">
+          <div className="min-w-0">
+            <div className="text-sm text-on-accent/70">Aktueller Rekordhalter</div>
+            <div className="display-title text-4xl text-on-accent sm:text-5xl"><ManagerName id={currentHolder.manager_id} /></div>
+          </div>
+          <div className="grid grid-cols-3 gap-x-6 sm:text-right">
+            <div>
+              <div className="text-xs text-on-accent/70">Wert</div>
+              <div className="display-title text-2xl tabular-nums text-on-accent">{fmtVal(Number(currentHolder.record_value))}</div>
+            </div>
+            <div>
+              <div className="text-xs text-on-accent/70">Seit</div>
+              <div className="text-base font-semibold tabular-nums text-on-accent">{fmtPeriod(currentHolder).replace("seit ", "")}</div>
+            </div>
+            <div>
+              <div className="text-xs text-on-accent/70">Wochen</div>
+              <div className="display-title text-2xl tabular-nums text-on-accent">{currentHolder.weeks_held}</div>
+            </div>
           </div>
         </div>
       )}
+
+      <RecordChart periods={timeline} label={recordLabel} />
 
       <RecordTabs
         ranking={ranking ? (
@@ -156,7 +149,7 @@ export default async function RecordDetailPage({
                         {isCurrent && <span className="ml-2 text-xs text-red">Rekord</span>}
                       </td>
                       <td className={`py-3 pl-3 pr-4 text-right tabular-nums sm:pr-5 ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
-                        {Number.isInteger(row.value) ? row.value : row.value.toFixed(2)}
+                        {fmtVal(row.value)}
                       </td>
                     </tr>
                   );
@@ -166,16 +159,16 @@ export default async function RecordDetailPage({
           </div>
         ) : (
           <div className="cell p-6 text-center text-text-muted">
-            Ranking für diesen Record-Typ wird noch implementiert.
+            Für diesen Record gibt es noch keine Rangliste.
           </div>
         )}
-        timeline={
+        history={
           <div className="relative">
             <div className="absolute bottom-0 left-[1.25rem] top-0 w-px bg-border" />
             <div className="space-y-3">
-              {timeline.map((entry) => {
+              {[...timeline].reverse().map((entry) => {
                 const link = matchupLinks[entry.id];
-                const period = formatPeriod(entry.from_year, entry.from_week, entry.to_year, entry.to_week, entry.is_current);
+                const period = fmtPeriod(entry);
                 return (
                   <div key={entry.id} className="relative flex items-start gap-3">
                     <div className={`relative z-10 mt-5 h-3 w-3 shrink-0 rounded-full border-2 ml-3.5 ${
@@ -188,10 +181,10 @@ export default async function RecordDetailPage({
                         <div className="text-xs text-text-muted">{entry.weeks_held} Wochen gehalten</div>
                       </div>
                       <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
-                        <div className="text-lg tabular-nums text-ink">{Number(entry.record_value).toFixed(2)}</div>
+                        <div className="text-lg tabular-nums text-ink">{fmtVal(Number(entry.record_value))}</div>
                         {link && (
                           <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
-                            className="inline-flex items-center gap-0.5 whitespace-nowrap rounded bg-accent-blue/10 px-2 py-1 text-xs text-accent-blue transition-colors hover:bg-accent-blue/20">
+                            className="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded-full bg-surface-2 px-3 text-xs text-text-secondary transition-colors hover:text-ink">
                             Matchup <ChevronRight size={12} />
                           </Link>
                         )}
