@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Barlow_Condensed, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
-const display = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+// Self-hosted (see fonts/README.md), so a build does not depend on Google Fonts
+const display = localFont({
+  src: [
+    { path: "./fonts/barlow-condensed-latin-600.woff2", weight: "600" },
+    { path: "./fonts/barlow-condensed-latin-700.woff2", weight: "700" },
+    { path: "./fonts/barlow-condensed-latin-800.woff2", weight: "800" },
+  ],
   variable: "--font-display",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const inter = localFont({
+  src: "./fonts/inter-latin-variable.woff2",
+  weight: "100 900",
   variable: "--font-inter",
 });
 
