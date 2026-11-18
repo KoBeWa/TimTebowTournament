@@ -458,7 +458,7 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                             <span className={`measured block text-sm ${diffTone(d)}`}>{fmtDiff(d)}</span>
                             <span className="measured block text-[11px] leading-tight text-text-muted">{fmtRecord(p.wins, p.losses, p.ties)}</span>
                           </>
-                        ) : <span className="text-text-faint">n/a</span>}
+                        ) : <span className="text-text-faint">–</span>}
                       </button>
                     </td>
                   );

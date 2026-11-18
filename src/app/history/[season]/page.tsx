@@ -56,29 +56,29 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
   const nextSeason = SEASONS.includes(year + 1) ? year + 1 : null;
 
   const navLink = "btn gap-1";
-  const th = "px-3 py-3 text-xs font-medium text-text-muted";
+  const th = "px-4 py-2.5 text-xs font-medium text-text-muted";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={`Saison ${year}`}
         crumbs={[{ label: "History", href: "/history" }]}
         description={`${seasonInfo.total_managers} Teams, ${seasonInfo.reg_season_weeks} Wochen, ${seasonInfo.playoff_teams} Playoff-Teams`}
       >
         {prevSeason && (
-          <Link href={`/history/${prevSeason}`} className={navLink}><ChevronLeft size={16} /> {prevSeason}</Link>
+          <Link href={`/history/${prevSeason}`} className={navLink}><ChevronLeft size={16} aria-hidden /> {prevSeason}</Link>
         )}
         {nextSeason && (
-          <Link href={`/history/${nextSeason}`} className={navLink}>{nextSeason} <ChevronRight size={16} /></Link>
+          <Link href={`/history/${nextSeason}`} className={navLink}>{nextSeason} <ChevronRight size={16} aria-hidden /></Link>
         )}
       </PageHeader>
 
       {champs && (
-        <div className="cell flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 sm:px-5">
+        <div className="cell-accent flex flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
-            <Crown size={16} className="text-gold" />
+            <Crown size={16} aria-hidden className="text-gold" />
             <span className="text-xs text-text-muted">Champion</span>
-            <ManagerName id={champs.champion} className="font-semibold text-ink" />
+            <ManagerName id={champs.champion} className="font-medium text-ink" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-text-muted">Runner-up</span>
@@ -93,7 +93,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
 
       <section>
         <h2 className="section-title text-ink">Regular Season</h2>
-        <p className="mb-3 mt-1 text-xs text-text-muted">
+        <p className="mb-4 mt-1 text-xs text-text-muted">
           Score von 0 bis 100: All Play 35 %, Bilanz 25 %, Punkte im Saisonvergleich 15 %, Endplatzierung 25 %
           {finalRank.size === 0 ? " (laufende Saison: aktueller Tabellenplatz)" : ""}.
         </p>
@@ -101,7 +101,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className={`${th} w-10 pl-4 text-left sm:pl-5`}>#</th>
+                <th className={`${th} w-10 text-left`}>#</th>
                 <th className={`${th} text-left`}>Manager</th>
                 <th className={`${th} text-center`}>Bilanz</th>
                 <th className={`${th} hidden text-center md:table-cell`} title="Bilanz, wenn man jede Woche gegen alle gespielt hätte">All Play</th>
@@ -111,7 +111,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                 <th className={`${th} hidden text-right lg:table-cell`}>Max PF</th>
                 <th className={`${th} hidden text-right lg:table-cell`}>Efficiency</th>
                 <th className={`${th} hidden text-center md:table-cell`} title="Endplatzierung">Final</th>
-                <th className={`${th} pr-4 text-right sm:pr-5`} title="All Play 35 %, Bilanz 25 %, Punkte 15 %, Platzierung 25 %">Score</th>
+                <th className={`${th} text-right`} title="All Play 35 %, Bilanz 25 %, Punkte 15 %, Platzierung 25 %">Score</th>
               </tr>
             </thead>
             <tbody>
@@ -120,34 +120,34 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                 const lk = luck.get(r.manager_id);
                 return (
                   <tr key={r.manager_id} className="border-t border-border-light">
-                    <td className="py-3 pl-4 pr-2 tabular-nums text-text-muted sm:pl-5">{r.reg_rank === 1 ? "★" : r.reg_rank}</td>
-                    <td className="px-3 py-3 font-medium text-ink"><ManagerName id={r.manager_id} /></td>
-                    <td className="whitespace-nowrap px-3 py-3 text-center tabular-nums">
+                    <td className={`measured px-4 py-2.5 ${r.reg_rank === 1 ? "text-gold" : "text-text-muted"}`}>{r.reg_rank}</td>
+                    <td className="px-4 py-2.5 font-medium text-ink"><ManagerName id={r.manager_id} /></td>
+                    <td className="measured whitespace-nowrap px-4 py-2.5 text-center">
                       <span className="win">{r.wins}</span>
-                      <span className="text-text-muted">-</span>
+                      <span className="text-text-muted">–</span>
                       <span className="loss">{r.losses}</span>
-                      {r.ties > 0 && <><span className="text-text-muted">-</span><span className="tie">{r.ties}</span></>}
+                      {r.ties > 0 && <><span className="text-text-muted">–</span><span className="tie">{r.ties}</span></>}
                     </td>
-                    <td className="hidden whitespace-nowrap px-3 py-3 text-center tabular-nums text-text-secondary md:table-cell">
-                      {ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
-                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "—"}
+                    <td className="hidden measured whitespace-nowrap px-4 py-2.5 text-center text-text-secondary md:table-cell">
+                      {ap ? <>{ap.ap_wins}–{ap.ap_losses}{ap.ap_ties ? `–${ap.ap_ties}` : ""}
+                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "–"}
                     </td>
-                    <td className={`hidden px-3 py-3 text-right tabular-nums md:table-cell ${(lk ?? 0) > 0 ? "text-positive" : (lk ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
-                      {lk !== undefined ? `${lk > 0 ? "+" : ""}${lk.toFixed(1)}` : "—"}
+                    <td className={`measured hidden px-4 py-2.5 text-right md:table-cell ${(lk ?? 0) > 0 ? "text-positive" : (lk ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
+                      {lk !== undefined ? `${lk > 0 ? "+" : ""}${lk.toFixed(1)}` : "–"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums">{Number(r.points_for).toFixed(1)}</td>
-                    <td className="hidden px-3 py-3 text-right tabular-nums text-text-secondary md:table-cell">{Number(r.points_against).toFixed(1)}</td>
-                    <td className="hidden px-3 py-3 text-right tabular-nums text-text-secondary lg:table-cell">
-                      {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "—"}
+                    <td className="measured px-4 py-2.5 text-right">{Number(r.points_for).toFixed(1)}</td>
+                    <td className="measured hidden px-4 py-2.5 text-right text-text-secondary md:table-cell">{Number(r.points_against).toFixed(1)}</td>
+                    <td className="measured hidden px-4 py-2.5 text-right text-text-secondary lg:table-cell">
+                      {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "–"}
                     </td>
-                    <td className="hidden px-3 py-3 text-right tabular-nums lg:table-cell">
-                      {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "—"}
+                    <td className="measured hidden px-4 py-2.5 text-right lg:table-cell">
+                      {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "–"}
                     </td>
-                    <td className="hidden px-3 py-3 text-center tabular-nums text-text-secondary md:table-cell">
-                      {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "—"}
+                    <td className="measured hidden px-4 py-2.5 text-center text-text-secondary md:table-cell">
+                      {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "–"}
                     </td>
-                    <td className="px-3 py-3 pr-4 text-right sm:pr-5">
-                      <span className="inline-block min-w-[2.5rem] rounded-md bg-surface-3 px-2 py-0.5 text-center font-semibold tabular-nums text-ink">
+                    <td className="px-3 py-3 text-right">
+                      <span className="measured inline-block min-w-[2.5rem] rounded-[var(--radius-pill)] bg-surface-3 px-2 py-0.5 text-center font-medium text-ink">
                         {scores[r.manager_id]}
                       </span>
                     </td>
@@ -160,17 +160,17 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
       </section>
 
       <section>
-        <h2 className="section-title mb-3 text-ink">Playoffs</h2>
+        <h2 className="section-title mb-4 text-ink">Playoffs</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {playoffs.slice(0, 4).map((p) => (
-            <div key={p.manager_id} className="cell p-3">
+            <div key={p.manager_id} className="cell p-4">
               <div className="text-xs text-text-muted">
                 {p.final_rank === 1 ? "Champion" : p.final_rank === 2 ? "Runner-up" : p.final_rank === 3 ? "Platz 3" : "Platz 4"}
               </div>
-              <div className={`mt-0.5 text-base font-semibold ${p.final_rank === 1 ? "text-red" : "text-ink"}`}>
+              <div className={`mt-0.5 text-base font-medium ${p.final_rank === 1 ? "text-red" : "text-ink"}`}>
                 <ManagerName id={p.manager_id} plain />
               </div>
-              <div className="mt-1 text-xs tabular-nums text-text-muted">
+              <div className="measured mt-1 text-xs text-text-muted">
                 Seed {p.seed}, {Number(p.week15_pts).toFixed(1)} + {Number(p.week16_pts).toFixed(1)} Pkt.
               </div>
             </div>

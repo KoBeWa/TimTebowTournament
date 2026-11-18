@@ -75,7 +75,7 @@ export default async function HistoryPage() {
   );
 
   const seasonList = (
-    <div className="space-y-2">
+    <div className="cell divide-y divide-border-light">
       {seasons.map((s) => {
         const topThree = (resultsBySeason[s.year] ?? []).slice(0, 3);
 
@@ -83,19 +83,19 @@ export default async function HistoryPage() {
           <Link
             key={s.year}
             href={`/history/${s.year}`}
-            className="cell-hover group flex items-center justify-between gap-4 px-4 py-4 sm:px-5"
+            className="group flex min-h-11 items-center justify-between gap-4 px-4 py-3 hover:bg-surface-2 sm:px-5"
           >
             <div className="flex items-center gap-4 sm:gap-6">
-              <div className="display-title text-3xl text-text-muted transition-colors group-hover:text-ink sm:text-4xl">
+              <div className="measured text-2xl text-text-muted group-hover:text-ink">
                 {s.year}
               </div>
               <div>
-                <div className="flex items-center gap-2 text-base font-semibold text-ink">
+                <div className="flex items-center gap-2 text-base font-medium text-ink">
                   {s.champion === "—" ? (
                     <span className="text-text-muted">Saison läuft</span>
                   ) : (
                     <>
-                      <Crown size={16} className="text-gold" />
+                      <Crown size={16} aria-hidden className="text-gold" />
                       <ManagerName id={s.champion} plain />
                     </>
                   )}
@@ -108,13 +108,13 @@ export default async function HistoryPage() {
             <div className="ml-auto hidden gap-6 text-sm text-text-secondary sm:flex">
               {topThree.map((r: (typeof results)[number], i: number) => (
                 <div key={r.manager_id} className="text-center" title="Platzierung Regular Season">
-                  <div className="mb-0.5 text-xs text-text-faint">{i + 1}.</div>
+                  <div className="measured mb-0.5 text-xs text-text-faint">{i + 1}.</div>
                   <ManagerName id={r.manager_id} plain className="text-sm text-ink" />
-                  <div className="text-xs tabular-nums text-text-muted">{r.wins}–{r.losses}</div>
+                  <div className="measured text-xs text-text-muted">{r.wins}–{r.losses}</div>
                 </div>
               ))}
             </div>
-            <ChevronRight size={20} className="shrink-0 text-text-faint transition-colors group-hover:text-ink" />
+            <ChevronRight size={20} aria-hidden className="shrink-0 text-text-faint group-hover:text-ink" />
           </Link>
         );
       })}

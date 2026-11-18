@@ -21,7 +21,7 @@ export default function PlayoffTabs({ odds, trend, games, season }: {
   const [tab, setTab] = useState<Key>("path");
   return (
     <div>
-      <div className="mb-5"><Tabs tabs={TABS} value={tab} onChange={setTab} label="Ansicht" /></div>
+      <div className="mb-8"><Tabs tabs={TABS} value={tab} onChange={setTab} label="Ansicht" /></div>
       {tab === "path" && <PathToPlayoffs odds={odds} games={games} />}
       {tab === "trend" && <OddsTrend trend={trend} season={season} />}
       {tab === "schedule" && <ScheduleMatrix odds={odds} games={games} />}

@@ -104,13 +104,13 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
   const lastSeg = segs[segs.length - 1];
 
   return (
-    <div className="cell p-3 sm:p-4">
+    <div className="cell p-4 sm:p-5">
       <div className="mb-1 flex flex-wrap gap-x-4 gap-y-0 px-1">
         {legend.map(([id, weeks]) => (
           <span key={id} className="flex min-h-8 items-center gap-1.5 text-xs text-text-secondary">
             <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colorOf(id) }} />
             {id}
-            <span className="tabular-nums text-text-faint">{weeks} Wo.</span>
+            <span className="measured text-text-faint">{weeks} Wo.</span>
           </span>
         ))}
       </div>
@@ -121,14 +121,14 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
           {sc.ticks.map((t) => (
             <g key={t}>
               <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-border-light)" strokeWidth={1} />
-              <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)">{fmtVal(t)}</text>
+              <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)" style={{ fontFamily: "var(--font-outlier)" }}>{fmtVal(t)}</text>
             </g>
           ))}
           {years.map((yr, k) => (
             <g key={yr}>
               <line x1={x(idx(yr, 1))} x2={x(idx(yr, 1))} y1={PAD.t} y2={plotBottom} stroke="var(--color-border-light)" strokeDasharray="2 4" />
               {k % labelEvery === 0 && (
-                <text x={x(idx(yr, 1))} y={H - 8} fontSize={11} fill="var(--color-text-faint)" textAnchor="middle">
+                <text x={x(idx(yr, 1))} y={H - 8} fontSize={11} fill="var(--color-text-faint)" textAnchor="middle" style={{ fontFamily: "var(--font-outlier)" }}>
                   {W < 500 ? `'${String(yr).slice(2)}` : yr}
                 </text>
               )}
@@ -158,14 +158,14 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
           {/* holder ribbon */}
           {rows.map((r, i) => (
             <g key={`r${i}`} tabIndex={0} role="button" aria-label={`${r.manager_id}, ${fmtVal(Number(r.record_value))}, ${fmtPeriod(r)}, ${r.weeks_held} Wochen`}
-              className="cursor-pointer outline-none" {...pick(i)}>
+              className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--color-focus)]" {...pick(i)}>
               <rect x={ribbon[i].x} y={ribbonTop} width={Math.max(ribbon[i].w - 1, 1)} height={RIBBON_H} rx={3}
                 fill={colorOf(r.manager_id)} opacity={dim(i)}
                 stroke={active === i ? "var(--color-ink)" : "none"} strokeWidth={2}
                 className="transition-opacity duration-150 motion-reduce:transition-none" />
               {ribbon[i].w > 44 && (
                 <text x={ribbon[i].x + ribbon[i].w / 2} y={ribbonTop + RIBBON_H / 2} textAnchor="middle" dominantBaseline="middle"
-                  fontSize={11} fontWeight={600} fill="#111" opacity={dim(i)} pointerEvents="none">
+                  fontSize={11} fontWeight={600} fill="var(--color-on-accent)" opacity={dim(i)} pointerEvents="none">
                   {ribbon[i].w > 90 ? r.manager_id : r.manager_id.slice(0, 3)}
                 </text>
               )}
@@ -176,12 +176,12 @@ export default function RecordChart({ periods, label }: { periods: TimelineEntry
 
         {a && (
           <div className={`pointer-events-none rounded-lg border border-border bg-solid px-3 py-2 text-xs ${
-            W < 500 ? "mt-2" : "absolute top-2 z-10 min-w-[11rem] shadow-lg"}`}
+            W < 500 ? "mt-2" : "absolute top-2 z-10 min-w-[11rem]"}`}
             style={W < 500 ? undefined : aCenter > 55 ? { right: `${100 - aCenter + 2}%` } : { left: `${aCenter + 2}%` }}>
             <div className="flex items-center gap-1.5 font-medium text-ink">
               <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: colorOf(a.r.manager_id) }} />
               {a.r.manager_id}
-              <span className="ml-auto pl-4 tabular-nums">{fmtVal(a.v)}</span>
+              <span className="measured ml-auto pl-4">{fmtVal(a.v)}</span>
             </div>
             {running && <div className="text-text-faint">Stand am Ende der Phase</div>}
             <div className="mt-1 text-text-muted">{fmtPeriod(a.r)}</div>

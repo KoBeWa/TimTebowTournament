@@ -3,6 +3,7 @@
  * axes: dark/grotesk-sans/chromatic-amber · posture: restrained · contrast: pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P2 H2 E2 S2 R2 V2 · weakest: S, eight manager colours are a data palette (chart series and a 3px name marker), never a fill or a signal */
 /* Hallmark · waive 2a-like: manager colours are categorical data colours, required to tell eight series apart in charts */
+/* Hallmark · waive 19: an en dash inside a record (7–3) or alone in a table cell for no value is a figure, not sentence punctuation */
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css" layer(base);

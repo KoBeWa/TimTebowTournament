@@ -17,10 +17,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 // Medal keys shown separately at the top
-const MEDAL_KEYS: Record<string, { icon: string; label: string; rank: number }> = {
-  champion:    { icon: "🥇", label: "Champion",   rank: 1 },
-  runner_up:   { icon: "🥈", label: "Runner Up",  rank: 2 },
-  third_place: { icon: "🥉", label: "3rd Place",  rank: 3 },
+const MEDAL_KEYS: Record<string, { label: string; rank: number }> = {
+  champion:    { label: "Champion",   rank: 1 },
+  runner_up:   { label: "Runner Up",  rank: 2 },
+  third_place: { label: "3rd Place",  rank: 3 },
 };
 
 interface Achievement {
@@ -99,10 +99,10 @@ export default async function ManagerTrophyPage({
     .map(([key, items]) => toCard(key, items));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={<span className="inline-flex items-center gap-3">
-          <span aria-hidden className="inline-block h-8 w-1.5 rounded-full sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
+          <span aria-hidden className="inline-block h-8 w-1.5 rounded-sm sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
           {name}
         </span>}
         description={`Trophy Room: ${positive.length} Achievements, ${blunders.length} Blunders, ${achievements.length} Badges gesamt`}
@@ -114,7 +114,7 @@ export default async function ManagerTrophyPage({
       <TrophyTabs
         medals={medals.map((m) => {
           const medal = MEDAL_KEYS[m.achievement_key];
-          return { icon: medal.icon, label: medal.label, rank: medal.rank, year: m.season_year };
+          return { label: medal.label, rank: medal.rank, year: m.season_year };
         })}
         categories={categories}
         blunders={blunderCards}

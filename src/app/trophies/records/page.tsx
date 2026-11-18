@@ -44,7 +44,7 @@ export default async function RecordsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-8">
       <PageHeader
         title="Records"
         crumbs={[{ label: "Trophy Room", href: "/trophies" }]}

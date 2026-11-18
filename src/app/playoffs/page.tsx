@@ -58,13 +58,13 @@ export default async function PlayoffsPage() {
   const sims = odds[0].sims.toLocaleString("de-DE");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader title="Playoff-Chancen" description={`Stand nach Woche ${week}, berechnet aus ${sims} simulierten Saisonverläufen.`} />
       <OddsTable rows={odds} previous={previous} />
       <PlayoffTabs odds={odds} trend={trend} games={games} season={CURRENT_SEASON} />
       <details className="cell group">
-        <summary className="flex min-h-11 cursor-pointer items-center px-5 text-sm font-medium text-text-secondary hover:text-ink">So wird gerechnet</summary>
-        <div className="space-y-2 px-5 pb-5 text-sm text-text-muted">
+        <summary className="flex min-h-11 cursor-pointer items-center px-4 py-3 text-sm font-medium text-text-secondary hover:text-ink sm:px-5">So wird gerechnet</summary>
+        <div className="space-y-2 px-4 pb-5 pt-1 text-sm text-text-muted sm:px-5">
           <p>Die Restsaison wird {sims}-mal durchgespielt. In jeder Woche bekommt jedes Team eine zufällige Punktzahl um seinen Erwartungswert.</p>
           <p>Der Erwartungswert mischt die Projektion von Sleeper für die bestmögliche Aufstellung mit dem Saisonschnitt des Teams. Byes und Verletzte zählen dabei als 0 Punkte.</p>
           <p>Die Tabelle wird nach Siegen sortiert, bei Gleichstand nach Punkten. Die ersten vier Teams erreichen die Playoffs, das letzte bekommt den Sacko.</p>
