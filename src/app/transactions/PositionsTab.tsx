@@ -31,11 +31,11 @@ export default function PositionsTab({ filtFatx }: { filtFatx: FaTxRow[] }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Hinzugefügt" value={cur.totalAdded} />
         <StatTile label="Bester Add"
-          value={cur.topAdd ? fmt(cur.topAdd.item_value) : "—"}
+          value={cur.topAdd ? fmt(cur.topAdd.item_value) : "–"}
           hint={cur.topAdd ? `${cur.topAdd.player_name}, ${cur.topAdd.team_name} ${cur.topAdd.season_year}` : undefined} />
         <StatTile label="Gedroppt" value={cur.totalDropped} />
         <StatTile label="Schlechtester Drop"
-          value={cur.worstDrop ? fmt(cur.worstDrop.item_value) : "—"}
+          value={cur.worstDrop ? fmt(cur.worstDrop.item_value) : "–"}
           tone={cur.worstDrop ? "negative" : undefined}
           hint={cur.worstDrop ? `${cur.worstDrop.player_name}, ${cur.worstDrop.team_name} ${cur.worstDrop.season_year}` : undefined} />
       </div>

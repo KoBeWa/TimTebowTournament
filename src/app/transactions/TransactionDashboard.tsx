@@ -18,7 +18,7 @@ export type { VTxRow, FaTxRow };
 
 type TabKey = "overview" | "rankings" | "moves" | "positions" | "players" | "log";
 
-const SELECT = "rounded-full border border-border bg-surface px-3 py-2 text-sm text-ink";
+const SELECT = "rounded-[var(--radius-pill)] border border-border bg-paper-3 px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]";
 
 export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fatx: FaTxRow[] }) {
   const [season, setSeason] = useState<number | "all">("all");
@@ -100,10 +100,10 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
   }, [vtx, owner, season, ownerFiltered, seasonFiltered]);
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader title="Transactions" description="Waiver-Moves und Trades mit Wertanalyse" />
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
           <label className="flex flex-col gap-1 text-xs text-text-muted">
             Saison
@@ -121,11 +121,11 @@ export default function TransactionDashboard({ vtx, fatx }: { vtx: VTxRow[]; fat
             </select>
           </label>
           {isFiltered && (
-            <button type="button" className="btn" onClick={resetFilters}>Filter zurücksetzen</button>
+            <button type="button" className="btn disabled:opacity-55 disabled:cursor-not-allowed" onClick={resetFilters}>Filter zurücksetzen</button>
           )}
           {seasonFiltered && (
-            <Link href={`/transactions/${season}`} className="ml-auto inline-flex min-h-11 items-center gap-1 px-3 text-sm text-text-muted transition-colors hover:text-ink">
-              Ganze Saison {season} ansehen <ChevronRight size={15} />
+            <Link href={`/transactions/${season}`} className="ml-auto inline-flex min-h-11 items-center gap-1 px-3 text-sm text-text-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]">
+              Ganze Saison {season} ansehen <ChevronRight size={15} aria-hidden="true" />
             </Link>
           )}
         </div>

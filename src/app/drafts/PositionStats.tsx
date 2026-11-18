@@ -41,7 +41,7 @@ const TH = "py-2.5 text-xs font-medium text-text-muted";
 function PickTable({ title, rows, tone }: { title: string; rows: PositionPickRow[]; tone: "positive" | "negative" }) {
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold text-ink">{title}</h3>
+      <h3 className="mb-2 text-base font-medium text-ink">{title}</h3>
       <div className="cell overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -55,15 +55,15 @@ function PickTable({ title, rows, tone }: { title: string; rows: PositionPickRow
           <tbody>
             {rows.map((p, i) => (
               <tr key={`${p.season_year}-${p.overall_pick}`} className="border-t border-border-light">
-                <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+                <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
                 <td className="px-2 py-2.5">
                   <div className="font-medium text-ink">{p.player_name}</div>
                   <div className="flex items-center gap-1.5 text-xs text-text-muted">
-                    <ManagerName id={p.manager_id} /> <span>{p.season_year}</span>
+                    <ManagerName id={p.manager_id} /> <span className="measured">{p.season_year}</span>
                   </div>
                 </td>
-                <td className="px-2 py-2.5 text-right tabular-nums text-text-muted">#{p.overall_pick}</td>
-                <td className={`py-2.5 pl-2 pr-4 text-right font-semibold tabular-nums sm:pr-5 ${tone === "positive" ? "text-positive" : "text-negative"}`}>
+                <td className="px-2 py-2.5 text-right measured text-text-muted">#{p.overall_pick}</td>
+                <td className={`py-2.5 pl-2 pr-4 text-right font-semibold measured sm:pr-5 ${tone === "positive" ? "text-positive" : "text-negative"}`}>
                   {sign(p.grade4)}
                 </td>
               </tr>
@@ -82,7 +82,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
   if (!current) return null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="section-title text-ink">{POS_LABEL[pos] ?? pos}</h2>
         <Tabs tabs={POSITION_TABS} value={pos} onChange={setPos} label="Position" />
@@ -90,7 +90,7 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-ink">Owner-Ranking</h3>
+          <h3 className="mb-2 text-base font-medium text-ink">Owner-Ranking</h3>
           <div className="cell overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -104,12 +104,12 @@ export default function PositionStats({ data }: { data: PositionData[] }) {
               <tbody>
                 {current.ownerRankings.map((o, i) => (
                   <tr key={o.id} className="border-t border-border-light">
-                    <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+                    <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
                     <td className="px-2 py-2.5 font-medium text-ink"><ManagerName id={o.id} /></td>
-                    <td className={`px-2 py-2.5 text-right font-semibold tabular-nums ${o.avgGrade >= 0 ? "text-positive" : "text-negative"}`}>
+                    <td className={`px-2 py-2.5 text-right font-semibold measured ${o.avgGrade >= 0 ? "text-positive" : "text-negative"}`}>
                       {sign(o.avgGrade)}
                     </td>
-                    <td className="py-2.5 pl-2 pr-4 text-right tabular-nums text-text-muted sm:pr-5">{o.picks}</td>
+                    <td className="py-2.5 pl-2 pr-4 text-right measured text-text-muted sm:pr-5">{o.picks}</td>
                   </tr>
                 ))}
               </tbody>

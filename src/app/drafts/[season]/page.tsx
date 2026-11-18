@@ -20,7 +20,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
   const rounds = [...new Set(picks.map((p) => p.round))].sort((a, b) => a - b);
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader
         title={`Draft ${season}`}
         description={`${picks.length} Picks, ${rounds.length} Runden`}
@@ -47,19 +47,19 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
                   <tbody>
                     {roundPicks.map((p) => (
                       <tr key={p.overall_pick} className="border-t border-border-light">
-                        <td className="py-2.5 pl-4 pr-3 tabular-nums text-text-muted sm:pl-5">{round}.{String(p.overall_pick - (round - 1) * 8).padStart(2, "0")}</td>
+                        <td className="py-2.5 pl-4 pr-3 measured text-ink sm:pl-5">{round}.{String(p.overall_pick - (round - 1) * 8).padStart(2, "0")}</td>
                         <td className="py-2.5 pr-3 font-medium text-ink">{p.player_name}</td>
-                        <td className="py-2.5 pr-3 font-semibold text-red">{p.position}</td>
+                        <td className="py-2.5 pr-3 text-text-secondary">{p.position}</td>
                         <td className="py-2.5 pr-3 text-ink"><ManagerName id={p.manager_id} /></td>
-                        <td className="hidden py-2.5 pr-3 text-right tabular-nums md:table-cell">
+                        <td className="hidden py-2.5 pr-3 text-right measured md:table-cell">
                           {p.vorp != null ? (
                             <span className={Number(p.vorp) > 0 ? "text-positive" : Number(p.vorp) < 0 ? "text-negative" : "text-text-muted"}>
                               {Number(p.vorp) > 0 ? "+" : ""}{Number(p.vorp).toFixed(1)}
                             </span>
-                          ) : "—"}
+                          ) : "–"}
                         </td>
-                        <td className="py-2.5 pl-3 pr-4 text-right tabular-nums text-text-secondary sm:pr-5">
-                          {p.grade4 != null ? Number(p.grade4).toFixed(1) : "—"}
+                        <td className="py-2.5 pl-3 pr-4 text-right measured text-text-secondary sm:pr-5">
+                          {p.grade4 != null ? Number(p.grade4).toFixed(1) : "–"}
                         </td>
                       </tr>
                     ))}

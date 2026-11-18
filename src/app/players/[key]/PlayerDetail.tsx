@@ -66,7 +66,7 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
         <p className="text-sm text-text-secondary">Der Spieler konnte nicht geladen werden.</p>
         <button
           type="button"
-          className="btn"
+          className="btn disabled:opacity-55 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
           onClick={() => { setError(false); setLoading(true); setAttempt((n) => n + 1); }}
         >
           Erneut versuchen
@@ -76,13 +76,13 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
   }
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6" aria-busy="true">
-        <div className="h-10 w-1/2 rounded-lg bg-surface-3" />
-        <div className="cell h-32 bg-surface-2" />
+      <div className="animate-pulse motion-reduce:animate-none space-y-8" aria-busy="true">
+        <div className="h-10 w-1/2 rounded-lg bg-paper-3" />
+        <div className="cell h-32" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {Array.from({ length: 4 }, (_, i) => <div key={i} className="cell h-20 bg-surface-2" />)}
+          {Array.from({ length: 4 }, (_, i) => <div key={i} className="cell h-20" />)}
         </div>
-        <div className="cell h-56 bg-surface-2" />
+        <div className="cell h-56" />
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
     return (
       <div className="cell flex flex-col items-start gap-3 p-5">
         <p className="text-sm text-text-secondary">Diesen Spieler gibt es nicht.</p>
-        <Link href="/players" className="btn">Zur Spieler-Datenbank</Link>
+        <Link href="/players" className="btn focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]">Zur Spieler-Datenbank</Link>
       </div>
     );
   }
@@ -122,10 +122,10 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
   ].filter(Boolean).join(", ");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader title={summary.player_name} description={descr} crumbs={[{ label: "Spieler", href: "/players" }]} />
 
-      <div className="cell flex flex-col items-start gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+      <div className="cell-accent flex flex-col items-start gap-5 p-4 sm:flex-row sm:items-center sm:p-5">
         <PlayerAvatar p={summary} size={80} />
         <div className="min-w-0 flex-1 space-y-3">
           {summary.top_manager && (
@@ -137,7 +137,7 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
             {facts.map((f) => (
               <div key={f.label} title={f.hint}>
                 <dt className="text-xs text-text-muted">{f.label}</dt>
-                <dd className="font-semibold tabular-nums text-ink">{f.value}</dd>
+                <dd className="measured text-lg text-ink">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -174,18 +174,18 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
                   <td className="py-2.5 pl-4 pr-3 text-left font-medium sm:pl-5"><ManagerName id={m.manager_id} /></td>
                   <td className="hidden px-3 py-2.5 md:table-cell">
                     <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-3">
+                      <div className="h-2 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-paper-3">
                         <div className="h-full" style={{ width: `${(m.weeks_rostered / maxWeeks) * 100}%`, backgroundColor: MANAGER_COLORS[m.manager_id] }} />
                       </div>
-                      <span className="w-8 text-right tabular-nums">{m.weeks_rostered}</span>
+                      <span className="measured w-8 text-right">{m.weeks_rostered}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 tabular-nums md:hidden">{m.weeks_rostered}</td>
-                  <td className="px-3 py-2.5 tabular-nums">{m.starts}</td>
-                  <td className="px-3 py-2.5 tabular-nums text-ink">{fmt(m.starter_points)}</td>
-                  <td className="hidden px-3 py-2.5 tabular-nums md:table-cell">{fmt(m.avg_start)}</td>
-                  <td className="hidden px-3 py-2.5 tabular-nums md:table-cell">{fmt(m.best_start)}</td>
-                  <td className="hidden py-2.5 pl-3 pr-4 tabular-nums text-text-muted sm:pr-5 md:table-cell">
+                  <td className="px-3 py-2.5 measured md:hidden">{m.weeks_rostered}</td>
+                  <td className="px-3 py-2.5 measured">{m.starts}</td>
+                  <td className="px-3 py-2.5 measured text-ink">{fmt(m.starter_points)}</td>
+                  <td className="hidden px-3 py-2.5 measured md:table-cell">{fmt(m.avg_start)}</td>
+                  <td className="hidden px-3 py-2.5 measured md:table-cell">{fmt(m.best_start)}</td>
+                  <td className="hidden py-2.5 pl-3 pr-4 measured text-text-muted sm:pr-5 md:table-cell">
                     {m.first_season === m.last_season ? m.first_season : `${m.first_season}–${m.last_season}`}
                   </td>
                 </tr>
@@ -196,10 +196,10 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
       ) : <p className="py-8 text-center text-text-muted">Keine Manager-Daten.</p>)}
 
       {tab === "seasons" && (
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+        <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
           <section>
             <h2 className="section-title text-ink mb-4">Historie</h2>
-            <div className="space-y-5">
+            <div className="space-y-6">
               {seasons.map(({ season, items }) => (
                 <div key={season}>
                   <h3 className="mb-2 text-sm font-medium text-text-muted">{season}</h3>
@@ -208,12 +208,12 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
                       <li key={i} className="flex items-start gap-3 px-4 py-2.5 text-sm">
                         {it.type === "event" ? <EventRow e={it.event} /> : (
                           <>
-                            <Users size={16} className="mt-0.5 text-text-faint shrink-0" />
+                            <Users size={16} aria-hidden="true" className="mt-0.5 text-text-faint shrink-0" />
                             <span className="flex-1 text-text-muted">
                               Im Kader bei <b className="font-medium text-ink">{it.stint.manager_id}</b>
                               , W{it.stint.from}{it.stint.to !== it.stint.from ? `–${it.stint.to}` : ""}
                             </span>
-                            <span className="text-xs text-text-muted whitespace-nowrap">
+                            <span className="measured text-xs text-text-muted whitespace-nowrap">
                               {it.stint.starts}/{it.stint.weeks} Starts, {fmt(it.stint.points)} Pkt
                             </span>
                           </>
@@ -234,9 +234,9 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
                   <tbody>
                     {bySeason.map((s) => (
                       <tr key={s.season} className="border-b border-border-light last:border-0">
-                        <td className="py-1.5 text-text-muted">{s.season}</td>
+                        <td className="measured py-1.5 text-text-muted">{s.season}</td>
                         <td className="py-1.5 text-text-muted">{s.managers.join(", ")}</td>
-                        <td className="py-1.5 text-right tabular-nums text-ink" title={`${s.starts} Starts, Ø ${fmt(s.avg)}`}>
+                        <td className="measured py-1.5 text-right text-ink" title={`${s.starts} Starts, Ø ${fmt(s.avg)}`}>
                           {fmt(s.points)}
                         </td>
                       </tr>
@@ -262,9 +262,9 @@ export default function PlayerDetail({ playerKey, initial }: { playerKey: string
             <tbody>
               {bestGames.map((g) => (
                 <tr key={`${g.season_year}-${g.week}`} className="border-t border-border-light">
-                  <td className="py-2.5 pl-4 pr-3 text-text-muted sm:pl-5">{g.season_year} W{g.week}</td>
+                  <td className="measured py-2.5 pl-4 pr-3 text-text-muted sm:pl-5">{g.season_year} W{g.week}</td>
                   <td className="px-3 py-2.5"><ManagerName id={g.manager_id} /></td>
-                  <td className="py-2.5 pl-3 pr-4 text-right tabular-nums text-ink sm:pr-5">{fmt(g.points)}</td>
+                  <td className="py-2.5 pl-3 pr-4 text-right measured text-ink sm:pr-5">{fmt(g.points)}</td>
                 </tr>
               ))}
             </tbody>
@@ -281,16 +281,16 @@ function EventRow({ e }: { e: PlayerEvent }) {
     draft: { icon: ListOrdered, text: <>Gedraftet von <b className="text-ink font-medium">{e.manager_id}</b>, Runde {e.round}, Pick {e.overall_pick}</>, cls: "text-gold" },
     add: { icon: LogIn, text: <>Geholt von <b className="text-ink font-medium">{e.manager_id}</b> (Waiver/FA){week}</>, cls: "text-positive" },
     drop: { icon: LogOut, text: <>Entlassen von <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-negative" },
-    trade_in: { icon: ArrowLeftRight, text: <>Per Trade zu <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-accent-blue" },
-    trade_out: { icon: ArrowLeftRight, text: <>Per Trade abgegeben von <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-accent-blue" },
+    trade_in: { icon: ArrowLeftRight, text: <>Per Trade zu <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-text-muted" },
+    trade_out: { icon: ArrowLeftRight, text: <>Per Trade abgegeben von <b className="text-ink font-medium">{e.manager_id}</b>{week}</>, cls: "text-text-muted" },
   }[e.kind];
   const Icon = map.icon;
   return (
     <>
-      <Icon size={16} className={`mt-0.5 shrink-0 ${map.cls}`} />
+      <Icon size={16} aria-hidden="true" className={`mt-0.5 shrink-0 ${map.cls}`} />
       <span className="flex-1 text-text-muted">{map.text}</span>
       {e.kind === "draft" && e.value != null && (
-        <span className="text-xs text-text-muted whitespace-nowrap" title="Draft-Note (Grade4)">Note {fmt(e.value, 2)}</span>
+        <span className="measured text-xs text-text-muted whitespace-nowrap" title="Draft-Note (Grade4)">Note {fmt(e.value, 2)}</span>
       )}
     </>
   );
