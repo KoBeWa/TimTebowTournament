@@ -108,12 +108,12 @@ export default function RecordRaceChart({ history, label, higher }: { history: R
     .filter((r): r is { m: string; v: number } => r.v != null)
     .sort((a, b) => (higher ? b.v - a.v : a.v - b.v));
   const hx = hover != null ? (x(hover) / W) * 100 : 0;
-  const lineOpacity = (m: string) => (focus && focus !== m ? 0.12 : 0.45);
+  const lineOpacity = (m: string) => (focus && focus !== m ? 0.1 : 0.28);
   const heldOpacity = (m: string) => (focus && focus !== m ? 0.2 : 1);
 
   return (
     <div className="cell p-4 sm:p-5">
-      <div className="mb-1 grid grid-cols-4 gap-x-1 sm:flex sm:flex-wrap">
+      <div className="mb-1 grid grid-cols-3 gap-x-1 sm:flex sm:flex-wrap">
         {managers.map((m) => {
           const on = focus === m;
           return (
@@ -121,7 +121,7 @@ export default function RecordRaceChart({ history, label, higher }: { history: R
               className={`flex min-h-11 min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] px-1.5 text-xs sm:px-2 transition-colors md:min-h-8 ${
                 on ? "bg-surface-3 text-ink" : focus ? "text-text-faint hover:text-text-secondary" : "text-text-secondary hover:text-ink"}`}>
               <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colorOf(m) }} />
-              <span className="truncate">{m}</span>
+              <span>{m}</span>
               {(heldWeeks.get(m) ?? 0) > 0 && <span className="measured hidden text-text-faint sm:inline">{heldWeeks.get(m)} Wo.</span>}
             </button>
           );
@@ -153,7 +153,7 @@ export default function RecordRaceChart({ history, label, higher }: { history: R
 
           {/* every manager, thin */}
           {managers.map((m) => (
-            <path key={`l${m}`} d={linePath(series[m], x, y)} fill="none" stroke={colorOf(m)} strokeWidth={focus === m ? 2.5 : 1.5}
+            <path key={`l${m}`} d={linePath(series[m], x, y)} fill="none" stroke={colorOf(m)} strokeWidth={focus === m ? 2.5 : 1.25}
               strokeLinejoin="round" opacity={focus === m ? 1 : lineOpacity(m)}
               className="transition-opacity duration-150 motion-reduce:transition-none" />
           ))}

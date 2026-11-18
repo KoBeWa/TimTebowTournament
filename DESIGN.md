@@ -36,7 +36,7 @@ The spacing scale, the type scale, the easings and the durations are the scaffol
   marks an instrument (a projection, a trace). ok and bad are wins and losses only.
 - Manager colours (`MANAGER_COLORS`) are data colours: a 3px marker beside a name and chart series.
   Never a fill, a background or a text colour for a block.
-- `.cell-accent` is the one lead panel of a view (a stronger rule and an amber top edge).
+- `.cell-accent` is the one lead panel of a view (the stronger rule-2 edge, no amber).
 - Tables sit in `<div className="cell overflow-x-auto">`, horizontal rules only, heads sentence case
   in muted, figures right-aligned in mono; secondary columns `hidden md:table-cell`.
 
