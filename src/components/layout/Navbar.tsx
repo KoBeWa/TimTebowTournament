@@ -29,10 +29,11 @@ const groupActive = (g: NavGroup, pathname: string) => g.links.some((l) => linkA
 
 function Brand({ onClick }: { onClick?: () => void }) {
   return (
-    <Link href="/" onClick={onClick} className="group flex min-h-11 items-center gap-2.5 rounded-full pr-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red display-title text-base text-on-accent">TTT</span>
+    <Link href="/" onClick={onClick} aria-label="Tim Tebow Tournament, zur Startseite"
+      className="group flex min-h-11 items-center gap-2.5 rounded-[var(--radius-pill)] pr-2">
+      <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-pill)] bg-red text-xs font-medium text-on-accent">TTT</span>
       <span className="leading-tight">
-        <span className="block display-title text-lg text-ink">Tim Tebow Tournament</span>
+        <span className="block text-sm font-medium text-ink">Tim Tebow Tournament</span>
         <span className="block text-xs text-text-muted">Saison {CURRENT_SEASON}</span>
       </span>
     </Link>
@@ -40,17 +41,19 @@ function Brand({ onClick }: { onClick?: () => void }) {
 }
 
 function ManagerDot({ id }: { id: string }) {
-  return <span aria-hidden className="h-2.5 w-1 shrink-0 rounded-full" style={{ backgroundColor: MANAGER_COLORS[id] }} />;
+  return <span aria-hidden className="h-2.5 w-[3px] shrink-0 rounded-[1px]" style={{ backgroundColor: MANAGER_COLORS[id] }} />;
 }
 
-// One row of the sidebar or sheet. The current page is the white pill.
+// One row of the sidebar or sheet. The current page: a raised row with an amber edge.
 function NavRow({ link, active, onClick, roomy }: { link: NavLink; active: boolean; onClick?: () => void; roomy?: boolean }) {
   const Icon = link.icon ? LINK_ICONS[link.icon] : null;
   return (
     <Link href={link.href} onClick={onClick} aria-current={active ? "page" : undefined}
-      className={`flex items-center gap-3 rounded-2xl px-3 text-sm font-medium transition-colors ${roomy ? "min-h-12" : "min-h-10"} ${
-        active ? "bg-red text-on-accent shadow-sm" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
-      {Icon && <Icon size={17} className={active ? "text-on-accent" : "text-text-muted"} />}
+      className={`relative flex items-center gap-2.5 rounded-[var(--radius-pill)] px-2.5 text-sm transition-colors ${roomy ? "min-h-12" : "min-h-9"} ${
+        active
+          ? "bg-surface-2 text-ink before:absolute before:inset-y-2 before:left-0 before:w-[2px] before:rounded-full before:bg-red"
+          : "text-text-secondary hover:bg-surface-2 hover:text-ink"}`}>
+      {Icon && <Icon size={16} aria-hidden className={active ? "text-red" : "text-text-muted"} />}
       {link.label}
     </Link>
   );
@@ -63,8 +66,8 @@ function ManagerGrid({ links, pathname, onClick, roomy }: { links: NavLink[]; pa
         const active = linkActive(l, pathname);
         return (
           <Link key={l.href} href={l.href} onClick={onClick} aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2 rounded-xl px-3 text-sm transition-colors ${roomy ? "min-h-11" : "min-h-9"} ${
-              active ? "bg-red font-medium text-on-accent" : "text-text-secondary hover:bg-white/10 hover:text-ink"}`}>
+            className={`flex items-center gap-2 rounded-[var(--radius-pill)] px-2.5 text-sm transition-colors ${roomy ? "min-h-11" : "min-h-8"} ${
+              active ? "bg-surface-2 text-ink" : "text-text-secondary hover:bg-surface-2 hover:text-ink"}`}>
             <ManagerDot id={l.label} />{l.label}
           </Link>
         );
@@ -93,13 +96,13 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop: every destination visible in a fixed sidebar, one click away */}
-      <aside className="glass fixed bottom-3 left-3 top-3 z-40 hidden w-64 flex-col overflow-y-auto rounded-[28px] p-3 [scrollbar-width:none] lg:flex">
-        <div className="px-1 pb-3 pt-1"><Brand /></div>
-        <nav aria-label="Hauptnavigation" className="flex flex-1 flex-col gap-4">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col overflow-y-auto border-r border-border bg-paper-3 px-3 py-4 [scrollbar-width:none] lg:flex">
+        <div className="px-1 pb-4"><Brand /></div>
+        <nav aria-label="Hauptnavigation" className="flex flex-1 flex-col gap-5">
           <NavRow link={{ label: "Start", href: "/", icon: "home" }} active={pathname === "/"} />
           {NAV_GROUPS.map((g) => (
             <div key={g.label}>
-              <div className="px-3 pb-1 text-xs font-medium text-text-faint">{g.label}</div>
+              <div className="px-2.5 pb-1 text-xs text-text-faint">{g.label}</div>
               <div className="flex flex-col gap-0.5">
                 {g.links.filter((l) => !isManager(l)).map((l) => (
                   <NavRow key={l.href} link={l} active={linkActive(l, pathname)} />
@@ -112,15 +115,15 @@ export default function Navbar() {
       </aside>
 
       {/* Below lg: the name on top, the tab bar within reach of the thumb */}
-      <div className="px-3 pt-3 sm:px-6 lg:hidden">
-        <div className="glass flex h-14 items-center rounded-full pl-2.5 pr-4"><Brand onClick={close} /></div>
+      <div className="flex h-14 items-center border-b border-border bg-paper-3 px-4 sm:px-6 lg:hidden">
+        <Brand onClick={close} />
       </div>
 
       <div ref={mobileRef} className="lg:hidden">
         {openGroup && (
-          <div className="glass fixed inset-x-3 z-50 mx-auto max-h-[70dvh] max-w-lg overflow-y-auto rounded-[28px] p-2"
-            style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}>
-            <div className="px-3 pb-1 pt-2 text-xs font-medium text-text-muted">{openGroup.label}</div>
+          <div className="fixed inset-x-0 z-50 max-h-[70dvh] overflow-y-auto rounded-t-[var(--radius-card)] border-t border-border bg-paper-2 px-3 pb-3 pt-2"
+            style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
+            <div className="px-2.5 pb-1 pt-2 text-sm font-medium text-ink">{openGroup.label}</div>
             <div className="flex flex-col gap-0.5">
               {openGroup.links.filter((l) => !isManager(l)).map((l) => (
                 <NavRow key={l.href} link={l} active={linkActive(l, pathname)} onClick={close} roomy />
@@ -131,12 +134,12 @@ export default function Navbar() {
             )}
           </div>
         )}
-        <nav aria-label="Bereiche" className="glass fixed inset-x-3 z-50 mx-auto flex h-16 max-w-lg items-stretch justify-between rounded-full px-2"
-          style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+        <nav aria-label="Bereiche" className="fixed inset-x-0 bottom-0 z-50 flex items-stretch justify-between border-t border-border bg-paper-3 px-1"
+          style={{ height: "calc(4rem + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
           <Link href="/" onClick={close} aria-current={pathname === "/" ? "page" : undefined}
-            className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium ${
+            className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs ${
               pathname === "/" && !sheet ? "text-ink" : "text-text-muted"}`}>
-            <House size={21} className={pathname === "/" && !sheet ? "text-red" : ""} />Start
+            <House size={20} aria-hidden className={pathname === "/" && !sheet ? "text-red" : ""} />Start
           </Link>
           {NAV_GROUPS.map((g) => {
             const Icon = GROUP_ICONS[g.icon];
@@ -145,9 +148,9 @@ export default function Navbar() {
             return (
               <button key={g.label} type="button" aria-expanded={isOpen} aria-haspopup="true"
                 onClick={() => setSheet(isOpen ? null : g.label)}
-                className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium ${
-                  active ? "text-ink" : "text-text-muted"} ${isOpen ? "bg-white/15" : ""}`}>
-                <Icon size={21} className={active ? "text-red" : ""} />{g.label}
+                className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs ${
+                  active ? "text-ink" : "text-text-muted"} ${isOpen ? "bg-surface-2" : ""}`}>
+                <Icon size={20} aria-hidden className={active ? "text-red" : ""} />{g.label}
               </button>
             );
           })}

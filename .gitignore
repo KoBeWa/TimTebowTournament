@@ -46,3 +46,6 @@ next-env.d.ts
 
 # play-by-play download cache (scripts/score_timelines)
 /.cache/
+
+# Hallmark before/after screenshots and records
+.hallmark/
