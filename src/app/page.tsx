@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getSeasonSummaries } from "@/lib/queries";
-import { CURRENT_SEASON, MANAGERS, MANAGER_COLORS } from "@/lib/constants";
+import { CURRENT_SEASON, MANAGERS } from "@/lib/constants";
 import Link from "next/link";
 import { ChevronRight, Crown } from "lucide-react";
 import ManagerName from "@/components/ui/ManagerName";
@@ -50,8 +50,8 @@ const pts = (n: number) => Number(n).toLocaleString("de-DE", { minimumFractionDi
 function Side({ id, score, won, align }: { id: string; score: number; won: boolean; align: "left" | "right" }) {
   return (
     <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
-      <ManagerName id={id} plain className={`${align === "right" ? "flex-row-reverse" : ""} text-base ${won ? "font-semibold text-ink" : "text-text-muted"}`} />
-      <span className={`ml-auto display-title text-xl sm:text-2xl tabular-nums ${align === "right" ? "ml-0 mr-auto" : ""} ${won ? "text-ink" : "text-text-faint"}`}>{pts(score)}</span>
+      <ManagerName id={id} plain className={`${align === "right" ? "flex-row-reverse" : ""} text-sm sm:text-base ${won ? "font-medium text-ink" : "text-text-muted"}`} />
+      <span className={`measured text-sm sm:text-base ${align === "right" ? "mr-auto" : "ml-auto"} ${won ? "text-ink" : "text-text-muted"}`}>{pts(score)}</span>
     </div>
   );
 }
@@ -84,88 +84,90 @@ export default async function HomePage() {
   const rec = (s: Standing) => `${s.wins}–${s.losses}${s.ties ? `–${s.ties}` : ""}`;
 
   return (
-    <div className="space-y-5">
-      <div className="grid items-stretch gap-5 xl:grid-cols-3">
-        {/* The one highlighted card: what happened this week */}
+    <div className="space-y-8">
+      <div className="grid items-stretch gap-8 xl:grid-cols-5">
+        {/* The one lead panel: what happened this week */}
         {running && top ? (
-          <section className="cell-accent flex flex-col justify-between gap-8 p-6 sm:p-8 xl:col-span-2">
+          <section className="cell-accent flex flex-col justify-between gap-8 p-4 sm:p-5 xl:col-span-3">
             <div>
-              <p className="text-sm text-on-accent/75">Saison {CURRENT_SEASON}</p>
-              <h1 className="mt-1 display-title text-5xl sm:text-6xl">Woche {current.week}</h1>
-              <p className="mt-3 max-w-md text-lg text-on-accent/90">
-                {top.id} holt mit {pts(top.score)} Punkten den Wochensieg.
+              <p className="text-sm text-text-muted">Saison {CURRENT_SEASON}</p>
+              <h1 className="mt-1 display-title text-4xl text-ink sm:text-5xl">Woche {current.week}</h1>
+              <p className="mt-3 max-w-md text-base text-text-secondary">
+                {top.id} holt mit <span className="measured text-ink">{pts(top.score)}</span> Punkten den Wochensieg.
               </p>
             </div>
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <dl className="flex flex-wrap gap-x-8 gap-y-4">
+            <dl className="grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
+              <div>
+                <dd className="measured text-2xl text-ink">{pts(top.score)}</dd>
+                <dt className="mt-1 text-sm text-text-muted">Höchster Score</dt>
+              </div>
+              {closest && (
                 <div>
-                  <dd className="display-title text-3xl tabular-nums">{pts(top.score)}</dd>
-                  <dt className="text-sm text-on-accent/70">Höchster Score</dt>
+                  <dd className="measured text-2xl text-ink">{pts(Math.abs(closest.score_a - closest.score_b))}</dd>
+                  <dt className="mt-1 text-sm text-text-muted">Knappstes Spiel, {closest.manager_a} gegen {closest.manager_b}</dt>
                 </div>
-                {closest && (
-                  <div>
-                    <dd className="display-title text-3xl tabular-nums">{pts(Math.abs(closest.score_a - closest.score_b))}</dd>
-                    <dt className="text-sm text-on-accent/70">Knappstes Spiel, {closest.manager_a} gegen {closest.manager_b}</dt>
-                  </div>
-                )}
-                <div>
-                  <dd className="display-title text-3xl tabular-nums">{pts(avg)}</dd>
-                  <dt className="text-sm text-on-accent/70">Schnitt der Liga</dt>
-                </div>
-              </dl>
-              <Link href="/gamecenter" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-on-accent px-5 text-sm font-semibold text-gold hover:bg-black transition-colors">
-                Zum Gamecenter <ChevronRight size={16} />
+              )}
+              <div>
+                <dd className="measured text-2xl text-ink">{pts(avg)}</dd>
+                <dt className="mt-1 text-sm text-text-muted">Schnitt der Liga</dt>
+              </div>
+            </dl>
+            <div>
+              <Link href="/gamecenter" className="btn-primary inline-flex items-center gap-1.5">
+                Zum Gamecenter <ChevronRight size={16} aria-hidden />
               </Link>
             </div>
           </section>
         ) : reigning && (
-          <section className="cell-accent flex flex-col justify-between gap-8 p-6 sm:p-8 xl:col-span-2">
+          <section className="cell-accent flex flex-col justify-between gap-8 p-4 sm:p-5 xl:col-span-3">
             <div>
-              <p className="flex items-center gap-2 text-sm text-on-accent/75"><Crown size={16} /> Champion {reigning.year}</p>
-              <h1 className="mt-1 display-title text-6xl sm:text-7xl uppercase">{reigning.champion}</h1>
-              <p className="mt-3 text-lg text-on-accent/90">Finale gegen {reigning.runner_up}.</p>
+              <p className="flex items-center gap-2 text-sm text-text-muted"><Crown size={16} aria-hidden className="text-red" /> Champion {reigning.year}</p>
+              <h1 className="mt-1 display-title text-4xl text-ink sm:text-5xl">{reigning.champion}</h1>
+              <p className="mt-3 text-base text-text-secondary">Finale gegen {reigning.runner_up}.</p>
             </div>
-            <Link href={`/history/${reigning.year}`} className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full bg-on-accent px-5 text-sm font-semibold text-gold">
-              Zur Saison {reigning.year} <ChevronRight size={16} />
-            </Link>
+            <div>
+              <Link href={`/history/${reigning.year}`} className="btn-primary inline-flex items-center gap-1.5">
+                Zur Saison {reigning.year} <ChevronRight size={16} aria-hidden />
+              </Link>
+            </div>
           </section>
         )}
 
         {running && (
-          <section className="cell overflow-hidden">
+          <section className="cell overflow-x-auto xl:col-span-2">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-text-muted">
-                  <th className="pb-2.5 pl-5 pr-2 pt-4 font-medium">Tabelle</th>
-                  <th className="px-2 pb-2.5 pt-4 text-right font-medium">Bilanz</th>
-                  <th className="pb-2.5 pl-2 pr-5 pt-4 text-right font-medium">Punkte</th>
+                <tr className="text-left text-xs font-medium text-text-muted">
+                  <th className="px-4 py-2.5 font-medium">Tabelle</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Bilanz</th>
+                  <th className="px-4 py-2.5 text-right font-medium">Punkte</th>
                 </tr>
               </thead>
               <tbody>
                 {current.standings.map((s) => (
                   <tr key={s.manager_id}
                     className={`border-t ${s.reg_rank === playoffTeams + 1 ? "border-dashed border-border-strong" : "border-border-light"}`}>
-                    <td className="py-2 pl-5 pr-2">
+                    <td className="px-4 py-2.5">
                       <span className="flex items-center gap-3">
-                        <span className="w-4 text-right tabular-nums text-text-faint">{s.reg_rank}</span>
+                        <span className="measured w-4 text-right text-text-faint">{s.reg_rank}</span>
                         <ManagerName id={s.manager_id} className="font-medium text-ink" />
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums text-text-secondary">{rec(s)}</td>
-                    <td className="py-2 pl-2 pr-5 text-right tabular-nums text-text-secondary">{pts(s.points_for)}</td>
+                    <td className="measured px-4 py-2.5 text-right text-text-secondary">{rec(s)}</td>
+                    <td className="measured px-4 py-2.5 text-right text-text-secondary">{pts(s.points_for)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <Link href={`/history/${CURRENT_SEASON}`} className="flex min-h-11 items-center justify-center gap-1 border-t border-border-light px-4 text-sm text-text-muted hover:text-ink transition-colors">
-              Ganze Tabelle <ChevronRight size={15} />
+              Ganze Tabelle <ChevronRight size={15} aria-hidden />
             </Link>
           </section>
         )}
       </div>
 
       {running && leader && scorer && (
-        <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatTile label="Tabellenführer" value={leader.manager_id} hint={`Bilanz ${rec(leader)}`} />
           <StatTile label="Meiste Punkte" value={scorer.manager_id} hint={`${pts(scorer.points_for)} Punkte`} />
           {race ? (
@@ -177,13 +179,13 @@ export default async function HomePage() {
         </div>
       )}
 
-      <div className="grid items-start gap-5 xl:grid-cols-3">
+      <div className="grid items-start gap-8 xl:grid-cols-3">
         {running && (
           <section className="cell overflow-hidden xl:col-span-2">
-            <h2 className="px-5 pb-1 pt-4 text-sm font-medium text-text-muted">Ergebnisse der Woche</h2>
+            <h2 className="px-4 pb-2 pt-4 text-base font-medium text-ink sm:px-5">Ergebnisse der Woche</h2>
             {current.games.map((m) => (
               <Link key={m.manager_a} href={`/gamecenter/${CURRENT_SEASON}/${m.week}?a=${m.manager_a}&b=${m.manager_b}`}
-                className="flex items-center gap-2.5 border-b border-border-light px-5 py-3.5 last:border-0 hover:bg-white/5 transition-colors sm:gap-4">
+                className="flex min-h-11 items-center gap-2.5 border-t border-border-light px-4 py-2.5 hover:bg-surface-2 transition-colors sm:gap-4 sm:px-5">
                 <Side id={m.manager_a} score={m.score_a} won={m.score_a > m.score_b} align="left" />
                 <span className="text-xs text-text-faint">vs</span>
                 <Side id={m.manager_b} score={m.score_b} won={m.score_b > m.score_a} align="right" />
@@ -194,44 +196,45 @@ export default async function HomePage() {
 
         {records.length > 0 && (
           <section className={`cell overflow-hidden ${running ? "" : "xl:col-span-3"}`}>
-            <div className="flex items-center justify-between px-5 pb-1 pt-4">
-              <h2 className="text-sm font-medium text-text-muted">Aktuelle Rekordhalter</h2>
-              <Link href="/trophies/records" className="flex items-center gap-0.5 text-sm text-text-muted hover:text-ink transition-colors">
-                Alle <ChevronRight size={15} />
+            <div className="flex items-center justify-between px-4 pb-2 pt-4 sm:px-5">
+              <h2 className="text-base font-medium text-ink">Aktuelle Rekordhalter</h2>
+              <Link href="/trophies/records" className="flex min-h-11 items-center gap-0.5 text-sm text-text-muted hover:text-ink transition-colors">
+                Alle <ChevronRight size={15} aria-hidden />
               </Link>
             </div>
-            {records.map((r) => (
-              <div key={r.record_label} className="flex items-center justify-between gap-3 border-b border-border-light px-5 py-2.5 last:border-0">
-                <span className="truncate text-sm text-text-secondary">{r.record_label}</span>
-                <ManagerName id={r.manager_id} className="shrink-0 text-sm font-medium text-ink" />
-              </div>
-            ))}
+            <div className="divide-y divide-border-light border-t border-border-light">
+              {records.map((r) => (
+                <div key={r.record_label} className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
+                  <span className="truncate text-sm text-text-secondary">{r.record_label}</span>
+                  <ManagerName id={r.manager_id} className="shrink-0 text-sm font-medium text-ink" />
+                </div>
+              ))}
+            </div>
           </section>
         )}
       </div>
 
-      {/* Every title since the league started, in each champion's colour */}
-      <section className="cell p-5">
+      {/* Every title since the league started */}
+      <section className="cell p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-text-muted">Alle Champions</h2>
-          <Link href="/history" className="flex items-center gap-0.5 text-sm text-text-muted hover:text-ink transition-colors">
-            Zur History <ChevronRight size={15} />
+          <h2 className="text-base font-medium text-ink">Alle Champions</h2>
+          <Link href="/history" className="flex min-h-11 items-center gap-0.5 text-sm text-text-muted hover:text-ink transition-colors">
+            Zur History <ChevronRight size={15} aria-hidden />
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 xl:grid-cols-[repeat(11,minmax(0,1fr))]">
+        <div className="grid grid-cols-2 border-l border-t border-border-light sm:grid-cols-4 xl:grid-cols-6">
           {[...finished].reverse().map((s) => (
             <Link key={s.year} href={`/history/${s.year}`}
-              className="rounded-xl bg-white/5 px-2.5 pb-2.5 pt-2 transition-colors hover:bg-white/10"
-              style={{ boxShadow: `inset 0 3px 0 ${MANAGER_COLORS[s.champion] ?? "var(--color-border-strong)"}` }}>
-              <div className="text-xs tabular-nums text-text-faint">{s.year}</div>
-              <div className="truncate font-semibold text-ink">{s.champion}</div>
+              className="flex min-h-11 flex-col gap-0.5 border-b border-r border-border-light px-3 py-2.5 transition-colors hover:bg-surface-2">
+              <span className="measured text-xs text-text-faint">{s.year}</span>
+              <ManagerName id={s.champion} plain className="font-medium text-ink" />
             </Link>
           ))}
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-secondary">
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-secondary">
           {titles.map(([m, n]) => (
             <span key={m} className="flex items-center gap-1.5">
-              <ManagerName id={m} /> <span className="tabular-nums text-text-faint">{n}×</span>
+              <ManagerName id={m} /> <span className="measured text-text-faint">{n}×</span>
             </span>
           ))}
         </div>
