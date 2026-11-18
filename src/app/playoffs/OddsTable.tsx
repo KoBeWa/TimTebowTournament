@@ -9,7 +9,7 @@ const SEED_CLASSES = [
 ];
 
 function Trend({ delta }: { delta: number | null }) {
-  if (delta == null) return <span className="text-text-faint">–</span>;
+  if (delta == null) return <span aria-label="keine Angabe" className="inline-block h-px w-3 bg-border-strong align-middle" />;
   const pp = delta * 100;
   if (Math.abs(pp) < 0.05) return <span className="inline-flex items-center gap-1 text-text-faint"><Minus size={14} aria-hidden />±0</span>;
   const up = pp > 0;
@@ -61,7 +61,7 @@ export default function OddsTable({ rows, previous }: { rows: OddsRow[]; previou
                   </span>
                 </td>
                 <td className="measured whitespace-nowrap px-4 py-2.5 text-right text-text-secondary">
-                  {r.wins}–{r.losses}{r.ties ? `–${r.ties}` : ""}
+                  {r.wins}-{r.losses}{r.ties ? `-${r.ties}` : ""}
                 </td>
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -87,7 +87,7 @@ export default function OddsTable({ rows, previous }: { rows: OddsRow[]; previou
                   <Trend delta={prev == null ? null : r.playoff_pct - prev} />
                 </td>
                 <td className="measured hidden whitespace-nowrap px-4 py-2.5 text-right text-text-secondary md:table-cell">
-                  {fmtNum(projWins)}–{fmtNum(projLosses)}
+                  {fmtNum(projWins)}-{fmtNum(projLosses)}
                 </td>
                 <td className="measured hidden px-4 py-2.5 text-right text-text-secondary md:table-cell">{fmtPct(r.last_pct)}</td>
                 <td className="hidden px-4 py-2.5 lg:table-cell">

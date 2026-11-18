@@ -39,7 +39,7 @@ export default function ScheduleMatrix({ odds, games }: { odds: OddsRow[]; games
                             <div className="text-ink">{g.opponent_id}</div>
                             <div className="measured text-xs text-text-secondary">{fmtPct(g.win_prob)}</div>
                           </div>
-                        ) : <div className="text-center text-text-faint">–</div>}
+                        ) : <div className="text-center"><span aria-label="keine Angabe" className="inline-block h-px w-3 bg-border-strong align-middle" /></div>}
                       </td>
                     );
                   })}

@@ -110,7 +110,7 @@ export default async function HistoryPage() {
                 <div key={r.manager_id} className="text-center" title="Platzierung Regular Season">
                   <div className="measured mb-0.5 text-xs text-text-faint">{i + 1}.</div>
                   <ManagerName id={r.manager_id} plain className="text-sm text-ink" />
-                  <div className="measured text-xs text-text-muted">{r.wins}–{r.losses}</div>
+                  <div className="measured text-xs text-text-muted">{r.wins}-{r.losses}</div>
                 </div>
               ))}
             </div>

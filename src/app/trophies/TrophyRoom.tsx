@@ -147,7 +147,7 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
         onChange={(k) => { if (k === "browse") router.push("/trophies/records"); else setTab(k); }} />
 
       {tab === "achievements" && (
-        <div className="cell overflow-x-auto">
+        <div className="cell relative overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr>

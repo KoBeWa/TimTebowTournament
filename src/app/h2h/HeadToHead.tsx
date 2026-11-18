@@ -15,7 +15,7 @@ import {
 const fmt = (n: number) => n.toFixed(1);
 // Win difference as the headline number, the record goes underneath
 const fmtDiff = (d: number) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : "±0");
-const fmtRecord = (w: number, l: number, t = 0) => `${w}–${l}${t ? `–${t}` : ""}`;
+const fmtRecord = (w: number, l: number, t = 0) => `${w}-${l}${t ? `-${t}` : ""}`;
 const diffTone = (d: number) => (d > 0 ? "text-positive" : d < 0 ? "text-negative" : "text-text-secondary");
 const when = (m: { season_year: number; week: number }) => `${m.season_year}, W${m.week}`;
 
@@ -451,14 +451,14 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                       <button
                         onClick={() => onSelect(r, c)}
                         className={`min-h-11 w-full rounded-md px-2 py-1.5 hover:ring-1 hover:ring-border-strong ${tone} ${selected ? "ring-2 ring-red" : ""}`}
-                        title={`${r} vs ${c}: ${p?.wins ?? 0}–${p?.losses ?? 0}${p?.ties ? `–${p.ties}` : ""}`}
+                        title={`${r} vs ${c}: ${p?.wins ?? 0}-${p?.losses ?? 0}${p?.ties ? `-${p.ties}` : ""}`}
                       >
                         {p ? (
                           <>
                             <span className={`measured block text-sm ${diffTone(d)}`}>{fmtDiff(d)}</span>
                             <span className="measured block text-[11px] leading-tight text-text-muted">{fmtRecord(p.wins, p.losses, p.ties)}</span>
                           </>
-                        ) : <span className="text-text-faint">–</span>}
+                        ) : <span aria-label="keine Angabe" className="inline-block h-px w-3 bg-border-strong align-middle" />}
                       </button>
                     </td>
                   );

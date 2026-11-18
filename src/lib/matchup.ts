@@ -24,7 +24,7 @@ export interface TeamWeekStats {
 }
 
 export interface H2HData {
-  record: string;       // "16–10"
+  record: string;       // "16-10"
   winnerStreak: number;
   winner: string;
   avgNetMarginForA: number;
@@ -132,7 +132,7 @@ export async function loadMatchup(season: number, week: number, a: string, b: st
   streak += 1;
 
   const rec = h2hRecord?.[0];
-  const recordStr = rec ? `${rec.wins}–${rec.losses}${rec.ties > 0 ? `–${rec.ties}` : ""}` : "—";
+  const recordStr = rec ? `${rec.wins}-${rec.losses}${rec.ties > 0 ? `-${rec.ties}` : ""}` : "—";
   const avgNetMargin = rec ? Number(rec.avg_score_for) - Number(rec.avg_score_against) : 0;
 
   // Previous matchup (most recent before this)

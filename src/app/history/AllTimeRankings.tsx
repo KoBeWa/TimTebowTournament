@@ -33,7 +33,7 @@ const TABS: { key: Tab; label: string }[] = [
 
 const games = (r: Rec) => r.w + r.l + r.t;
 const pct = (r: Rec) => (games(r) ? (r.w + r.t / 2) / games(r) : 0);
-const fmtRec = (r: Rec) => `${r.w}–${r.l}${r.t > 0 ? `–${r.t}` : ""}`;
+const fmtRec = (r: Rec) => `${r.w}-${r.l}${r.t > 0 ? `-${r.t}` : ""}`;
 const fmtPct = (r: Rec) => (games(r) ? `${(pct(r) * 100).toFixed(1)}%` : "–");
 
 /** Sorted by the record of the tab: win share, then wins. */

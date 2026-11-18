@@ -81,7 +81,7 @@ export default async function HomePage() {
   const leader = current.standings[0];
   const scorer = [...current.standings].sort((a, b) => Number(b.points_for) - Number(a.points_for))[0];
   const bubble = current.standings.find((s) => s.reg_rank === playoffTeams);
-  const rec = (s: Standing) => `${s.wins}–${s.losses}${s.ties ? `–${s.ties}` : ""}`;
+  const rec = (s: Standing) => `${s.wins}-${s.losses}${s.ties ? `-${s.ties}` : ""}`;
 
   return (
     <div className="space-y-8">

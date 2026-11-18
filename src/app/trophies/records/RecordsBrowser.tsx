@@ -87,7 +87,7 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
         value={activeCat} onChange={selectCategory} label="Kategorie" />
 
       {/* Below md the panes stack and the record list becomes a select; no fixed heights there */}
-      <div className="cell overflow-hidden md:flex md:min-h-[24rem]">
+      <div className="cell overflow-hidden md:flex md:min-h-[32rem]">
 
         <div className="border-b border-border p-4 md:hidden">
           <label className="flex flex-col gap-1 text-xs text-text-muted">
@@ -98,7 +98,9 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
             </select>
           </label>
         </div>
-        <div className="hidden w-60 shrink-0 border-r border-border md:block md:max-h-[80vh] md:overflow-y-auto">
+        {/* The list fills the panel's height and scrolls on its own, whatever the detail beside it needs */}
+        <div className="relative hidden w-60 shrink-0 border-r border-border md:block">
+          <div className="absolute inset-0 overflow-y-auto">
           {recordsInCat.map(({ key, label }) => {
             const isSelected = key === selectedKey;
             const holder = timelineMap[key]?.find((e) => e.is_current);
@@ -121,6 +123,7 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="min-w-0 md:flex-1">

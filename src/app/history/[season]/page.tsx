@@ -124,12 +124,12 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                     <td className="px-4 py-2.5 font-medium text-ink"><ManagerName id={r.manager_id} /></td>
                     <td className="measured whitespace-nowrap px-4 py-2.5 text-center">
                       <span className="win">{r.wins}</span>
-                      <span className="text-text-muted">–</span>
+                      <span aria-label="keine Angabe" className="inline-block h-px w-3 bg-border-strong align-middle" />
                       <span className="loss">{r.losses}</span>
-                      {r.ties > 0 && <><span className="text-text-muted">–</span><span className="tie">{r.ties}</span></>}
+                      {r.ties > 0 && <><span className="text-text-muted">-</span><span className="tie">{r.ties}</span></>}
                     </td>
                     <td className="hidden measured whitespace-nowrap px-4 py-2.5 text-center text-text-secondary md:table-cell">
-                      {ap ? <>{ap.ap_wins}–{ap.ap_losses}{ap.ap_ties ? `–${ap.ap_ties}` : ""}
+                      {ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
                         <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "–"}
                     </td>
                     <td className={`measured hidden px-4 py-2.5 text-right md:table-cell ${(lk ?? 0) > 0 ? "text-positive" : (lk ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>

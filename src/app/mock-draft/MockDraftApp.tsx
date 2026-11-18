@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { DraftSlot, Prospect, MockDraftSummary, DraftResult } from "./MockDraftPage";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const POS_COLORS: Record<string, string> = {
-  QB: "#f87171", RB: "#60a5fa", WR: "#4ade80", TE: "#a78bfa",
-  OT: "#fbbf24", IOL: "#fbbf24", OL: "#fbbf24", T: "#fbbf24", EDGE: "#22d3ee",
+  QB: "#f87171", RB: "var(--color-cool)", WR: "var(--color-ok)", TE: "var(--color-muted)",
+  OT: "var(--color-accent)", IOL: "var(--color-accent)", OL: "var(--color-accent)", T: "var(--color-accent)", EDGE: "#22d3ee",
   DL: "#94a3b8", DT: "#94a3b8", LB: "#f472b6", CB: "#fb923c", S: "#818cf8", SAF: "#818cf8", DB: "#818cf8",
-  C: "#fbbf24", G: "#fbbf24", K: "var(--color-text-muted)", P: "var(--color-text-muted)", LS: "var(--color-text-muted)", FB: "var(--color-text-muted)", SPEC: "var(--color-text-muted)",
+  C: "var(--color-accent)", G: "var(--color-accent)", K: "var(--color-text-muted)", P: "var(--color-text-muted)", LS: "var(--color-text-muted)", FB: "var(--color-text-muted)", SPEC: "var(--color-text-muted)",
 };
 function posColor(pos: string) { return POS_COLORS[pos] ?? "var(--color-text-muted)"; }
 
@@ -204,7 +205,7 @@ function ProspectDetailModal({
               )}
               {prospect.strengths && (
                 <div>
-                  <div className="kicker text-xs mb-1" style={{ color: "#4ade80" }}>Stärken</div>
+                  <div className="kicker text-xs mb-1" style={{ color: "var(--color-ok)" }}>Stärken</div>
                   {bulletList(prospect.strengths)}
                 </div>
               )}
@@ -266,7 +267,7 @@ function ProspectDetailModal({
                     {value && (
                       <div className="h-full transition-colors" style={{
                         width: `${Math.min((value / max) * 100, 100)}%`,
-                        background: value >= 80 ? "#4ade80" : value >= 60 ? "#fbbf24" : "var(--color-red)",
+                        background: value >= 80 ? "var(--color-ok)" : value >= 60 ? "var(--color-accent)" : "var(--color-red)",
                         borderRadius: "2px",
                       }} />
                     )}
@@ -553,7 +554,7 @@ export default function MockDraftApp({
             <><span className="hidden sm:inline">DRAFT IN </span>{countdown.days}T {countdown.hours}H {countdown.minutes}M {countdown.seconds}S</>
           )}
         </div>
-        <div className="label-nav text-white opacity-80 hidden sm:block" style={{ fontSize: "10px" }}>Pittsburgh · 23. April · 20:00 ET</div>
+        <div className="label-nav text-white opacity-80 hidden sm:block" style={{ fontSize: "10px" }}>Pittsburgh, 23. April, 20:00 ET</div>
       </div>
 
       {/* ── Tabs ── */}
@@ -710,7 +711,7 @@ export default function MockDraftApp({
                       <button onClick={() => setActivePick(Math.max(1, activePick - 1))}
                         className="w-8 h-8 flex items-center justify-center border border-border text-text-muted hover:text-ink text-sm">←</button>
                       <button onClick={() => setActivePick(Math.min(32, activePick + 1))}
-                        className="w-8 h-8 flex items-center justify-center border border-border text-text-muted hover:text-ink text-sm">→</button>
+                        className="w-8 h-8 flex items-center justify-center border border-border text-text-muted hover:text-ink text-sm" aria-label="Nächster Pick"><ChevronRight size={16} aria-hidden /></button>
                     </div>
                   </div>
 
@@ -775,7 +776,7 @@ export default function MockDraftApp({
                         <button key={pos} onClick={() => setPosFilter(posFilter === pos ? null : pos)}
                           className="label-nav px-1.5 py-1 transition-colors flex-shrink-0"
                           style={{ fontSize: "10px", background: posFilter === pos ? posColor(pos) : "transparent",
-                            color: posFilter === pos ? "#fff" : posColor(pos), border: `1px solid ${posColor(pos)}40` }}>{pos}</button>
+                            color: posFilter === pos ? "var(--color-ink)" : posColor(pos), border: `1px solid ${posColor(pos)}40` }}>{pos}</button>
                       ))}
                     </div>
                   </div>
@@ -913,12 +914,12 @@ export default function MockDraftApp({
             <div className="kicker text-xs mb-3">Punktesystem</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { pts: 110, label: "Exakter Pick + Position", color: "#4ade80" },
-                { pts: 60, label: "1 daneben + Position", color: "#60a5fa" },
+                { pts: 110, label: "Exakter Pick + Position", color: "var(--color-ok)" },
+                { pts: 60, label: "1 daneben + Position", color: "var(--color-cool)" },
                 { pts: 50, label: "1 daneben", color: "#93c5fd" },
-                { pts: 30, label: "2–5 daneben + Position", color: "#fbbf24" },
+                { pts: 30, label: "2–5 daneben + Position", color: "var(--color-accent)" },
                 { pts: 20, label: "2–5 daneben", color: "#fcd34d" },
-                { pts: 10, label: "Position richtig", color: "#a78bfa" },
+                { pts: 10, label: "Position richtig", color: "var(--color-muted)" },
               ].map(({ pts, label, color }) => (
                 <div key={pts} className="flex items-center gap-2 p-2 border border-border">
                   <span className="label-nav text-sm font-bold" style={{ color }}>{pts}</span>
@@ -948,7 +949,7 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
   const [expanded, setExpanded] = useState(false);
 
   const pointsColor = (pts: number) =>
-    pts === 100 ? "#4ade80" : pts === 50 ? "#60a5fa" : pts === 20 ? "#fbbf24" : pts === 10 ? "#a78bfa" : "var(--color-text-faint)";
+    pts === 100 ? "var(--color-ok)" : pts === 50 ? "var(--color-cool)" : pts === 20 ? "var(--color-accent)" : pts === 10 ? "var(--color-muted)" : "var(--color-text-faint)";
 
   return (
     <div className="border-b border-border-light">
@@ -968,10 +969,10 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
             </span>
           </div>
           <div className="flex gap-2 sm:gap-3 mt-0.5 flex-wrap">
-            {entry.exact > 0 && <span className="label-nav text-xs" style={{ color: "#4ade80" }}>{entry.exact}× exakt</span>}
-            {entry.close > 0 && <span className="label-nav text-xs" style={{ color: "#60a5fa" }}>{entry.close}× 1 daneben</span>}
-            {entry.near > 0 && <span className="label-nav text-xs" style={{ color: "#fbbf24" }}>{entry.near}× 2-5 daneben</span>}
-            {entry.posMatch > 0 && <span className="label-nav text-xs" style={{ color: "#a78bfa" }}>{entry.posMatch}× Position</span>}
+            {entry.exact > 0 && <span className="label-nav text-xs" style={{ color: "var(--color-ok)" }}>{entry.exact}× exakt</span>}
+            {entry.close > 0 && <span className="label-nav text-xs" style={{ color: "var(--color-cool)" }}>{entry.close}× 1 daneben</span>}
+            {entry.near > 0 && <span className="label-nav text-xs" style={{ color: "var(--color-accent)" }}>{entry.near}× 2-5 daneben</span>}
+            {entry.posMatch > 0 && <span className="label-nav text-xs" style={{ color: "var(--color-muted)" }}>{entry.posMatch}× Position</span>}
           </div>
         </div>
         {/* Score */}
@@ -1013,7 +1014,7 @@ function ScoringCard({ entry, rank, slots, prospectMap, onProspectClick }: {
                       style={{ color: posColor(s.prospect.position) }}>{s.prospect.position}</span>
                   </button>
                 ) : (
-                  <span className="flex-1 text-xs text-text-faint">—</span>
+                  <span className="flex-1 text-xs text-text-faint" aria-label="keine Angabe" />
                 )}
                 {/* Points + reason */}
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -1120,7 +1121,7 @@ function MockCard({
                 )}
           
                 {!prospect ? (
-                  <span className="text-xs text-text-faint">—</span>
+                  <span className="text-xs text-text-faint" aria-label="keine Angabe" />
                 ) : (
                   <div
                     className="flex flex-col flex-1 min-w-0 px-1 py-1 rounded"
