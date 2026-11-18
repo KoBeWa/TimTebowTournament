@@ -126,7 +126,7 @@ function LineupTable({
                       <div className="hidden h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-pill)] bg-border-light md:flex">
                         {p.headshot ? (
                           <img
-                            fetchPriority="high"
+                            loading="lazy"
                             decoding="async"
                             src={p.headshot}
                             alt={p.player_name}
