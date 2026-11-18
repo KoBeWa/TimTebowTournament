@@ -10,12 +10,12 @@ export default function Error({ error, unstable_retry }: {
   useEffect(() => { console.error(error); }, [error]);
 
   return (
-    <div className="mx-auto max-w-md py-16 text-center">
-      <h1 className="display-title text-4xl text-ink">Die Seite konnte nicht geladen werden</h1>
-      <p className="mt-3 text-sm text-text-muted">
+    <div className="cell mx-auto mt-8 max-w-lg p-6 sm:p-8">
+      <h1 className="display-title text-2xl text-ink">Die Seite konnte nicht geladen werden</h1>
+      <p className="mt-2 text-base text-text-muted">
         Meist liegt das an einer kurzen Störung der Datenbank. Ein zweiter Versuch reicht in der Regel.
       </p>
-      <div className="mt-6 flex justify-center gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         <button type="button" className="btn-primary" onClick={() => unstable_retry()}>Erneut versuchen</button>
         <Link href="/" className="btn">Zur Startseite</Link>
       </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtNum, fmtPctPoints, fmtSigned } from "@/lib/format";
 
 export type RankingRow = {
   manager_id: string;
@@ -20,16 +22,16 @@ export type RankingRow = {
 type ColKey = keyof Omit<RankingRow, "manager_id">;
 
 const COLS: { key: ColKey; label: string; format: (v: number) => string; desc: boolean }[] = [
-  { key: "avg_draft",       label: "Draft",         format: (v) => (v >= 0 ? "+" : "") + v.toFixed(2), desc: true  },
-  { key: "avg_manager_pct", label: "Manager",        format: (v) => v.toFixed(2) + "%",                desc: true  },
-  { key: "avg_coach",       label: "Coach",          format: (v) => v.toFixed(1),                      desc: true  },
-  { key: "avg_sos",         label: "SOS",            format: (v) => v.toFixed(2),                      desc: true  },
-  { key: "total_luck",      label: "Luck",           format: (v) => (v >= 0 ? "+" : "") + v.toFixed(2),desc: true  },
-  { key: "top_score_pct",   label: "Top Score %",    format: (v) => v.toFixed(1) + "%",                desc: true  },
+  { key: "avg_draft",       label: "Draft",         format: (v) => fmtSigned(v, 2),                   desc: true  },
+  { key: "avg_manager_pct", label: "Manager-Score",  format: (v) => fmtPctPoints(v, 2),                desc: true  },
+  { key: "avg_coach",       label: "Coach",          format: (v) => fmtNum(v),                          desc: true  },
+  { key: "avg_sos",         label: "SOS",            format: (v) => fmtNum(v, 2),                       desc: true  },
+  { key: "total_luck",      label: "Luck",           format: (v) => fmtSigned(v, 2),                   desc: true  },
+  { key: "top_score_pct",   label: "Top Score %",    format: (v) => fmtPctPoints(v),                    desc: true  },
   { key: "current_records", label: "# Records",      format: (v) => String(v),                         desc: true  },
   { key: "achievements",    label: "# Achievements", format: (v) => String(v),                         desc: true  },
-  { key: "avg_points_share",label: "Pts Share Avg",  format: (v) => v.toFixed(2) + "%",                desc: true  },
-  { key: "avg_season_score",label: "Ø Season Score", format: (v) => v.toFixed(1),                      desc: true  },
+  { key: "avg_points_share",label: "Pts Share Avg",  format: (v) => fmtPctPoints(v, 2),                desc: true  },
+  { key: "avg_season_score",label: "Ø Season Score", format: (v) => fmtNum(v),                          desc: true  },
 ];
 
 export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
@@ -58,35 +60,37 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs font-medium text-text-muted">
-            <th className="py-3 pl-4 pr-2 text-left sm:pl-5">#</th>
-            <th className="px-3 py-3 text-left">Manager</th>
+            <th className="py-2.5 pl-4 pr-2 text-left sm:pl-5">#</th>
+            <th className="px-4 py-2.5 text-left">Manager</th>
             {COLS.map((c, i) => (
               <th
                 key={c.key}
                 aria-sort={c.key === sortKey ? (sortDesc ? "descending" : "ascending") : undefined}
-                className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-right transition-colors hover:text-ink ${
+                className={`cursor-pointer select-none whitespace-nowrap px-4 py-2.5 text-right hover:text-ink ${
                   i === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${c.key === sortKey ? "text-ink" : ""} ${colVis(c.key)}`}
                 onClick={() => handleSort(c.key)}
               >
                 {c.label}
-                {c.key === sortKey && <span className="ml-1">{sortDesc ? "↓" : "↑"}</span>}
+                {c.key === sortKey && (sortDesc
+                  ? <ChevronDown aria-hidden className="ml-1 inline h-3.5 w-3.5 align-[-2px]" />
+                  : <ChevronUp aria-hidden className="ml-1 inline h-3.5 w-3.5 align-[-2px]" />)}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {sorted.map((row, i) => (
-            <tr key={row.manager_id} className="border-t border-border-light transition-colors hover:bg-surface-2">
-              <td className="py-3 pl-4 pr-2 text-xs tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
-              <td className="px-3 py-3 font-semibold text-ink"><ManagerName id={row.manager_id} /></td>
+            <tr key={row.manager_id} className="border-t border-border-light hover:bg-surface-2">
+              <td className="py-2.5 pl-4 pr-2 text-xs measured text-text-faint sm:pl-5">{i + 1}</td>
+              <td className="px-4 py-2.5 font-medium text-ink"><ManagerName id={row.manager_id} /></td>
               {COLS.map((c, ci) => {
                 const val = row[c.key] as number;
                 const active = c.key === sortKey;
                 return (
                   <td
                     key={c.key}
-                    className={`px-3 py-3 text-right tabular-nums ${ci === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${
-                      active ? "font-semibold text-ink" : "text-text-secondary"} ${colVis(c.key)}`}
+                    className={`measured px-4 py-2.5 text-right ${ci === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${
+                      active ? "font-medium text-ink" : "text-text-secondary"} ${colVis(c.key)}`}
                   >
                     {c.format(val)}
                   </td>

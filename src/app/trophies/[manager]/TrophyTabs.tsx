@@ -11,10 +11,10 @@ export type TrophyCard = {
   description: string | null;
   values: string[];
 };
-type Medal = { icon: string; label: string; rank: number; year: number };
+type Medal = { label: string; rank: number; year: number };
 type Category = { key: string; label: string; cards: TrophyCard[] };
 
-const MEDAL_BORDER = ["var(--color-gold-dark)", "var(--color-silver)", "var(--color-bronze)"];
+const MEDAL_TEXT = ["text-gold", "text-silver", "text-bronze"];
 
 // One tab per badge group so a manager page shows one block at a time
 export default function TrophyTabs({ medals, categories, blunders }: {
@@ -34,19 +34,16 @@ export default function TrophyTabs({ medals, categories, blunders }: {
   const cat = categories.find((c) => c.key === tab);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Tabs tabs={tabs} value={tab} onChange={setTab} label="Badge-Gruppe" />
 
       {tab === "medals" && (
-        <div className="flex flex-wrap gap-3">
+        <div className="cell divide-y divide-border-light">
           {medals.map((m, i) => (
-            <div key={i} className="cell flex items-center gap-3 px-5 py-3"
-              style={{ borderColor: MEDAL_BORDER[m.rank - 1], borderWidth: "1px" }}>
-              <span className="text-2xl leading-none">{m.icon}</span>
-              <div>
-                <div className="text-xs text-text-muted">{m.label}</div>
-                <div className="display-title text-lg text-ink">{m.year}</div>
-              </div>
+            <div key={i} className="flex items-center gap-4 px-4 py-2.5 sm:px-5">
+              <span className={`measured w-6 text-lg ${MEDAL_TEXT[m.rank - 1] ?? "text-text-muted"}`}>{m.rank}</span>
+              <span className="min-w-0 flex-1 text-sm font-medium text-ink">{m.label}</span>
+              <span className="measured text-sm text-text-secondary">{m.year}</span>
             </div>
           ))}
         </div>
@@ -69,11 +66,11 @@ export default function TrophyTabs({ medals, categories, blunders }: {
 
 function AchievementCard({ card, blunder }: { card: TrophyCard; blunder: boolean }) {
   return (
-    <div className={`cell p-4 ${blunder ? "border border-negative/60" : ""}`}>
+    <div className="cell p-4">
       <div className="mb-1 flex items-start justify-between gap-2">
-        <span className="text-sm font-semibold leading-snug text-ink">{card.title}</span>
+        <span className="text-sm font-medium leading-snug text-ink">{card.title}</span>
         {card.count > 1 && (
-          <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${blunder ? "bg-negative/10 text-negative" : "bg-surface-3 text-text-muted"}`}>
+          <span className={`shrink-0 measured rounded-[var(--radius-pill)] px-1.5 py-0.5 text-xs ${blunder ? "bg-negative/10 text-negative" : "bg-surface-3 text-text-muted"}`}>
             ×{card.count}
           </span>
         )}
@@ -81,7 +78,7 @@ function AchievementCard({ card, blunder }: { card: TrophyCard; blunder: boolean
       <div className="mb-1 text-xs text-text-muted">{card.labels.join(", ")}</div>
       {card.description && <div className="text-xs leading-snug text-text-muted">{card.description}</div>}
       {card.values.length > 0 && (
-        <div className={`mt-1 text-xs tabular-nums ${blunder ? "text-negative" : "text-text-muted"}`}>{card.values.join(", ")}</div>
+        <div className={`measured mt-1 text-xs ${blunder ? "text-negative" : "text-text-muted"}`}>{card.values.join(", ")}</div>
       )}
     </div>
   );

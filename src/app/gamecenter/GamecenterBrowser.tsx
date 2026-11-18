@@ -8,18 +8,19 @@ import PageHeader from "@/components/ui/PageHeader";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import { loadSeasonWeeks, loadWeek, type MatchupWithStats, type SeasonWeeks } from "@/lib/gamecenter";
+import { fmtNum, fmtPctPoints, fmtSigned, fmtSignedPctPoints } from "@/lib/format";
 
-function sign(n: number) { return n >= 0 ? `+${n.toFixed(1)}` : n.toFixed(1); }
-function signPct(n: number) { return (n >= 0 ? "+" : "") + n.toFixed(1) + "%"; }
-const pts = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+function sign(n: number) { return fmtSigned(n); }
+function signPct(n: number) { return fmtSignedPctPoints(n); }
+const pts = (n: number) => fmtNum(n);
 const tone = (n: number | null) => (n === null || n === 0 ? "text-text-secondary" : n > 0 ? "text-positive" : "text-negative");
 
 function StatRow({ label, a, b, toneA, toneB }: { label: string; a: string; b: string; toneA?: string; toneB?: string }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-1 text-sm tabular-nums">
-      <span className={toneA ?? "text-text-secondary"}>{a}</span>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-1 text-sm">
+      <span className={`measured ${toneA ?? "text-text-secondary"}`}>{a}</span>
       <span className="text-xs text-text-muted">{label}</span>
-      <span className={`text-right ${toneB ?? "text-text-secondary"}`}>{b}</span>
+      <span className={`measured text-right ${toneB ?? "text-text-secondary"}`}>{b}</span>
     </div>
   );
 }
@@ -28,8 +29,8 @@ function Side({ id, score, won, align }: { id: string; score: number; won: boole
   const right = align === "right";
   return (
     <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${right ? "flex-row-reverse text-right" : ""}`}>
-      <ManagerName id={id} plain className={`${right ? "flex-row-reverse" : ""} text-base ${won ? "font-semibold text-ink" : "text-text-muted"}`} />
-      <span className={`display-title text-xl sm:text-2xl tabular-nums ${right ? "mr-auto" : "ml-auto"} ${won ? "text-ink" : "text-text-faint"}`}>{pts(score)}</span>
+      <ManagerName id={id} plain className={`${right ? "flex-row-reverse" : ""} text-base ${won ? "font-medium text-ink" : "text-text-muted"}`} />
+      <span className={`measured text-xl sm:text-2xl ${right ? "mr-auto" : "ml-auto"} ${won ? "font-medium text-ink" : "text-text-muted"}`}>{pts(score)}</span>
     </div>
   );
 }
@@ -43,18 +44,18 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
     <div className="cell overflow-hidden">
       <Link
         href={`/gamecenter/${season}/${week}?a=${m.manager_a}&b=${m.manager_b}`}
-        className="flex items-center gap-2.5 px-4 py-4 transition-colors hover:bg-surface-2 sm:gap-4 sm:px-5"
+        className="flex items-center gap-2.5 p-4 transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-focus)] sm:gap-4 sm:p-5"
       >
         <Side id={m.manager_a} score={m.score_a} won={aWon} align="left" />
         <span className="text-xs text-text-faint">vs</span>
         <Side id={m.manager_b} score={m.score_b} won={bWon} align="right" />
       </Link>
 
-      <div className="border-t border-border-light px-4 py-2 sm:px-5">
+      <div className="border-t border-border px-4 py-2 sm:px-5">
         <StatRow
           label="Coach-Score"
-          a={a.coach_score !== null ? a.coach_score.toFixed(1) : "–"}
-          b={b.coach_score !== null ? b.coach_score.toFixed(1) : "–"}
+          a={a.coach_score !== null ? fmtNum(a.coach_score) : "–"}
+          b={b.coach_score !== null ? fmtNum(b.coach_score) : "–"}
         />
         <StatRow
           label="Luck"
@@ -68,7 +69,7 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
             <StatRow label="Coach-Rang" a={a.coach_rank !== null ? `#${a.coach_rank}` : "–"} b={b.coach_rank !== null ? `#${b.coach_rank}` : "–"} />
             <StatRow label="vs Team Ø" a={signPct(a.pts_vs_team_avg_pct)} b={signPct(b.pts_vs_team_avg_pct)} toneA={tone(a.pts_vs_team_avg_pct)} toneB={tone(b.pts_vs_team_avg_pct)} />
             <StatRow label="vs Liga Ø" a={signPct(a.pts_vs_league_avg_pct)} b={signPct(b.pts_vs_league_avg_pct)} toneA={tone(a.pts_vs_league_avg_pct)} toneB={tone(b.pts_vs_league_avg_pct)} />
-            <StatRow label="Punkteanteil" a={`${a.pts_share_pct.toFixed(1)}%`} b={`${b.pts_share_pct.toFixed(1)}%`} />
+            <StatRow label="Punkteanteil" a={fmtPctPoints(a.pts_share_pct)} b={fmtPctPoints(b.pts_share_pct)} />
             <StatRow label="Wochenrang" a={`#${a.pts_rank}`} b={`#${b.pts_rank}`} />
           </>
         )}
@@ -78,10 +79,10 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center justify-center gap-1 border-t border-border-light px-3 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        className="flex min-h-11 w-full items-center justify-center gap-1 border-t border-border px-3 text-sm text-text-muted transition-colors hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-focus)]"
       >
         {open ? "Weniger" : "Details"}
-        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} aria-hidden className={open ? "rotate-180" : ""} />
       </button>
     </div>
   );
@@ -162,13 +163,13 @@ export default function GamecenterBrowser({ initial }: { initial: InitialWeek })
     <div>
       <PageHeader title="Gamecenter" description="Jedes Matchup, jeder Punkt, jede Woche" />
 
-      <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div className="mb-8 flex flex-wrap items-center gap-x-4 gap-y-3">
         <label className="flex items-center gap-2 text-sm text-text-muted">
           Saison
           <select
             value={season}
             onChange={(e) => setSeason(Number(e.target.value))}
-            className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-ink"
+            className="measured rounded-[var(--radius-pill)] border border-border bg-paper-3 px-3 py-1.5 text-sm text-ink"
           >
             {[...SEASONS].reverse().map((s) => (
               <option key={s} value={s}>{s}</option>
@@ -188,9 +189,9 @@ export default function GamecenterBrowser({ initial }: { initial: InitialWeek })
           <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
         </div>
       ) : matchups.length === 0 && loading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-busy="true">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-busy="true">
           {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="cell animate-pulse space-y-3 p-4 sm:p-5">
+            <div key={i} className="cell motion-safe:animate-pulse space-y-3 p-4 sm:p-5">
               <div className="h-8 rounded-lg bg-surface-3" />
               <div className="h-4 rounded-lg bg-surface-3" />
               <div className="h-4 rounded-lg bg-surface-3" />
@@ -206,7 +207,7 @@ export default function GamecenterBrowser({ initial }: { initial: InitialWeek })
           )}
         </div>
       ) : (
-        <div className={`grid grid-cols-1 items-start gap-4 transition-opacity md:grid-cols-2 ${loading ? "opacity-50" : ""}`}>
+        <div className={`grid grid-cols-1 items-start gap-3 md:grid-cols-2 ${loading ? "opacity-50" : ""}`}>
           {matchups.map((m) => (
             <MatchupCard
               key={`${m.manager_a}-${m.manager_b}`}

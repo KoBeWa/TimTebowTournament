@@ -164,7 +164,7 @@ export default async function DraftsPage() {
   const worstDrafts = [...draftList].sort((a, b) => a.avg - b.avg).slice(0, 3);
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader title="Drafts" description="Jeder Pick, jede Runde, jede Note" />
       <DraftsTabs
         avgPickValue={avgPickValue}

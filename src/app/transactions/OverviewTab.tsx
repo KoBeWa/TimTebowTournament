@@ -3,6 +3,7 @@
 import { useState } from "react";
 import StatTile from "@/components/ui/StatTile";
 import SvgTooltip from "./SvgTooltip";
+import { fmtInt } from "@/lib/format";
 
 export interface ChartPoint { label: string; transactions: number; trades: number }
 export interface OwnerStats { waiverPct: string; tradePct: string; waiverN: number; tradeN: number }
@@ -29,12 +30,12 @@ function ActivityChart({ data }: { data: ChartPoint[] }) {
 
   return (
     <div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}
+      <svg role="img" aria-label="Diagramm der Transaktionen und Trades" width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}
         onMouseLeave={() => setTip(null)}>
         {[0.25, 0.5, 0.75, 1].map(p => (
           <line key={p} x1={PAD.l} x2={W - PAD.r}
             y1={PAD.t + plotH * (1 - p)} y2={PAD.t + plotH * (1 - p)}
-            className="stroke-border" strokeWidth="0.5" />
+            style={{ stroke: "var(--color-border-light)" }} strokeWidth="1" />
         ))}
         {data.map((d, i) => (
           <rect key={i} x={PAD.l + i * slotW + slotW * 0.3} y={ry(d.trades)}
@@ -53,17 +54,17 @@ function ActivityChart({ data }: { data: ChartPoint[] }) {
         ))}
         {data.map((d, i) => i % showEvery === 0 && (
           <text key={`xl-${i}`} x={lx(i)} y={H - 2} textAnchor="middle"
-            style={{ fontSize: "10px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>
             {d.label}
           </text>
         ))}
         {[maxTx, Math.round(maxTx / 2), 0].map((v, i) => (
           <text key={`ly-${i}`} x={PAD.l - 4} y={PAD.t + (i / 2) * plotH + 4} textAnchor="end"
-            style={{ fontSize: "9px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>{v}</text>
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>{v}</text>
         ))}
         {[maxTr, Math.round(maxTr / 2), 0].map((v, i) => (
           <text key={`ry-${i}`} x={W - PAD.r + 4} y={PAD.t + (i / 2) * plotH + 4} textAnchor="start"
-            style={{ fontSize: "9px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>{v}</text>
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>{v}</text>
         ))}
         {tip && <SvgTooltip x={tip.x} y={tip.y} lines={tip.lines} W={W} H={H} />}
       </svg>
@@ -90,11 +91,11 @@ export default function OverviewTab({ waiverCount, tradeCount, totalCount, owner
   chartTitle: string;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-        <StatTile label="Waiver-Moves" value={waiverCount.toLocaleString("de-DE")} hint="Adds und Add/Drops" />
-        <StatTile label="Trades" value={tradeCount.toLocaleString("de-DE")} hint="Einzigartige Trades" />
-        <StatTile label="Transaktionen" value={totalCount.toLocaleString("de-DE")} hint="Waiver plus Trades" />
+        <StatTile label="Waiver-Moves" value={fmtInt(waiverCount)} hint="Adds und Add/Drops" />
+        <StatTile label="Trades" value={fmtInt(tradeCount)} hint="Einzigartige Trades" />
+        <StatTile label="Transaktionen" value={fmtInt(totalCount)} hint="Waiver plus Trades" />
       </div>
 
       {ownerStats && (

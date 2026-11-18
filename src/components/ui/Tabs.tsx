@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-// The one tab control of the site: a glass capsule. `size="sm"` for filters inside a card.
+// The one tab control of the site: a segmented strip on the deepest step. `size="sm"` for filters inside a card.
 export default function Tabs<T extends string | number>({ tabs, value, onChange, size = "md", label }: {
   tabs: readonly { key: T; label: React.ReactNode; count?: number }[];
   value: T;
@@ -20,19 +20,19 @@ export default function Tabs<T extends string | number>({ tabs, value, onChange,
     strip.scrollLeft = btn.offsetLeft - (strip.clientWidth - btn.offsetWidth) / 2;
   }, [value]);
 
-  const pad = size === "sm" ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
+  const pad = size === "sm" ? "min-h-7 px-2.5 text-xs" : "min-h-8 px-3 text-sm";
   return (
     <div role="tablist" aria-label={label}
-      className="glass relative inline-flex max-w-full gap-1 overflow-x-auto rounded-full p-1 shadow-none [scrollbar-width:none]">
+      className="relative inline-flex max-w-full gap-0.5 overflow-x-auto rounded-[var(--radius-pill)] border border-border bg-paper-3 p-0.5 [scrollbar-width:none]">
       {tabs.map((t) => {
         const active = t.key === value;
         return (
           <button key={String(t.key)} ref={active ? activeRef : undefined} type="button" role="tab" aria-selected={active}
             onClick={() => onChange(t.key)}
-            className={`${pad} whitespace-nowrap rounded-full font-medium transition-colors ${
-              active ? "bg-red text-on-accent shadow-sm" : "text-text-secondary hover:text-ink"}`}>
+            className={`${pad} whitespace-nowrap rounded-[5px] font-medium transition-colors ${
+              active ? "bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--color-rule-2)]" : "text-text-muted hover:text-ink"}`}>
             {t.label}
-            {t.count !== undefined && <span className={`ml-1.5 tabular-nums ${active ? "text-on-accent/70" : "text-text-faint"}`}>{t.count}</span>}
+            {t.count !== undefined && <span className={`measured ml-1.5 text-xs ${active ? "text-text-secondary" : "text-text-faint"}`}>{t.count}</span>}
           </button>
         );
       })}

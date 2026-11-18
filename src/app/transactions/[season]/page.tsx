@@ -3,6 +3,7 @@ import { SEASONS } from "@/lib/constants";
 import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import { notFound } from "next/navigation";
+import { fmtNum } from "@/lib/format";
 
 type Pickup = { first_week: number; manager_id: string; player_name: string; position: string | null; pickup_score: number | string | null };
 
@@ -58,8 +59,8 @@ export default async function TransactionDetailPage({ params }: { params: Promis
                       <td className="py-2.5 pl-4 pr-3 font-medium text-ink sm:pl-5"><ManagerName id={p.manager_id} /></td>
                       <td className="py-2.5 pr-3 text-ink">{p.player_name}</td>
                       <td className="hidden py-2.5 pr-3 text-text-muted md:table-cell">{p.position}</td>
-                      <td className="py-2.5 pl-3 pr-4 text-right tabular-nums text-text-secondary sm:pr-5">
-                        {p.pickup_score != null ? Number(p.pickup_score).toFixed(1) : "—"}
+                      <td className="py-2.5 pl-3 pr-4 text-right measured text-text-secondary sm:pr-5">
+                        {p.pickup_score != null ? fmtNum(Number(p.pickup_score)) : "–"}
                       </td>
                     </tr>
                   ))}

@@ -79,7 +79,7 @@ export default async function RankingsPage() {
   const rows = await getRankings();
 
   return (
-    <div>
+    <div className="space-y-8">
       <PageHeader title="Rankings" description="Alle Manager im Vergleich über alle Seasons. Klick auf eine Spaltenüberschrift sortiert die Tabelle." />
       <RankingsTable rows={rows} />
     </div>

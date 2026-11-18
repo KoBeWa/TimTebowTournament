@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ArrowDown, ArrowUp, Search, X } from "lucide-react";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import Tabs from "@/components/ui/Tabs";
 import TeamChart, { NFL_TEAMS } from "./TeamChart";
 import { loadManagerPlayers, playerHref, POSITIONS } from "@/lib/players";
 import { buildRows, type Row } from "./rows";
+import { fmtNum } from "@/lib/format";
 
 type Filter = "all" | "started" | "drafted" | "waiver" | "trade" | "bench";
 type SortKey = "name" | "position" | "team" | "first" | "weeks" | "starts" | "points" | "avg" | "best" | "drafted" | "adds" | "trades";
@@ -129,7 +130,7 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: !TEXT_KEYS.has(key) && key !== "first" }));
   }
 
-  const fmt = (n: number | null) => (n == null ? "–" : n.toFixed(1));
+  const fmt = (n: number | null) => (n == null ? "–" : fmtNum(n));
 
   const thBase = "py-2.5 px-3 text-xs font-medium text-text-muted whitespace-nowrap";
   // Columns kept on phones; the rest only from lg
@@ -137,10 +138,10 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
   const vis = (k: SortKey) => (PHONE.has(k) ? "" : "hidden lg:table-cell");
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 className="section-title text-ink">Spieler</h2>
-        {!loading && !error && <span className="text-sm text-text-muted">{rows.length} Spieler seit 2015 im Kader</span>}
+        {!loading && !error && <span className="text-sm text-text-muted"><span className="measured">{rows.length}</span> Spieler seit 2015 im Kader</span>}
       </div>
 
       {!loading && !error && rows.length > 0 && (
@@ -155,13 +156,13 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative flex-1 min-w-[12rem]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
+          <Search size={16} aria-hidden className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Spieler suchen…" aria-label="Spieler suchen"
-            className="w-full bg-surface border border-border rounded-full pl-9 pr-3 py-2 text-sm text-ink placeholder:text-text-faint focus:border-red focus:outline-none" />
+            className="w-full bg-paper-3 border border-border rounded-[var(--radius-pill)] pl-9 pr-3 py-2 text-sm text-ink placeholder:text-text-faint focus:border-red focus:outline-none" />
         </label>
         {team && (
           <button type="button" onClick={() => setTeam(null)} className="btn" aria-label={`Teamfilter ${team} entfernen`}>
-            Team: {team} ✕
+            Team: <span className="measured">{team}</span> <X size={14} aria-hidden className="ml-1.5 inline-block" />
           </button>
         )}
       </div>
@@ -172,7 +173,7 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
           <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
         </div>
       ) : loading ? (
-        <div className="cell animate-pulse divide-y divide-border-light" aria-busy="true">
+        <div className="cell motion-safe:animate-pulse divide-y divide-border-light" aria-busy="true">
           {Array.from({ length: 8 }, (_, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
               <div className="h-7 w-7 shrink-0 rounded-full bg-surface-3" />
@@ -195,7 +196,8 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
                   <th key={c.key} title={c.title}
                     className={`${thBase} ${vis(c.key)} ${i === 0 ? "pl-4 sm:pl-5" : ""} ${i === COLUMNS.length - 1 ? "pr-4 sm:pr-5" : ""} ${c.align === "left" ? "text-left" : "text-right"}`}>
                     <button onClick={() => sortBy(c.key)} className={`inline-flex min-h-11 items-center ${sort.key === c.key ? "text-red" : "hover:text-ink"}`}>
-                      {c.label}{sort.key === c.key ? (sort.desc ? " ↓" : " ↑") : ""}
+                      {c.label}
+                      {sort.key === c.key && (sort.desc ? <ArrowDown size={12} aria-hidden className="ml-1" /> : <ArrowUp size={12} aria-hidden className="ml-1" />)}
                     </button>
                   </th>
                 ))}
@@ -204,33 +206,33 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
             <tbody>
               {shown.slice(0, limit).map((r) => (
                 <tr key={r.key} className="border-t border-border-light hover:bg-surface-2">
-                  <td className="py-2 pl-4 pr-3 sm:pl-5">
+                  <td className="py-2.5 pl-4 pr-3 sm:pl-5">
                     <Link href={playerHref(r.key)} className="group flex items-center gap-2.5">
                       <PlayerAvatar p={{ headshot: r.headshot, player_name: r.name, position: r.position }} size={28} />
                       <span className="whitespace-nowrap font-medium text-ink group-hover:text-red">{r.name}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2 text-text-muted">{r.position ?? "–"}</td>
-                  <td className="hidden px-3 py-2 text-text-muted lg:table-cell">{r.team ?? "–"}</td>
-                  <td className="hidden whitespace-nowrap px-3 py-2 text-text-muted lg:table-cell">
+                  <td className="px-3 py-2.5 text-text-muted">{r.position ?? "–"}</td>
+                  <td className="hidden px-3 py-2.5 text-text-muted lg:table-cell">{r.team ?? "–"}</td>
+                  <td className="hidden whitespace-nowrap px-3 py-2.5 measured text-text-muted lg:table-cell">
                     {r.first == null ? "–" : r.first === r.last ? r.first : `${r.first}–${r.last}`}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.weeks}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.starts}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-ink">{r.points.toFixed(1)}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{fmt(r.avg)}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{fmt(r.best)}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{r.drafted || "–"}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{r.adds || "–"}</td>
-                  <td className="hidden py-2 pl-3 pr-4 text-right tabular-nums sm:pr-5 lg:table-cell">{r.trades || "–"}</td>
+                  <td className="px-3 py-2.5 text-right measured">{r.weeks}</td>
+                  <td className="px-3 py-2.5 text-right measured">{r.starts}</td>
+                  <td className="px-3 py-2.5 text-right measured text-ink">{fmtNum(r.points)}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{fmt(r.avg)}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{fmt(r.best)}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{r.drafted || "–"}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{r.adds || "–"}</td>
+                  <td className="hidden py-2.5 pl-3 pr-4 text-right measured sm:pr-5 lg:table-cell">{r.trades || "–"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {shown.length > limit && (
             <button onClick={() => setLimit((l) => l + PAGE)}
-              className="min-h-11 w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:bg-surface-2 hover:text-ink">
-              {Math.min(PAGE, shown.length - limit)} weitere anzeigen ({shown.length - limit} übrig)
+              className="min-h-11 w-full whitespace-nowrap border-t border-border-light px-4 py-3 text-sm text-text-muted hover:bg-surface-2 hover:text-ink">
+              <span className="whitespace-nowrap">{`${Math.min(PAGE, shown.length - limit)} weitere anzeigen (${shown.length - limit} übrig)`}</span>
             </button>
           )}
         </div>

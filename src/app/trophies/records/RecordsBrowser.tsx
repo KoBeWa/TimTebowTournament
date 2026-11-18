@@ -82,23 +82,25 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
   const currentHolder = periods.find((e) => e.is_current);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Tabs tabs={CATEGORIES.map((cat) => ({ key: cat, label: cat, count: categoryRecords[cat].length }))}
         value={activeCat} onChange={selectCategory} label="Kategorie" />
 
       {/* Below md the panes stack and the record list becomes a select; no fixed heights there */}
-      <div className="cell overflow-hidden md:flex md:min-h-[24rem]">
+      <div className="cell overflow-hidden md:flex md:min-h-[32rem]">
 
-        <div className="border-b border-border p-3 md:hidden">
+        <div className="border-b border-border p-4 md:hidden">
           <label className="flex flex-col gap-1 text-xs text-text-muted">
             Record
             <select value={selectedKey ?? ""} onChange={(e) => setSelectedKey(e.target.value)}
-              className="w-full rounded-full border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-red focus:outline-none">
+              className="w-full">
               {recordsInCat.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
             </select>
           </label>
         </div>
-        <div className="hidden w-60 shrink-0 border-r border-border md:block md:max-h-[80vh] md:overflow-y-auto">
+        {/* The list fills the panel's height and scrolls on its own, whatever the detail beside it needs */}
+        <div className="relative hidden w-60 shrink-0 border-r border-border md:block">
+          <div className="absolute inset-0 overflow-y-auto">
           {recordsInCat.map(({ key, label }) => {
             const isSelected = key === selectedKey;
             const holder = timelineMap[key]?.find((e) => e.is_current);
@@ -106,7 +108,8 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
               <button
                 key={key}
                 onClick={() => setSelectedKey(key)}
-                className={`min-h-11 w-full border-b border-border-light px-3 py-2.5 text-left transition-colors ${
+                aria-pressed={isSelected}
+                className={`min-h-11 w-full border-b border-border-light px-4 py-2.5 text-left transition-colors ${
                   isSelected ? "bg-surface-3" : "hover:bg-surface-2"
                 }`}
               >
@@ -114,20 +117,21 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
                 {holder && (
                   <div className="mt-0.5 text-xs text-text-muted">
                     {holder.manager_id}{", "}
-                    <span className="tabular-nums">{fmtVal(Number(holder.record_value))}</span>
+                    <span className="measured">{fmtVal(Number(holder.record_value))}</span>
                   </div>
                 )}
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="min-w-0 md:flex-1">
           {selectedKey && selectedLabel ? (
-            <div className="space-y-4 p-4 sm:p-5">
+            <div className="space-y-6 p-4 sm:p-5">
               <div>
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-                  <h2 className="display-title text-2xl leading-tight text-ink sm:text-3xl">{selectedLabel}</h2>
+                  <h2 className="section-title text-ink">{selectedLabel}</h2>
                   <Link href={`/trophies/records/${selectedKey}`}
                     className="inline-flex min-h-11 shrink-0 items-center gap-0.5 text-sm text-text-secondary transition-colors hover:text-ink">
                     Ganzer Verlauf <ChevronRight size={14} />
@@ -139,21 +143,21 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
               <RecordHistoryPanel key={selectedKey} recordKey={selectedKey} periods={periods} label={selectedLabel} higher={higher} />
 
               <div>
-                <h3 className="mb-2 text-sm font-medium text-text-muted">Aktuelle Rangliste</h3>
-                <div className="overflow-x-auto rounded-xl border border-border-light">
+                <h3 className="mb-2 text-base font-medium text-ink">Aktuelle Rangliste</h3>
+                <div className="overflow-x-auto border-y border-border-light">
                   <table className="w-full text-sm">
                     <tbody>
                       {ownerRanking.map((row, i) => {
                         const isCurrent = currentHolder?.manager_id === row.manager_id;
-                        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
+                        const medalClass = i === 0 ? "text-gold" : i === 1 ? "text-silver" : i === 2 ? "text-bronze" : "text-text-muted";
                         return (
-                          <tr key={row.manager_id} className={`${i > 0 ? "border-t border-border-light" : ""} ${isCurrent ? "bg-surface-2" : ""}`}>
-                            <td className="w-10 py-2.5 pl-4 text-xs text-text-muted">{medal}</td>
+                          <tr key={row.manager_id} className={i > 0 ? "border-t border-border-light" : ""}>
+                            <td className={`measured w-10 py-2.5 text-sm ${medalClass}`}>{i + 1}</td>
                             <td className="px-3 py-2.5 font-medium">
                               <ManagerName id={row.manager_id} />
                               {isCurrent && <span className="ml-2 text-xs text-red">Rekord</span>}
                             </td>
-                            <td className={`py-2.5 pl-3 pr-4 text-right tabular-nums ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
+                            <td className="measured py-2.5 pl-3 text-right text-ink">
                               {fmtVal(row.current_value)}
                             </td>
                           </tr>
@@ -165,7 +169,7 @@ export default function RecordsBrowser({ ownerValues, timeline }: Props) {
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center text-text-muted">Kein Record ausgewählt</div>
+            <div className="p-8 text-center text-sm text-text-muted">Kein Record ausgewählt</div>
           )}
         </div>
       </div>

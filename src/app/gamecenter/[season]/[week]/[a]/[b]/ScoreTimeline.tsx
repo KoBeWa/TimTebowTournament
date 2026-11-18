@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGER_COLORS } from "@/lib/constants";
+import { fmtNum, fmtSigned } from "@/lib/format";
 
 // Data written by scripts/score_timelines/build.py
 interface TimelineFile {
@@ -18,8 +19,8 @@ interface Point {
   plays: { player: string; pts: number }[];
 }
 
-const FALLBACK_A = "#f4532f";
-const FALLBACK_B = "#4590ea";
+const FALLBACK_A = "var(--color-red)";
+const FALLBACK_B = "var(--color-cool)";
 
 // Manager colours for the two lines; falls back to the fixed pair when they are hard to tell apart
 function lineColors(a: string, b: string) {
@@ -188,7 +189,7 @@ export default function ScoreTimeline({
 
   const empty = (text: string) => <div className="cell p-6 text-sm text-text-muted">{text}</div>;
   if (failed) return empty("Für diese Woche gibt es keinen Spielverlauf.");
-  if (!data) return <div className="cell h-80 animate-pulse bg-surface-2" aria-busy="true" />;
+  if (!data) return <div className="cell h-80 motion-safe:animate-pulse bg-surface-2" aria-busy="true" />;
   if (!chart) return empty("Für diese Woche gibt es keinen Spielverlauf.");
 
   const { seriesA, seriesB, x, y, fromX, ticks, path, endT, leadChanges } = chart;
@@ -223,8 +224,8 @@ export default function ScoreTimeline({
   };
 
   return (
-    <div className="space-y-6">
-    <section className="cell p-4 sm:p-6">
+    <div className="space-y-8">
+    <section className="cell p-4 sm:p-5">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="section-title text-ink">So lief der Spieltag</h2>
@@ -254,7 +255,7 @@ export default function ScoreTimeline({
           onPointerDown={onMove}
           onPointerLeave={() => setHoverT(null)}
           role="img"
-          aria-label={`Punkteverlauf ${managerA} ${finalA.toFixed(1)} gegen ${managerB} ${finalB.toFixed(1)}`}
+          aria-label={`Punkteverlauf ${managerA} ${fmtNum(finalA)} gegen ${managerB} ${fmtNum(finalB)}`}
         >
           {/* Game windows */}
           {data.windows.map(([a, b], i) => (
@@ -269,7 +270,7 @@ export default function ScoreTimeline({
                 rx={4}
               />
               {labelled.has(i) && (
-                <text x={x(a) + 4} y={HEIGHT - 12} fontSize={11} fill="var(--color-text-faint)">
+                <text x={x(a) + 4} y={HEIGHT - 12} fontSize={11} fill="var(--color-text-faint)" style={{ fontFamily: "var(--font-outlier)" }}>
                   {formatTime(data.start + a)}
                 </text>
               )}
@@ -284,10 +285,10 @@ export default function ScoreTimeline({
                 x2={width - PAD.right}
                 y1={y(v)}
                 y2={y(v)}
-                stroke="var(--color-border)"
+                stroke="var(--color-border-light)"
                 strokeDasharray={v === 0 ? undefined : "2 4"}
               />
-              <text x={PAD.left - 8} y={y(v) + 4} fontSize={11} textAnchor="end" fill="var(--color-text-faint)">
+              <text x={PAD.left - 8} y={y(v) + 4} fontSize={11} textAnchor="end" fill="var(--color-text-faint)" style={{ fontFamily: "var(--font-outlier)" }}>
                 {v}
               </text>
             </g>
@@ -298,28 +299,28 @@ export default function ScoreTimeline({
           <path d={path(seriesA)} fill="none" stroke={COLOR_A} strokeWidth={2} strokeLinejoin="round" />
 
           {/* End labels */}
-          <circle cx={x(endT)} cy={y(finalB)} r={4} fill={COLOR_B} stroke="var(--color-surface)" strokeWidth={2} />
-          <circle cx={x(endT)} cy={y(finalA)} r={4} fill={COLOR_A} stroke="var(--color-surface)" strokeWidth={2} />
-          <text x={x(endT) + 8} y={labelA + 4} fontSize={12} fontWeight={600} fill="var(--color-ink)">
-            {finalA.toFixed(1)}
+          <circle cx={x(endT)} cy={y(finalB)} r={4} fill={COLOR_B} stroke="var(--color-paper-2)" strokeWidth={2} />
+          <circle cx={x(endT)} cy={y(finalA)} r={4} fill={COLOR_A} stroke="var(--color-paper-2)" strokeWidth={2} />
+          <text x={x(endT) + 8} y={labelA + 4} fontSize={12} fontWeight={500} fill="var(--color-ink)" style={{ fontFamily: "var(--font-outlier)" }}>
+            {fmtNum(finalA)}
           </text>
-          <text x={x(endT) + 8} y={labelB + 4} fontSize={12} fontWeight={600} fill="var(--color-ink)">
-            {finalB.toFixed(1)}
+          <text x={x(endT) + 8} y={labelB + 4} fontSize={12} fontWeight={500} fill="var(--color-ink)" style={{ fontFamily: "var(--font-outlier)" }}>
+            {fmtNum(finalB)}
           </text>
 
           {/* Crosshair */}
           {hover && (
             <g pointerEvents="none">
               <line x1={hoverX} x2={hoverX} y1={PAD.top} y2={HEIGHT - PAD.bottom} stroke="var(--color-text-faint)" />
-              <circle cx={hoverX} cy={y(hover.b.score)} r={4} fill={COLOR_B} stroke="var(--color-surface)" strokeWidth={2} />
-              <circle cx={hoverX} cy={y(hover.a.score)} r={4} fill={COLOR_A} stroke="var(--color-surface)" strokeWidth={2} />
+              <circle cx={hoverX} cy={y(hover.b.score)} r={4} fill={COLOR_B} stroke="var(--color-paper-2)" strokeWidth={2} />
+              <circle cx={hoverX} cy={y(hover.a.score)} r={4} fill={COLOR_A} stroke="var(--color-paper-2)" strokeWidth={2} />
             </g>
           )}
         </svg>
 
         {hover && hoverT !== null && (
           <div
-            className="pointer-events-none absolute top-2 z-10 w-56 rounded-xl border border-border-strong bg-solid p-3 text-xs shadow-xl backdrop-blur"
+            className="pointer-events-none absolute top-2 z-10 w-56 rounded-lg border border-border bg-solid p-3 text-xs"
             style={{ left: tooltipLeft(hoverX, width) }}
           >
             <div className="mb-2 text-text-muted">{formatTime(data.start + hoverT)}, Stand und letzte Aktion</div>
@@ -330,13 +331,13 @@ export default function ScoreTimeline({
               <div key={name} className="mb-1.5 last:mb-0">
                 <div className="flex items-center gap-2">
                   <span className="inline-block h-0.5 w-3 rounded" style={{ background: color }} />
-                  <span className="font-semibold text-ink tabular-nums">{p.score.toFixed(1)}</span>
+                  <span className="measured font-medium text-ink">{fmtNum(p.score)}</span>
                   <span className="text-text-secondary">{name}</span>
                 </div>
                 {p.plays.length > 0 && (
                   <div className="ml-5 mt-0.5 text-text-faint">
                     {p.plays
-                      .map((pl) => `${pl.player} ${pl.pts > 0 ? "+" : ""}${pl.pts.toFixed(1)}`)
+                      .map((pl) => `${pl.player} ${fmtSigned(pl.pts)}`)
                       .join(", ")}
                   </div>
                 )}
@@ -367,20 +368,19 @@ export default function ScoreTimeline({
               .flatMap((p) => p.plays.map((pl, i) => ({ ...pl, t: p.t, side: p.side, key: `${p.side}-${p.t}-${i}` })))
               .map((row) => (
                 <tr key={row.key} className="border-t border-border-light">
-                  <td className="whitespace-nowrap py-1.5 pl-4 pr-2 text-text-faint sm:pl-5">{formatTime(data.start + row.t)}</td>
-                  <td className="px-2 py-1.5 text-text-secondary">
+                  <td className="measured whitespace-nowrap py-2.5 pl-4 pr-2 text-text-faint sm:pl-5">{formatTime(data.start + row.t)}</td>
+                  <td className="px-2 py-2.5 text-text-secondary">
                     <span
                       className="mr-2 inline-block h-0.5 w-3 rounded align-middle"
                       style={{ background: row.side === "a" ? COLOR_A : COLOR_B }}
                     />
                     {row.player}
                   </td>
-                  <td className={`px-2 py-1.5 text-right tabular-nums ${row.pts < 0 ? "text-negative" : "text-ink"}`}>
-                    {row.pts > 0 ? "+" : ""}
-                    {row.pts.toFixed(2)}
+                  <td className={`measured px-2 py-2.5 text-right ${row.pts < 0 ? "text-negative" : "text-ink"}`}>
+                    {fmtSigned(row.pts, 2)}
                   </td>
-                  <td className="hidden px-2 py-1.5 text-right tabular-nums text-text-muted md:table-cell">{scoreAt(seriesA, row.t).score.toFixed(1)}</td>
-                  <td className="hidden py-1.5 pl-2 pr-4 text-right tabular-nums text-text-muted sm:pr-5 md:table-cell">{scoreAt(seriesB, row.t).score.toFixed(1)}</td>
+                  <td className="measured hidden px-2 py-2.5 text-right text-text-muted md:table-cell">{fmtNum(scoreAt(seriesA, row.t).score)}</td>
+                  <td className="measured hidden py-2.5 pl-2 pr-4 text-right text-text-muted sm:pr-5 md:table-cell">{fmtNum(scoreAt(seriesB, row.t).score)}</td>
                 </tr>
               ))}
           </tbody>

@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { MANAGER_COLORS } from "@/lib/constants";
 import PageHeader from "@/components/ui/PageHeader";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import ScoreTimeline from "./ScoreTimeline";
 import { loadMatchup, type H2HData, type LineupPlayer, type MatchupData, type TeamWeekStats } from "@/lib/matchup";
+import { fmtNum, fmtPctPoints, fmtSigned, fmtSignedPctPoints } from "@/lib/format";
 
 type TabKey = "lineups" | "verlauf" | "vergleich";
 const TABS: { key: TabKey; label: string }[] = [
@@ -98,10 +98,10 @@ function LineupTable({
   return (
     <div className="min-w-0 flex-1">
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h3 className="text-base font-semibold text-ink">
+        <h3 className="text-base font-medium text-ink">
           <ManagerName id={managerId} />
         </h3>
-        <span className="text-sm tabular-nums text-text-muted">{total.toFixed(1)} Punkte</span>
+        <span className="measured text-sm text-text-muted">{fmtNum(total)} Punkte</span>
       </div>
       <div className="cell overflow-x-auto">
         <table className="w-full text-sm">
@@ -120,10 +120,10 @@ function LineupTable({
               const wonBattle = positionWins[posGroup] === true;
               return (
                 <tr key={p.slot} className="border-t border-border-light">
-                  <td className="py-2 pl-4 pr-2 text-xs font-semibold text-red sm:pl-5">{slotLabel(p.slot)}</td>
+                  <td className="py-2 pl-4 pr-2 measured text-xs text-text-muted sm:pl-5">{slotLabel(p.slot)}</td>
                   <td className="px-2 py-2">
                     <div className="flex items-center gap-3">
-                      <div className="hidden h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-border-light md:flex">
+                      <div className="hidden h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-pill)] bg-border-light md:flex">
                         {p.headshot ? (
                           <img
                             loading="lazy"
@@ -145,30 +145,30 @@ function LineupTable({
                     </div>
                   </td>
                   <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
-                  <td className="whitespace-nowrap py-2 pl-2 pr-4 text-right tabular-nums text-ink sm:pr-5">
-                    <span className="font-semibold">{p.points.toFixed(1)}</span>
+                  <td className="measured whitespace-nowrap py-2 pl-2 pr-4 text-right text-ink sm:pr-5">
+                    <span className="font-medium">{fmtNum(p.points)}</span>
                     {wonBattle && (
-                      <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-positive align-middle" title="Position-Battle gewonnen" />
+                      <span className="ml-2 inline-block h-1.5 w-1.5 rounded-[var(--radius-pill)] bg-positive align-middle" title="Position-Battle gewonnen" />
                     )}
                   </td>
                 </tr>
               );
             })}
             {bench.length > 0 && (
-              <tr className="border-t border-border bg-surface-2">
+              <tr className="border-t border-border">
                 <td colSpan={4} className="py-1.5 pl-4 pr-4 text-xs font-medium text-text-muted sm:pl-5">Bank</td>
               </tr>
             )}
             {bench.map((p, i) => (
               <tr key={`bench-${i}`} className={`border-t border-border-light ${p.shouldHaveStarted ? "" : "opacity-60"}`}>
-                <td className="py-2 pl-4 pr-2 text-xs text-text-muted sm:pl-5">BN</td>
+                <td className="measured py-2 pl-4 pr-2 text-xs text-text-muted sm:pl-5">BN</td>
                 <td className="px-2 py-2">
                   <span className={`truncate ${p.shouldHaveStarted ? "font-medium text-ink" : "text-text-secondary"}`}>{p.player_name}</span>
                   {p.shouldHaveStarted && <span className="ml-2 text-xs text-negative">hätte starten sollen</span>}
                 </td>
                 <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
-                <td className={`py-2 pl-2 pr-4 text-right tabular-nums sm:pr-5 ${p.shouldHaveStarted ? "font-semibold text-ink" : "text-text-muted"}`}>
-                  {p.points.toFixed(1)}
+                <td className={`measured py-2 pl-2 pr-4 text-right sm:pr-5 ${p.shouldHaveStarted ? "font-medium text-ink" : "text-text-muted"}`}>
+                  {fmtNum(p.points)}
                 </td>
               </tr>
             ))}
@@ -182,30 +182,28 @@ function LineupTable({
 // ─── Team stat card ───────────────────────────────────────────────────────────
 
 function TeamStatBar({ stats, managerId, won }: { stats: TeamWeekStats; managerId: string; won: boolean }) {
-  const signPct = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
-  const sign = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(2);
-  const color = MANAGER_COLORS[managerId] ?? "var(--color-border-strong)";
-
+  const signPct = (n: number) => fmtSignedPctPoints(n);
+  const sign = (n: number) => fmtSigned(n, 2);
   const items = [
-    { label: "Punkteanteil", value: `${stats.pts_share_pct.toFixed(1)}%` },
+    { label: "Punkteanteil", value: fmtPctPoints(stats.pts_share_pct) },
     { label: "Wochenrang", value: `#${stats.pts_rank}` },
     { label: "vs Team Ø", value: signPct(stats.pts_vs_team_avg_pct) },
     { label: "vs Liga Ø", value: signPct(stats.pts_vs_league_avg_pct) },
     { label: "Luck", value: stats.luck !== null ? sign(stats.luck) : "–" },
     { label: "Coach-Rang", value: stats.coach_rank !== null ? `#${stats.coach_rank}` : "–" },
-    { label: "Coach-Score", value: stats.coach_score !== null ? stats.coach_score.toFixed(1) : "–" },
+    { label: "Coach-Score", value: stats.coach_score !== null ? fmtNum(stats.coach_score) : "–" },
   ];
 
   return (
-    <div className="cell flex-1 overflow-hidden" style={{ boxShadow: `inset 0 3px 0 ${color}` }}>
-      <div className={`px-4 pb-1 pt-3 text-base sm:px-5 ${won ? "font-semibold text-ink" : "text-text-secondary"}`}>
+    <div className="cell flex-1 overflow-hidden">
+      <div className={`px-4 py-3 text-base sm:px-5 ${won ? "font-medium text-ink" : "text-text-secondary"}`}>
         <ManagerName id={managerId} plain />
       </div>
       <dl>
         {items.map((item) => (
           <div key={item.label} className="flex justify-between gap-2 border-t border-border-light px-4 py-2 text-sm sm:px-5">
             <dt className="text-text-muted">{item.label}</dt>
-            <dd className="font-medium tabular-nums text-ink">{item.value}</dd>
+            <dd className="measured text-ink">{item.value}</dd>
           </div>
         ))}
       </dl>
@@ -228,29 +226,29 @@ function H2HSection({ h2h, managerA, managerB }: {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="cell p-4">
           <div className="text-xs text-text-muted">Bilanz gesamt</div>
-          <div className="display-title mt-1 text-xl tabular-nums text-ink">{h2h.record}</div>
+          <div className="measured mt-1 text-xl font-medium text-ink">{h2h.record}</div>
           <div className="mt-0.5 text-xs text-text-muted">{managerA} gegen {managerB}</div>
         </div>
         <div className="cell p-4">
           <div className="text-xs text-text-muted">Aktuelle Serie</div>
-          <div className="display-title mt-1 text-xl tabular-nums text-ink">{h2h.winnerStreak}×</div>
+          <div className="measured mt-1 text-xl font-medium text-ink">{h2h.winnerStreak}×</div>
           <div className="mt-0.5 text-xs text-text-muted">{h2h.winner}</div>
         </div>
         <div className="cell p-4">
           <div className="text-xs text-text-muted">Ø Punktedifferenz</div>
-          <div className={`display-title mt-1 text-xl tabular-nums ${favoredA ? "text-ink" : "text-text-secondary"}`}>
-            {favoredA ? "+" : ""}{Math.abs(margin).toFixed(1)}
+          <div className={`measured mt-1 text-xl font-medium ${favoredA ? "text-ink" : "text-text-secondary"}`}>
+            {favoredA ? "+" : ""}{fmtNum(Math.abs(margin))}
           </div>
           <div className="mt-0.5 text-xs text-text-muted">zugunsten {favoredA ? managerA : managerB}</div>
         </div>
         {h2h.prevMatchup && (
           <Link
             href={`/gamecenter/${h2h.prevMatchup.season}/${h2h.prevMatchup.week}?a=${managerA}&b=${managerB}`}
-            className="cell group p-4 transition-colors hover:bg-surface-2"
+            className="cell group p-4 transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--color-focus)]"
           >
             <div className="text-xs text-text-muted">Letztes Aufeinandertreffen</div>
-            <div className="display-title mt-1 text-xl tabular-nums text-ink group-hover:text-red transition-colors">
-              {h2h.prevMatchup.scoreA.toFixed(1)} – {h2h.prevMatchup.scoreB.toFixed(1)}
+            <div className="measured mt-1 text-xl font-medium text-ink transition-colors group-hover:text-red">
+              {fmtNum(h2h.prevMatchup.scoreA)} : {fmtNum(h2h.prevMatchup.scoreB)}
             </div>
             <div className="mt-0.5 text-xs text-text-muted">
               Saison {h2h.prevMatchup.season}, Woche {h2h.prevMatchup.week}
@@ -323,11 +321,11 @@ export default function MatchupView({ season, week, a, b, initial }: {
   }
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6" aria-busy="true">
+      <div className="motion-safe:animate-pulse space-y-8" aria-busy="true">
         <div className="h-10 w-2/3 rounded-lg bg-surface-3" />
         <div className="cell h-32 bg-surface-2" />
-        <div className="h-11 w-72 max-w-full rounded-full bg-surface-3" />
-        <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="h-11 w-72 max-w-full rounded-[var(--radius-pill)] bg-surface-3" />
+        <div className="flex flex-col gap-4 lg:flex-row">
           <div className="cell h-96 flex-1 bg-surface-2" />
           <div className="cell h-96 flex-1 bg-surface-2" />
         </div>
@@ -360,8 +358,6 @@ export default function MatchupView({ season, week, a, b, initial }: {
 
   const { a: posWinsA, b: posWinsB } = getPositionBattle(lineupA, lineupB);
 
-  const color = (id: string) => MANAGER_COLORS[id] ?? "var(--color-border-strong)";
-
   return (
     <div>
       <PageHeader
@@ -371,34 +367,30 @@ export default function MatchupView({ season, week, a, b, initial }: {
       />
 
       {/* Score header */}
-      <div className="cell mb-6 overflow-hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-6 text-center sm:px-8 sm:py-8">
+      <div className="cell-accent mb-8 overflow-hidden">
+        <div className="flex items-center justify-between gap-3 p-4 text-center sm:p-6">
           <div className="min-w-0 flex-1">
-            <div className={`display-title truncate text-2xl sm:text-4xl ${aWon ? "text-ink" : "text-text-muted"}`}>{matchup.manager_a}</div>
+            <div className={`flex justify-center text-base font-medium sm:text-2xl ${aWon ? "text-ink" : "text-text-muted"}`}><ManagerName id={matchup.manager_a} plain /></div>
             {aWon && <div className="mt-1 text-xs text-text-muted">Sieger</div>}
           </div>
-          <div className="display-title shrink-0 whitespace-nowrap text-3xl tabular-nums sm:text-5xl">
-            <span className={aWon ? "text-ink" : "text-text-faint"}>{matchup.score_a.toFixed(1)}</span>
-            <span className="mx-2 text-text-faint sm:mx-3">–</span>
-            <span className={!aWon ? "text-ink" : "text-text-faint"}>{matchup.score_b.toFixed(1)}</span>
+          <div className="measured shrink-0 whitespace-nowrap text-lg font-medium sm:text-4xl">
+            <span className={aWon ? "text-ink" : "text-text-muted"}>{fmtNum(matchup.score_a)}</span>
+            <span className="mx-1.5 text-text-faint sm:mx-3">:</span>
+            <span className={!aWon ? "text-ink" : "text-text-muted"}>{fmtNum(matchup.score_b)}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className={`display-title truncate text-2xl sm:text-4xl ${!aWon ? "text-ink" : "text-text-muted"}`}>{matchup.manager_b}</div>
+            <div className={`flex justify-center text-base font-medium sm:text-2xl ${!aWon ? "text-ink" : "text-text-muted"}`}><ManagerName id={matchup.manager_b} plain /></div>
             {!aWon && <div className="mt-1 text-xs text-text-muted">Sieger</div>}
           </div>
         </div>
-        <div className="flex h-1">
-          <div className="flex-1" style={{ backgroundColor: color(matchup.manager_a) }} />
-          <div className="flex-1" style={{ backgroundColor: color(matchup.manager_b) }} />
-        </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-8">
         <Tabs tabs={TABS} value={tab} onChange={setTab} label="Ansicht" />
       </div>
 
       {tab === "lineups" && (
-        <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-4">
           <LineupTable lineup={lineupA} managerId={matchup.manager_a} positionWins={posWinsA} />
           <LineupTable lineup={lineupB} managerId={matchup.manager_b} positionWins={posWinsB} />
         </div>

@@ -18,14 +18,14 @@ function WaiverTable({ rows, best }: { rows: VTxRow[]; best: boolean }) {
         <tbody>
           {rows.map((r, i) => (
             <tr key={`${r.transaction_id}-${r.team_name}-${i}`} className="border-t border-border-light">
-              <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+              <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
               <td className="px-2 py-2.5">
-                <div className="font-medium text-ink">{r.add_players ?? "—"}</div>
+                <div className="font-medium text-ink">{r.add_players ?? "–"}</div>
                 {r.drop_players && <div className="text-xs text-text-muted">− {r.drop_players}</div>}
                 <div className="text-xs text-text-faint">{r.season_year}, Woche {r.transaction_week}</div>
               </td>
               <td className="px-2 py-2.5 text-ink"><ManagerName id={r.team_name} /></td>
-              <td className={`py-2.5 pl-2 pr-4 text-right font-semibold tabular-nums sm:pr-5 ${best ? "text-positive" : "text-negative"}`}>
+              <td className={`py-2.5 pl-2 pr-4 text-right font-semibold measured sm:pr-5 ${best ? "text-positive" : "text-negative"}`}>
                 {fmt(best ? (r.scored_value ?? 0) : r.gain_value)}
               </td>
             </tr>

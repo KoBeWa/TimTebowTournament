@@ -20,9 +20,9 @@ function RankingTable({ rows, label }: { rows: { team: string; value: number }[]
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.team} className="border-t border-border-light">
-              <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+              <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
               <td className="px-2 py-2.5 font-semibold text-ink"><ManagerName id={r.team} /></td>
-              <td className={`py-2.5 pl-2 pr-4 text-right font-semibold tabular-nums sm:pr-5 ${valTone(r.value)}`}>{fmt(r.value)}</td>
+              <td className={`py-2.5 pl-2 pr-4 text-right font-semibold measured sm:pr-5 ${valTone(r.value)}`}>{fmt(r.value)}</td>
             </tr>
           ))}
         </tbody>
@@ -104,7 +104,7 @@ export default function RankingsTab({ vtx, filt, seasonFiltered }: {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {records.map(({ label, data, tone }) => (
             <StatTile key={label} label={label}
-              value={data ? fmt(data.total) : "—"}
+              value={data ? fmt(data.total) : "–"}
               tone={data ? tone : undefined}
               hint={data ? <><ManagerName id={data.team} />{!seasonFiltered && <span className="mt-0.5 block">{data.season}</span>}</> : undefined} />
           ))}

@@ -96,7 +96,7 @@ export default async function RecordDetailPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={recordLabel}
         crumbs={[{ label: "Trophy Room", href: "/trophies" }, { label: "Records", href: "/trophies/records" }]}
@@ -104,23 +104,23 @@ export default async function RecordDetailPage({
       />
 
       {currentHolder && (
-        <div className="cell-accent grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-end sm:p-6">
+        <div className="cell-accent grid gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-end sm:p-5">
           <div className="min-w-0">
-            <div className="text-sm text-on-accent/70">Aktueller Rekordhalter</div>
-            <div className="display-title text-4xl text-on-accent sm:text-5xl"><ManagerName id={currentHolder.manager_id} /></div>
+            <div className="text-sm text-text-muted">Aktueller Rekordhalter</div>
+            <div className="display-title text-3xl text-ink sm:text-4xl"><ManagerName id={currentHolder.manager_id} /></div>
           </div>
           <div className="grid grid-cols-3 gap-x-6 sm:text-right">
             <div>
-              <div className="text-xs text-on-accent/70">Wert</div>
-              <div className="display-title text-2xl tabular-nums text-on-accent">{fmtVal(Number(currentHolder.record_value))}</div>
+              <div className="text-xs text-text-muted">Wert</div>
+              <div className="measured text-xl text-ink">{fmtVal(Number(currentHolder.record_value))}</div>
             </div>
             <div>
-              <div className="text-xs text-on-accent/70">Seit</div>
-              <div className="text-base font-semibold tabular-nums text-on-accent">{fmtPeriod(currentHolder).replace("seit ", "")}</div>
+              <div className="text-xs text-text-muted">Seit</div>
+              <div className="measured text-xl text-ink">{fmtPeriod(currentHolder).replace("seit ", "")}</div>
             </div>
             <div>
-              <div className="text-xs text-on-accent/70">Wochen</div>
-              <div className="display-title text-2xl tabular-nums text-on-accent">{currentHolder.weeks_held}</div>
+              <div className="text-xs text-text-muted">Wochen</div>
+              <div className="measured text-xl text-ink">{currentHolder.weeks_held}</div>
             </div>
           </div>
         </div>
@@ -136,23 +136,23 @@ export default async function RecordDetailPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs font-medium text-text-muted">
-                  <th className="w-12 py-3 pl-4 text-left font-medium sm:pl-5">#</th>
-                  <th className="px-3 py-3 text-left font-medium">Manager</th>
-                  <th className="py-3 pl-3 pr-4 text-right font-medium sm:pr-5">Wert</th>
+                  <th className="w-12 py-2.5 pl-4 text-left font-medium sm:pl-5">#</th>
+                  <th className="px-3 py-2.5 text-left font-medium">Manager</th>
+                  <th className="py-2.5 pl-3 pr-4 text-right font-medium sm:pr-5">Wert</th>
                 </tr>
               </thead>
               <tbody>
                 {ranking.map((row, i) => {
                   const isCurrent = currentHolder?.manager_id === row.manager;
-                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
+                  const medalClass = i === 0 ? "text-gold" : i === 1 ? "text-silver" : i === 2 ? "text-bronze" : "text-text-muted";
                   return (
-                    <tr key={row.manager} className={`border-t border-border-light ${isCurrent ? "bg-surface-2" : ""}`}>
-                      <td className="py-3 pl-4 text-text-muted sm:pl-5">{medal}</td>
-                      <td className="px-3 py-3 font-medium">
+                    <tr key={row.manager} className="border-t border-border-light">
+                      <td className={`measured py-2.5 pl-4 sm:pl-5 ${medalClass}`}>{i + 1}</td>
+                      <td className="px-3 py-2.5 font-medium">
                         <ManagerName id={row.manager} />
                         {isCurrent && <span className="ml-2 text-xs text-red">Rekord</span>}
                       </td>
-                      <td className={`py-3 pl-3 pr-4 text-right tabular-nums sm:pr-5 ${i === 0 ? "font-semibold text-ink" : "text-ink"}`}>
+                      <td className="measured py-2.5 pl-3 pr-4 text-right text-ink sm:pr-5">
                         {fmtVal(row.value)}
                       </td>
                     </tr>
@@ -167,37 +167,32 @@ export default async function RecordDetailPage({
           </div>
         )}
         history={
-          <div className="relative">
-            <div className="absolute bottom-0 left-[1.25rem] top-0 w-px bg-border" />
-            <div className="space-y-3">
-              {[...timeline].reverse().map((entry) => {
-                const link = matchupLinks[entry.id];
-                const period = fmtPeriod(entry);
-                return (
-                  <div key={entry.id} className="relative flex items-start gap-3">
-                    <div className={`relative z-10 mt-5 h-3 w-3 shrink-0 rounded-full border-2 ml-3.5 ${
-                      entry.is_current ? "border-ink bg-ink" : "border-border-strong bg-surface"
-                    }`} />
-                    <div className="cell flex flex-1 items-center justify-between gap-3 p-4">
-                      <div className="min-w-0">
-                        <div className="text-lg font-semibold"><ManagerName id={entry.manager_id} /></div>
-                        <div className="text-sm text-text-muted">{period}</div>
-                        <div className="text-xs text-text-muted">{entry.weeks_held} Wochen gehalten</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
-                        <div className="text-lg tabular-nums text-ink">{fmtVal(Number(entry.record_value))}</div>
-                        {link && (
-                          <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
-                            className="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap rounded-full bg-surface-2 px-3 text-xs text-text-secondary transition-colors hover:text-ink">
-                            Matchup <ChevronRight size={12} />
-                          </Link>
-                        )}
-                      </div>
+          <div className="cell divide-y divide-border-light">
+            {[...timeline].reverse().map((entry) => {
+              const link = matchupLinks[entry.id];
+              const period = fmtPeriod(entry);
+              return (
+                <div key={entry.id} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-base font-medium">
+                      <ManagerName id={entry.manager_id} />
+                      {entry.is_current && <span className="text-xs text-red">Aktuell</span>}
                     </div>
+                    <div className="mt-0.5 text-sm text-text-muted">{period}</div>
+                    <div className="text-xs text-text-muted"><span className="measured">{entry.weeks_held}</span> Wochen gehalten</div>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="measured text-lg text-ink">{fmtVal(Number(entry.record_value))}</div>
+                    {link && (
+                      <Link href={`/gamecenter/${link.season}/${link.week}?a=${link.a}&b=${link.b}`}
+                        className="btn whitespace-nowrap">
+                        Matchup <ChevronRight size={12} aria-hidden />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         }
       />

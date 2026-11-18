@@ -76,7 +76,7 @@ export default function OddsTrend({ trend, season }: { trend: TrendRow[]; season
 
   return (
     <div>
-      <div className="cell p-3 sm:p-4">
+      <div className="cell p-4 sm:p-5">
         <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1.5 px-1">
           {MANAGERS.map((m) => {
             const off = hidden.has(m);
@@ -86,7 +86,7 @@ export default function OddsTrend({ trend, season }: { trend: TrendRow[]; season
                 onFocus={() => setFocus(m)} onBlur={() => setFocus(null)}
                 aria-pressed={!off}
                 className={`flex min-h-11 items-center gap-1.5 px-2 text-xs ${off ? "text-text-faint line-through" : "text-text-secondary hover:text-ink"}`}>
-                <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: off ? "var(--color-border-strong)" : MANAGER_COLORS[m] }} />
+                <span className="inline-block h-0.5 w-4" style={{ backgroundColor: off ? "var(--color-border-strong)" : MANAGER_COLORS[m] }} />
                 {m}
               </button>
             );
@@ -99,7 +99,7 @@ export default function OddsTrend({ trend, season }: { trend: TrendRow[]; season
             {TICKS.map((t) => (
               <g key={t}>
                 <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-border-light)" strokeWidth={1} />
-                <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)">{t * 100} %</text>
+                <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)" style={{ fontFamily: "var(--font-outlier)" }}>{t * 100} %</text>
               </g>
             ))}
             {weeks.map((w, i) => (
@@ -119,7 +119,7 @@ export default function OddsTrend({ trend, season }: { trend: TrendRow[]; season
                 <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-text-faint)" strokeWidth={1} />
                 {rows.map((r) => (
                   <circle key={r.mgr} cx={x(hover)} cy={y(r.v)} r={4} fill={MANAGER_COLORS[r.mgr]}
-                    stroke="var(--color-surface)" strokeWidth={2} opacity={focus && focus !== r.mgr ? 0.25 : 1} />
+                    stroke="var(--color-paper-2)" strokeWidth={2} opacity={focus && focus !== r.mgr ? 0.25 : 1} />
                 ))}
               </g>
             )}
@@ -129,16 +129,16 @@ export default function OddsTrend({ trend, season }: { trend: TrendRow[]; season
 
           {hover != null && rows.length > 0 && (
             <div className={`pointer-events-none rounded-lg border border-border bg-solid px-3 py-2 text-xs ${
-              W < 500 ? "mt-2 grid grid-cols-2 gap-x-4" : "absolute top-2 z-10 min-w-[10rem] shadow-lg"}`}
+              W < 500 ? "mt-2 grid grid-cols-2 gap-x-4" : "absolute top-2 z-10 min-w-[10rem]"}`}
               style={W < 500 ? undefined : tipLeft > 55 ? { right: `${100 - tipLeft + 2}%` } : { left: `${tipLeft + 2}%` }}>
               <div className="col-span-2 mb-1 text-text-muted">Nach Woche {weeks[hover]}</div>
               {rows.map((r) => (
                 <div key={r.mgr} className={`flex items-center justify-between gap-4 py-0.5 ${focus && focus !== r.mgr ? "opacity-40" : ""}`}>
                   <span className="flex items-center gap-1.5 text-text-secondary">
-                    <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: MANAGER_COLORS[r.mgr] }} />
+                    <span className="inline-block h-2 w-[3px]" style={{ backgroundColor: MANAGER_COLORS[r.mgr] }} />
                     {r.mgr}
                   </span>
-                  <span className="tabular-nums text-ink">{fmtPct(r.v)}</span>
+                  <span className="measured text-ink">{fmtPct(r.v)}</span>
                 </div>
               ))}
             </div>

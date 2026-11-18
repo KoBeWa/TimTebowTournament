@@ -61,12 +61,12 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
 
   if (loading) {
     return (
-      <div className="space-y-6" aria-busy="true">
+      <div className="space-y-8" aria-busy="true">
         <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
-        <div className="h-11 w-72 max-w-full animate-pulse rounded-full bg-surface-3" />
+        <div className="h-11 w-72 max-w-full animate-pulse motion-reduce:animate-none rounded-[var(--radius-pill)] bg-surface-3" />
         <div className="cell space-y-3 p-4 sm:p-5">
           {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="h-8 animate-pulse rounded-lg bg-surface-3" />
+            <div key={i} className="h-8 animate-pulse motion-reduce:animate-none rounded-lg bg-surface-3" />
           ))}
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
 
   if (failed) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
         <div className="cell flex flex-col items-start gap-3 p-5">
           <p className="text-sm text-ink">Das Trophy Room konnte nicht geladen werden.</p>
@@ -137,43 +137,43 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
     new Map(records.map((r) => [r.record_key, r])).values()
   ).sort((a, b) => a.record_label.localeCompare(b.record_label));
 
-  const th = "py-3 px-3 text-center text-xs font-medium text-text-muted";
+  const th = "px-3 py-2.5 text-right text-xs font-medium text-text-muted";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader title="Trophy Room" description="Records, Achievements und der ewige Ruhm." />
 
       <Tabs tabs={TABS} value={tab} label="Bereich"
         onChange={(k) => { if (k === "browse") router.push("/trophies/records"); else setTab(k); }} />
 
       {tab === "achievements" && (
-        <div className="cell overflow-x-auto">
+        <div className="cell relative overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="py-3 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
-                <th className={th}>Achievements</th>
-                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
-                <th className={th}>Blunders</th>
-                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
+                <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
+                <th className={th}>Achievement-Arten</th>
+                <th className={`${th} hidden sm:table-cell`}>Achievements</th>
+                <th className={th}>Blunder-Arten</th>
+                <th className={`${th} hidden sm:table-cell`}>Blunders</th>
                 <th className={th}>Badges gesamt</th>
                 <th className="w-12 py-3 pr-2 sm:pr-3"><span className="sr-only">Trophäen</span></th>
               </tr>
             </thead>
             <tbody>
               {achSummary.map((row) => (
-                <tr key={row.manager} className="border-t border-border-light hover:bg-surface-2">
-                  <td className="py-3 pl-4 pr-3 font-medium sm:pl-5">
+                <tr key={row.manager} className="border-t border-border-light ">
+                  <td className="py-2.5 pl-4 pr-3 font-medium sm:pl-5">
                     <ManagerName id={row.manager} />
                   </td>
-                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.achievementTypes}</td>
-                  <td className="hidden px-3 py-3 text-center text-xs tabular-nums text-text-muted sm:table-cell">{row.achievementTotal}</td>
-                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-negative">{row.blunderTypes}</td>
-                  <td className="hidden px-3 py-3 text-center text-xs tabular-nums text-text-muted sm:table-cell">{row.blunderTotal}</td>
-                  <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.total}</td>
+                  <td className="measured px-3 py-2.5 text-right text-ink">{row.achievementTypes}</td>
+                  <td className="hidden measured px-3 py-2.5 text-right text-ink sm:table-cell">{row.achievementTotal}</td>
+                  <td className="measured px-3 py-2.5 text-right text-ink">{row.blunderTypes}</td>
+                  <td className="hidden measured px-3 py-2.5 text-right text-ink sm:table-cell">{row.blunderTotal}</td>
+                  <td className="measured px-3 py-2.5 text-right text-ink">{row.total}</td>
                   <td className="py-0 pr-2 text-right sm:pr-3">
                     <Link href={`/trophies/${encodeURIComponent(row.manager)}`} aria-label={`Trophäen von ${row.manager}`}
-                      className="inline-flex h-11 w-11 items-center justify-center text-text-muted hover:text-red"><ChevronRight size={16} /></Link>
+                      className="inline-flex h-11 w-11 items-center justify-center text-text-muted hover:text-red focus-visible:text-red focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-focus)]"><ChevronRight size={16} /></Link>
                   </td>
                 </tr>
               ))}
@@ -183,12 +183,12 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
       )}
 
       {tab === "records" && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="cell overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr>
-                  <th className="py-3 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
+                  <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
                   <th className={th}>Positive Records</th>
                   <th className={th}>Negative Records</th>
                   <th className={`${th} pr-4 sm:pr-5`}>Records gesamt</th>
@@ -197,10 +197,10 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
               <tbody>
                 {recSummary.map((row) => (
                   <tr key={row.manager} className="border-t border-border-light">
-                    <td className="py-3 pl-4 pr-3 font-medium sm:pl-5"><ManagerName id={row.manager} /></td>
-                    <td className="px-3 py-3 text-center font-semibold tabular-nums text-ink">{row.positive}</td>
-                    <td className="px-3 py-3 text-center font-semibold tabular-nums text-negative">{row.negative}</td>
-                    <td className="py-3 pl-3 pr-4 text-center font-semibold tabular-nums text-ink sm:pr-5">{row.total}</td>
+                    <td className="py-2.5 pl-4 pr-3 font-medium sm:pl-5"><ManagerName id={row.manager} /></td>
+                    <td className="measured px-3 py-2.5 text-right text-ink">{row.positive}</td>
+                    <td className="measured px-3 py-2.5 text-right text-negative">{row.negative}</td>
+                    <td className="measured py-2.5 pl-3 pr-4 text-right text-ink sm:pr-5">{row.total}</td>
                   </tr>
                 ))}
               </tbody>
@@ -209,8 +209,8 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
 
           <Link href="/trophies/records" className="cell-hover group flex items-center justify-between p-5">
             <div>
-              <div className="font-semibold text-ink transition-colors group-hover:text-red">Alle Records durchsuchen</div>
-              <div className="mt-0.5 text-sm text-text-muted">{uniqueRecords.length} Records in 8 Kategorien</div>
+              <div className="font-medium text-ink transition-colors group-hover:text-red">Alle Records durchsuchen</div>
+              <div className="mt-0.5 text-sm text-text-muted"><span className="measured">{uniqueRecords.length}</span> Records in 8 Kategorien</div>
             </div>
             <ChevronRight size={18} className="text-text-muted transition-colors group-hover:text-red" />
           </Link>

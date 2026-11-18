@@ -7,6 +7,7 @@ import StatTile from "@/components/ui/StatTile";
 import ManagerTabs from "./ManagerTabs";
 import { buildRows, type Row } from "./rows";
 import { loadManagerPlayers } from "@/lib/players";
+import { fmtNum, fmtPct } from "@/lib/format";
 
 export function generateStaticParams() {
   return MANAGERS.map((name) => ({ name }));
@@ -63,17 +64,17 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
 
   const record = `${totalWins}-${totalLosses}${totalTies > 0 ? `-${totalTies}` : ""}`;
   const secondary = [
-    { label: "Punkte gesamt", value: totalPF.toFixed(1) },
-    { label: "Ø Punkte pro Saison", value: numSeasons ? (totalPF / numSeasons).toFixed(1) : "—" },
-    { label: "Beste Woche", value: bestScore.toFixed(1) },
-    { label: "Schlechteste Woche", value: worstScore === 999 ? "—" : worstScore.toFixed(1) },
+    { label: "Punkte gesamt", value: fmtNum(totalPF) },
+    { label: "Ø Punkte pro Saison", value: numSeasons ? fmtNum(totalPF / numSeasons) : "—" },
+    { label: "Beste Woche", value: fmtNum(bestScore) },
+    { label: "Schlechteste Woche", value: worstScore === 999 ? "—" : fmtNum(worstScore) },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={<span className="inline-flex items-center gap-3">
-          <span aria-hidden className="inline-block h-8 w-1.5 rounded-full sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
+          <span aria-hidden className="inline-block h-8 w-[3px] rounded-[2px] sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
           {name}
         </span>}
         description={`${numSeasons} Seasons, ${data.championships} Titel, seit 2015`}
@@ -82,10 +83,10 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
         <Link href={`/trophies/${name}`} className="btn">Trophäen</Link>
       </PageHeader>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Bilanz" value={record} />
-        <StatTile label="Siegquote" value={`${(winPct * 100).toFixed(1)}%`} />
-        <StatTile label="Titel" value={data.championships} tone={data.championships > 0 ? "gold" : undefined} />
+        <StatTile label="Siegquote" value={fmtPct(winPct)} />
+        <StatTile label="Titel" value={data.championships} />
         <StatTile label="Playoff-Teilnahmen" value={playoffApps} />
       </div>
 

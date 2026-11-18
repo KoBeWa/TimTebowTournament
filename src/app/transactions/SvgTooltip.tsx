@@ -6,10 +6,10 @@ export default function SvgTooltip({ x, y, lines, W, H }: { x: number; y: number
   const ty = y - boxH / 2 < 0 ? 4 : y + boxH / 2 > H ? H - boxH - 4 : y - boxH / 2;
   return (
     <g pointerEvents="none">
-      <rect x={tx} y={ty} width={boxW} height={boxH} rx={3} className="fill-red" opacity={0.88} />
+      <rect x={tx} y={ty} width={boxW} height={boxH} rx={6} className="fill-solid stroke-border" strokeWidth={1} />
       {lines.map((l, i) => (
         <text key={i} x={tx + PAD} y={ty + PAD + LINE_H * i + 9}
-          style={{ fontSize: "10px", fill: "#fff", fontFamily: "inherit", fontWeight: i === 0 ? "600" : "400" }}>
+          style={{ fontSize: "11px", fill: "var(--color-ink)", fontFamily: i === 0 ? "inherit" : "var(--font-outlier)", fontWeight: i === 0 ? "500" : "400" }}>
           {l}
         </text>
       ))}

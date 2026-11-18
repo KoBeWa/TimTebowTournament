@@ -6,6 +6,7 @@ import StatTile from "@/components/ui/StatTile";
 import ManagerName from "@/components/ui/ManagerName";
 import SvgTooltip from "./SvgTooltip";
 import { type VTxRow, type FaTxRow, fmt, valTone, TH } from "./shared";
+import { fmtNum, fmtPctPoints } from "@/lib/format";
 
 type TeamPoint = { team: string; value: number; posValue: number; hitRate: number; count: number };
 type Mode = "value" | "hitrate";
@@ -39,12 +40,12 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
 
   return (
     <div>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}
+      <svg role="img" aria-label="Diagramm der Aktivität pro NFL-Team" width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}
         onMouseLeave={() => setTip(null)}>
         {[0, 0.25, 0.5, 0.75, 1].map(p => (
           <line key={p} x1={PAD.l} x2={W - PAD.r}
             y1={PAD.t + plotH * p} y2={PAD.t + plotH * p}
-            className="stroke-border" strokeWidth="0.5" />
+            style={{ stroke: "var(--color-border-light)" }} strokeWidth="1" />
         ))}
         {data.map((d, i) => (
           <rect key={`bar-${i}`}
@@ -59,7 +60,7 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
             onMouseEnter={() => setTip({
               x: lx(i), y: ly(v),
               lines: [data[i].team,
-                mode === "hitrate" ? `Trefferquote: ${v.toFixed(1)}%` : `Pos. Wert: ${v.toFixed(1)}`,
+                mode === "hitrate" ? `Trefferquote: ${fmtPctPoints(v)}` : `Pos. Wert: ${fmtNum(v)}`,
                 `Adds: ${data[i].count}`],
             })} />
         ))}
@@ -72,19 +73,19 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
             x={lx(i)} y={H - PAD.b + 12}
             textAnchor="end"
             transform={`rotate(-45, ${lx(i)}, ${H - PAD.b + 12})`}
-            style={{ fontSize: "9px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>
             {d.team}
           </text>
         ))}
         {[maxVal, maxVal / 2, 0].map((v, i) => (
           <text key={`lv-${i}`} x={PAD.l - 4} y={ly(v) + 4} textAnchor="end"
-            style={{ fontSize: "9px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>
-            {mode === "hitrate" ? v.toFixed(0) + "%" : v.toFixed(0)}
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>
+            {mode === "hitrate" ? fmtPctPoints(v, 0) : fmtNum(v, 0)}
           </text>
         ))}
         {[maxCount, Math.round(maxCount / 2), 0].map((v, i) => (
           <text key={`rc-${i}`} x={W - PAD.r + 4} y={PAD.t + (i / 2) * plotH + 4} textAnchor="start"
-            style={{ fontSize: "9px", fill: "var(--color-text-muted)", fontFamily: "inherit" }}>{v}</text>
+            style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>{v}</text>
         ))}
         {tip && <SvgTooltip x={tip.x} y={tip.y} lines={tip.lines} W={W} H={H} />}
       </svg>
@@ -103,17 +104,17 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
 }
 
 function TradeSide({ side }: { side: VTxRow | null }) {
-  if (!side) return <span className="text-text-faint">—</span>;
+  if (!side) return <span className="text-text-faint">keine</span>;
   return (
     <div className="min-w-0">
-      <div className="mb-0.5 font-semibold text-ink"><ManagerName id={side.team_name} /></div>
+      <div className="mb-0.5 font-medium text-ink"><ManagerName id={side.team_name} /></div>
       {side.add_players && (
-        <div className="text-xs text-ink"><span className="mr-1 font-bold text-positive">+</span>{side.add_players}</div>
+        <div className="text-xs text-ink"><span className="mr-1 font-medium text-positive">+</span>{side.add_players}</div>
       )}
       {side.drop_players && (
-        <div className="text-xs text-text-muted"><span className="mr-1 font-bold">−</span>{side.drop_players}</div>
+        <div className="text-xs text-text-muted"><span className="mr-1 font-medium">−</span>{side.drop_players}</div>
       )}
-      <div className={`mt-1 font-semibold tabular-nums ${valTone(side.net_value)}`}>{fmt(side.net_value)}</div>
+      <div className={`mt-1 font-semibold measured ${valTone(side.net_value)}`}>{fmt(side.net_value)}</div>
     </div>
   );
 }
@@ -186,11 +187,11 @@ export default function PlayersTeamsTab({ vtx, filt, filtFatx, isFiltered }: {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Meistbewegter Spieler" value={tp?.name ?? "—"} hint={tp ? `${tp.count}x hinzugefügt` : undefined} />
-        <StatTile label="Wertvollster Spieler" value={vp?.name ?? "—"}
+        <StatTile label="Meistbewegter Spieler" value={tp?.name ?? "–"} hint={tp ? `${tp.count}x hinzugefügt` : undefined} />
+        <StatTile label="Wertvollster Spieler" value={vp?.name ?? "–"}
           hint={vp ? <span className={valTone(vp.value)}>{fmt(vp.value)}</span> : undefined} />
-        <StatTile label="Meistbewegtes Team" value={tt?.team ?? "—"} hint={tt ? `${tt.count}x Spieler hinzugefügt` : undefined} />
-        <StatTile label="Wertvollstes Team" value={vt?.team ?? "—"}
+        <StatTile label="Meistbewegtes Team" value={tt?.team ?? "–"} hint={tt ? `${tt.count}x Spieler hinzugefügt` : undefined} />
+        <StatTile label="Wertvollstes Team" value={vt?.team ?? "–"}
           hint={vt ? <span className={valTone(vt.posValue)}>{fmt(vt.posValue)}</span> : undefined} />
       </div>
 
@@ -223,9 +224,9 @@ export default function PlayersTeamsTab({ vtx, filt, filtFatx, isFiltered }: {
               <tbody>
                 {tradePairs.map(({ key, side1, side2 }) => (
                   <tr key={key} className="border-t border-border-light align-top">
-                    <td className="whitespace-nowrap py-3 pl-4 pr-2 text-text-muted sm:pl-5">
+                    <td className="measured whitespace-nowrap py-3 pl-4 pr-2 text-text-muted sm:pl-5">
                       {side1.season_year}
-                      <div className="text-xs text-text-faint">Woche {side1.transaction_week}</div>
+                      <div className="text-xs text-text-faint font-sans">Woche {side1.transaction_week}</div>
                     </td>
                     <td className="px-2 py-3"><TradeSide side={side1} /></td>
                     <td className="py-3 pl-2 pr-4 sm:pr-5"><TradeSide side={side2} /></td>

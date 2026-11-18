@@ -5,7 +5,7 @@ import { MANAGER_COLORS } from "@/lib/constants";
 export default function ManagerName({ id, plain, className = "" }: { id: string; plain?: boolean; className?: string }) {
   const inner = (
     <>
-      <span aria-hidden className="inline-block h-2.5 w-1 shrink-0 rounded-full" style={{ backgroundColor: MANAGER_COLORS[id] ?? "var(--color-border-strong)" }} />
+      <span aria-hidden className="inline-block h-2.5 w-[3px] shrink-0 rounded-[1px]" style={{ backgroundColor: MANAGER_COLORS[id] ?? "var(--color-border-strong)" }} />
       <span className="truncate">{id}</span>
     </>
   );

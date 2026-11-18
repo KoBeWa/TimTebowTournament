@@ -7,6 +7,7 @@ import ManagerName from "@/components/ui/ManagerName";
 import DraftBrowser, { type DraftPick } from "./DraftBrowser";
 import PositionStats, { type PositionData } from "./PositionStats";
 import { sign } from "./shared";
+import { fmtPct } from "@/lib/format";
 
 export interface PickRow {
   season_year: number;
@@ -46,14 +47,14 @@ function PickTable({ title, list, tone }: { title: string; list: PickRow[]; tone
           <tbody>
             {list.map((p, i) => (
               <tr key={`${p.season_year}-${p.overall_pick}`} className="border-t border-border-light">
-                <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+                <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
                 <td className="px-2 py-2.5">
                   <div className="font-medium text-ink">{p.player_name}</div>
-                  <div className="text-xs text-text-muted">{p.season_year}</div>
+                  <div className="measured text-xs text-text-muted">{p.season_year}</div>
                 </td>
                 <td className="px-2 py-2.5 text-ink"><ManagerName id={p.manager_id} /></td>
-                <td className="hidden px-2 py-2.5 text-right tabular-nums text-text-muted md:table-cell">#{p.overall_pick}</td>
-                <td className={`py-2.5 pl-2 pr-4 text-right font-semibold tabular-nums sm:pr-5 ${tone === "positive" ? "text-positive" : "text-negative"}`}>
+                <td className="hidden px-2 py-2.5 text-right measured text-text-muted md:table-cell">#{p.overall_pick}</td>
+                <td className={`py-2.5 pl-2 pr-4 text-right font-semibold measured sm:pr-5 ${tone === "positive" ? "text-positive" : "text-negative"}`}>
                   {sign(p.grade4)}
                 </td>
               </tr>
@@ -69,17 +70,17 @@ function DraftList({ title, list, tone }: { title: string; list: DraftSummary[];
   return (
     <section>
       <h2 className="section-title mb-3 text-ink">{title}</h2>
-      <div className="space-y-2">
+      <div className="cell divide-y divide-border-light">
         {list.map((d, i) => (
-          <div key={`${d.season_year}-${d.manager_id}`} className="cell flex items-center justify-between px-4 py-3">
+          <div key={`${d.season_year}-${d.manager_id}`} className="flex items-center justify-between px-4 py-3 sm:px-5">
             <div className="flex items-center gap-4">
-              <div className="display-title w-6 text-2xl text-text-faint">{i + 1}</div>
+              <div className="measured w-6 text-text-faint">{i + 1}</div>
               <div>
                 <div className="font-semibold text-ink"><ManagerName id={d.manager_id} /></div>
-                <div className="text-xs text-text-muted">Draft #{d.draftNo}, {d.season_year}</div>
+                <div className="measured text-xs text-text-muted">Draft #{d.draftNo}, {d.season_year}</div>
               </div>
             </div>
-            <div className={`display-title text-2xl tabular-nums ${tone === "positive" ? "text-positive" : "text-negative"}`}>{sign(d.avg)}</div>
+            <div className={`measured text-lg ${tone === "positive" ? "text-positive" : "text-negative"}`}>{sign(d.avg)}</div>
           </div>
         ))}
       </div>
@@ -102,7 +103,7 @@ export default function DraftsTabs({ avgPickValue, avgTeamValue, avgSeasonValue,
   const [tab, setTab] = useState<TabKey>("overview");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Tabs tabs={TABS} value={tab} onChange={setTab} label="Draft-Bereiche" />
 
       {tab === "overview" && (
@@ -130,12 +131,12 @@ export default function DraftsTabs({ avgPickValue, avgTeamValue, avgSeasonValue,
                 <tbody>
                   {ownerRankings.map((o, i) => (
                     <tr key={o.id} className="border-t border-border-light">
-                      <td className="py-2.5 pl-4 pr-2 tabular-nums text-text-faint sm:pl-5">{i + 1}</td>
+                      <td className="py-2.5 pl-4 pr-2 measured text-text-faint sm:pl-5">{i + 1}</td>
                       <td className="px-2 py-2.5 font-semibold text-ink"><ManagerName id={o.id} /></td>
-                      <td className={`px-2 py-2.5 text-right font-semibold tabular-nums ${o.avgGrade >= 0 ? "text-positive" : "text-negative"}`}>{sign(o.avgGrade)}</td>
-                      <td className="hidden px-2 py-2.5 text-right tabular-nums text-text-secondary md:table-cell">{sign(o.avgGrade * o.picks)}</td>
-                      <td className="hidden px-2 py-2.5 text-right tabular-nums text-text-muted md:table-cell">{o.picks}</td>
-                      <td className="py-2.5 pl-2 pr-4 text-right tabular-nums text-text-secondary sm:pr-5">{((o.positive / o.picks) * 100).toFixed(0)}%</td>
+                      <td className={`px-2 py-2.5 text-right font-semibold measured ${o.avgGrade >= 0 ? "text-positive" : "text-negative"}`}>{sign(o.avgGrade)}</td>
+                      <td className="hidden px-2 py-2.5 text-right measured text-text-secondary md:table-cell">{sign(o.avgGrade * o.picks)}</td>
+                      <td className="hidden px-2 py-2.5 text-right measured text-text-muted md:table-cell">{o.picks}</td>
+                      <td className="py-2.5 pl-2 pr-4 text-right measured text-text-secondary sm:pr-5">{fmtPct(o.positive / o.picks, 0)}</td>
                     </tr>
                   ))}
                 </tbody>

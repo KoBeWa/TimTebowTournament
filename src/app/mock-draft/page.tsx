@@ -12,8 +12,8 @@ export default function MockDraft() {
     <div>
       <PageHeader title="Mock Draft" description="Das Tippspiel zum NFL Draft." />
       <div className="cell max-w-xl p-6">
-        <h2 className="text-lg font-semibold text-ink">Der Mock Draft ruht bis zum nächsten NFL Draft</h2>
-        <p className="mt-2 text-sm text-text-secondary">
+        <h2 className="text-lg font-medium text-ink">Der Mock Draft ruht bis zum nächsten NFL Draft</h2>
+        <p className="mt-2 text-base text-text-muted">
           Vor dem Draft im April geht es mit den neuen Prospects wieder los. Bis dahin gibt es hier nichts zu tippen.
         </p>
       </div>

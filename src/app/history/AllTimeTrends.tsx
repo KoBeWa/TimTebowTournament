@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
 import Tabs from "@/components/ui/Tabs";
 import type { MetricKey, TrendData } from "./trends";
+import { fmtInt, fmtPctPoints } from "@/lib/format";
 
 const COLORS = MANAGER_COLORS;
 
 const METRICS: { key: MetricKey; label: string; hint: string; format: (v: number) => string }[] = [
   { key: "wins", label: "Siege", hint: "Siege insgesamt inkl. Playoffs", format: (v) => `${v}` },
-  { key: "winPct", label: "Siegquote", hint: "Anteil gewonnener Spiele bis zu dieser Woche", format: (v) => `${v.toFixed(1)} %` },
-  { key: "points", label: "Punkte", hint: "Punkte insgesamt", format: (v) => v.toLocaleString("de-DE") },
+  { key: "winPct", label: "Siegquote", hint: "Anteil gewonnener Spiele bis zu dieser Woche", format: (v) => fmtPctPoints(v) },
+  { key: "points", label: "Punkte", hint: "Punkte insgesamt", format: (v) => fmtInt(v) },
   { key: "elo", label: "Elo", hint: "Elo-Rating nach jedem Spiel", format: (v) => `${v}` },
   { key: "titles", label: "Titel", hint: "Meisterschaften insgesamt", format: (v) => `${v}` },
   { key: "rank", label: "Platz", hint: "Platz in der ewigen Tabelle (Siege, dann Punkte)", format: (v) => `${v}.` },
@@ -107,13 +108,13 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
   }
 
   return (
-    <div>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-text-muted">{m.hint}</p>
         <Tabs tabs={METRICS} value={metric} onChange={(k) => { setMetric(k); setHover(null); }} size="sm" label="Kennzahl" />
       </div>
 
-      <div className="cell p-3 sm:p-4">
+      <div className="cell p-4 sm:p-5">
         {/* Legend: hover highlights, click shows/hides */}
         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-2 px-1">
           {MANAGERS.map((mgr) => {
@@ -124,7 +125,7 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
                 onFocus={() => setFocus(mgr)} onBlur={() => setFocus(null)}
                 aria-pressed={!off}
                 className={`flex min-h-11 items-center gap-1.5 px-2 text-xs ${off ? "text-text-faint line-through" : "text-text-secondary hover:text-ink"}`}>
-                <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: off ? "var(--color-border-strong)" : COLORS[mgr] }} />
+                <span className="inline-block h-0.5 w-4" style={{ backgroundColor: off ? "var(--color-border-strong)" : COLORS[mgr] }} />
                 {mgr}
               </button>
             );
@@ -138,7 +139,7 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
             {scale.ticks.map((t) => (
               <g key={t}>
                 <line x1={PAD.l} x2={W - PAD.r} y1={y(t)} y2={y(t)} stroke="var(--color-border-light)" strokeWidth={1} />
-                <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)">
+                <text x={PAD.l - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="var(--color-text-faint)" style={{ fontFamily: "var(--font-outlier)" }}>
                   {metric === "rank" ? `${t}.` : metric === "points" ? (t >= 1000 ? `${t / 1000}k` : t) : t}
                 </text>
               </g>
@@ -164,7 +165,7 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
                 <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b} stroke="var(--color-text-faint)" strokeWidth={1} />
                 {tooltipRows.map((r) => (
                   <circle key={r.mgr} cx={x(hover)} cy={y(r.v)} r={4} fill={COLORS[r.mgr]}
-                    stroke="var(--color-surface)" strokeWidth={2} opacity={focus && focus !== r.mgr ? 0.25 : 1} />
+                    stroke="var(--color-paper-2)" strokeWidth={2} opacity={focus && focus !== r.mgr ? 0.25 : 1} />
                 ))}
               </g>
             )}
@@ -174,16 +175,16 @@ export default function AllTimeTrends({ data }: { data: TrendData }) {
 
           {hover != null && tooltipRows.length > 0 && (
             <div className={`pointer-events-none rounded-lg border border-border bg-solid px-3 py-2 text-xs ${
-              W < 500 ? "mt-2 grid grid-cols-2 gap-x-4" : "absolute top-2 z-10 shadow-lg min-w-[10rem]"}`}
+              W < 500 ? "mt-2 grid grid-cols-2 gap-x-4" : "absolute top-2 z-10 min-w-[10rem]"}`}
               style={W < 500 ? undefined : tipLeft > 55 ? { right: `${100 - tipLeft + 2}%` } : { left: `${tipLeft + 2}%` }}>
               <div className="col-span-2 mb-1 text-text-muted">{data.weeks[hover].season}, Woche {data.weeks[hover].week}</div>
               {tooltipRows.map((r) => (
                 <div key={r.mgr} className={`flex items-center justify-between gap-4 py-0.5 ${focus && focus !== r.mgr ? "opacity-40" : ""}`}>
                   <span className="flex items-center gap-1.5 text-text-secondary">
-                    <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[r.mgr] }} />
+                    <span className="inline-block h-2 w-[3px]" style={{ backgroundColor: COLORS[r.mgr] }} />
                     {r.mgr}
                   </span>
-                  <span className="text-ink tabular-nums">{m.format(r.v)}</span>
+                  <span className="measured text-ink">{m.format(r.v)}</span>
                 </div>
               ))}
             </div>

@@ -9,6 +9,7 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 import PageHeader from "@/components/ui/PageHeader";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtNum } from "@/lib/format";
 
 type SortKey = "starter_points" | "avg_start" | "starts" | "managers" | "times_drafted" | "moves" | "player_name";
 
@@ -23,7 +24,7 @@ const COLUMNS: { key: SortKey; label: string; title?: string }[] = [
 ];
 
 // Columns kept on phones; the rest only from lg
-const PHONE = new Set<SortKey>(["player_name", "starter_points", "starts"]);
+const PHONE = new Set<SortKey>(["player_name", "starter_points"]);
 
 const value = (p: PlayerListRow, k: SortKey) => (k === "player_name" ? p.player_name : (p[k] ?? 0));
 
@@ -92,18 +93,18 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
   const shown = rows.slice(0, limit);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader title="Spieler" description="Jeder Spieler, der seit 2015 in einem Kader stand: Punkte, Manager und komplette Historie." />
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative min-w-[14rem] flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
+          <Search size={16} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Spieler suchen…"
             aria-label="Spieler suchen"
-            className="w-full bg-surface border border-border rounded-full pl-9 pr-3 py-2.5 text-ink placeholder:text-text-faint focus:border-red focus:outline-none"
+            className="w-full bg-paper-3 border border-border rounded-[var(--radius-pill)] pl-9 pr-3 py-2.5 text-ink placeholder:text-text-faint focus:border-red focus:outline-none"
           />
         </label>
         <Tabs size="sm" label="Position" value={pos} onChange={setPos}
@@ -111,7 +112,7 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
         <label className="flex items-center gap-2 text-sm text-text-muted" title="Manager, der ihn am längsten im Kader hatte">
           Meist bei
           <select value={manager} onChange={(e) => setManager(e.target.value)}
-            className="bg-surface border border-border rounded-full px-3 py-2 text-sm text-ink focus:border-red focus:outline-none">
+            className="bg-paper-3 border border-border rounded-[var(--radius-pill)] px-3 py-2 text-sm text-ink focus:border-red focus:outline-none">
             <option value="all">Alle</option>
             {MANAGERS.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
@@ -124,15 +125,15 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
           <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
         </div>
       ) : loading ? (
-        <div className="cell animate-pulse divide-y divide-border-light" aria-busy="true">
+        <div className="cell animate-pulse motion-reduce:animate-none divide-y divide-border-light" aria-busy="true">
           {Array.from({ length: 10 }, (_, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-              <div className="h-9 w-9 shrink-0 rounded-full bg-surface-3" />
+              <div className="h-9 w-9 shrink-0 rounded-full bg-paper-3" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 w-40 max-w-full rounded-lg bg-surface-3" />
-                <div className="h-3 w-24 rounded-lg bg-surface-2" />
+                <div className="h-3.5 w-40 max-w-full rounded-lg bg-paper-3" />
+                <div className="h-3 w-24 rounded-lg bg-paper-3" />
               </div>
-              <div className="h-4 w-12 rounded-lg bg-surface-3" />
+              <div className="h-4 w-12 rounded-lg bg-paper-3" />
             </div>
           ))}
         </div>
@@ -149,8 +150,8 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
                 <th className="hidden w-10 py-3 pl-4 pr-1 text-left font-medium md:table-cell sm:pl-5">#</th>
                 {COLUMNS.map((c) => (
                   <th key={c.key} title={c.title}
-                    className={`px-3 py-3 font-medium ${c.key === "player_name" ? "pl-4 text-left sm:pl-5 md:pl-3" : "text-right"} ${PHONE.has(c.key) ? "" : "hidden lg:table-cell"}`}>
-                    <button onClick={() => setSort(c.key)} className={`inline-flex min-h-11 items-center ${sort === c.key ? "text-red" : "hover:text-ink"}`}>
+                    className={`px-3 py-3 font-medium ${c.key === "player_name" ? "pl-4 text-left sm:pl-5 md:pl-3" : "text-right"} ${PHONE.has(c.key) ? "" : "hidden md:table-cell"}`}>
+                    <button onClick={() => setSort(c.key)} className={`inline-flex min-h-11 items-center disabled:opacity-55 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] ${sort === c.key ? "text-red" : "hover:text-ink"}`}>
                       {c.label}
                     </button>
                   </th>
@@ -161,26 +162,26 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
             <tbody>
               {shown.map((p, i) => (
                 <tr key={p.player_key} className="border-t border-border-light hover:bg-surface-2">
-                  <td className="hidden py-2 pl-4 pr-1 text-text-faint tabular-nums md:table-cell sm:pl-5">{i + 1}</td>
-                  <td className="py-2 pl-4 pr-3 sm:pl-5 md:pl-3">
-                    <Link href={playerHref(p.player_key)} className="group flex items-center gap-3">
-                      <PlayerAvatar p={p} />
+                  <td className="hidden py-2.5 pl-4 pr-1 text-text-faint measured md:table-cell sm:pl-5">{i + 1}</td>
+                  <td className="py-2.5 pl-4 pr-3 sm:pl-5 md:pl-3">
+                    <Link href={playerHref(p.player_key)} className="group flex items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]">
+                      <span className="hidden sm:block"><PlayerAvatar p={p} /></span>
                       <span>
-                        <span className="font-medium text-ink group-hover:text-red">{p.player_name}</span>
+                        <span className="font-medium text-ink">{p.player_name}</span>
                         <span className="block text-xs text-text-muted">
-                          {p.position ?? "–"}{p.first_season ? `, ${p.first_season}${p.last_season !== p.first_season ? `–${p.last_season}` : ""}` : ""}
+                          {p.position ?? "–"}{p.first_season ? <>, <span className="measured whitespace-nowrap">{p.first_season}{p.last_season !== p.first_season ? `–${p.last_season}` : ""}</span></> : ""}
                         </span>
                       </span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums text-ink">{p.starter_points.toFixed(1)}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{p.starts}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{p.avg_start != null ? p.avg_start.toFixed(1) : "–"}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{p.managers}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{p.times_drafted}</td>
-                  <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">{p.moves}</td>
-                  <td className="whitespace-nowrap py-2 pl-3 pr-4 sm:pr-5">
-                    {p.top_manager ? <><ManagerName id={p.top_manager} /> <span className="hidden text-text-faint md:inline">({p.top_manager_weeks} W)</span></> : "–"}
+                  <td className="px-3 py-2.5 text-right measured text-ink">{fmtNum(p.starter_points)}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.starts}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.avg_start != null ? fmtNum(p.avg_start) : "–"}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.managers}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.times_drafted}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.moves}</td>
+                  <td className="whitespace-nowrap py-2.5 pl-3 pr-4 sm:pr-5">
+                    {p.top_manager ? <><ManagerName id={p.top_manager} /> <span className="measured hidden text-text-faint md:inline">({p.top_manager_weeks} W)</span></> : "–"}
                   </td>
                 </tr>
               ))}
@@ -188,7 +189,7 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
           </table>
           {rows.length > shown.length && (
             <button type="button" onClick={() => setLimit(limit + 100)}
-              className="min-h-11 w-full border-t border-border-light px-4 py-3 text-sm text-text-muted hover:text-ink transition-colors sm:px-5">
+              className="min-h-11 w-full whitespace-nowrap border-t border-border-light px-4 py-3 text-sm text-text-muted hover:text-ink transition-colors disabled:opacity-55 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] sm:px-5">
               100 weitere anzeigen ({rows.length - shown.length} übrig)
             </button>
           )}

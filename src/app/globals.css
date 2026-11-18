@@ -1,231 +1,162 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Console (deal 1/3, seed private-fantasy-football-league-7309·4d0a4be3·2026-11-18·r0) · redesign: full
+ * nav: kept, a fixed sidebar from lg (13 destinations), a bottom tab bar with sheets below · signature: the record chart, every manager week by week with the holder drawn in amber-weight colour · states: loading, error, full · console: graphite
+ * axes: dark/grotesk-sans/chromatic-amber · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P2 H2 E2 S2 R2 V2 · weakest: S, eight manager colours are a data palette (chart series and a 3px name marker), never a fill or a signal */
+/* Hallmark · finish-review: subagent · 8 findings · 8 resolved · gap: none */
+/* Hallmark · reworded "110–76" to "110-76" · 19 names the en dash; every win-loss record takes a hyphen */
 @import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css" layer(base);
 
 /*
- * Design tokens: the league colours, gold on black and graphite.
- * Token names are kept from earlier themes so existing utility classes keep
- * working: `cream` = page background, `ink` = primary text, `red` = brand
- * accent (now gold). Losses and blunders use `negative`, never the accent.
+ * Legacy token names, kept so every existing utility class lands on the Console system:
+ * cream = ground, solid = an opaque panel, surface* = the panel steps, red = the amber
+ * accent (the token name predates the theme), border* = the rules. Amber marks a person's
+ * current selection and the one primary action; losses and errors use negative.
  */
 @theme {
-  --color-cream: #0a0a0b;
-  /* Opaque stand-in for things that must cover what is behind them (native menus, tooltips) */
-  --color-solid: #1b1a19;
-  --color-surface: rgb(255 255 255 / 0.055);
-  --color-surface-2: rgb(255 255 255 / 0.09);
-  --color-surface-3: rgb(255 255 255 / 0.15);
-  --color-ink: #f5f3ef;
-  --color-red: #d6a842;
-  /* Text and icons on a gold fill */
-  --color-on-accent: #17130a;
-  --color-red-soft: #e8c672;
-  --color-gold: #e6be62;
-  --color-gold-dark: #b8892a;
-  --color-silver: #c3c1bc;
-  --color-bronze: #d08a52;
-  --color-border: rgb(255 255 255 / 0.11);
-  --color-border-light: rgb(255 255 255 / 0.065);
-  --color-border-strong: rgb(255 255 255 / 0.22);
-  --color-text-secondary: #cdcac4;
-  --color-text-muted: #a09c95;
-  --color-text-faint: #77736c;
-  --color-positive: #34d399;
-  --color-negative: #f87171;
-  --color-accent-green: #34d399;
-  --color-accent-red: #f87171;
-  --color-accent-blue: #8fa3b8;
-
-  --radius-card: 24px;
+  --color-cream: var(--color-paper);
+  --color-solid: var(--color-paper-2);
+  --color-surface: var(--color-paper-2);
+  --color-surface-2: oklch(24.5% 0.01 250);
+  --color-surface-3: oklch(28% 0.011 250);
+  --color-red: var(--color-accent);
+  --color-on-accent: var(--color-accent-ink);
+  --color-red-soft: oklch(87% 0.12 82);
+  --color-gold: oklch(84% 0.13 85);
+  --color-gold-dark: oklch(66% 0.12 75);
+  --color-silver: oklch(80% 0.01 250);
+  --color-bronze: oklch(70% 0.1 55);
+  --color-border: var(--color-rule);
+  --color-border-light: oklch(25.5% 0.009 250);
+  --color-border-strong: var(--color-rule-2);
+  --color-text-secondary: var(--color-ink-2);
+  --color-text-muted: var(--color-muted);
+  --color-text-faint: oklch(64% 0.01 250);
+  --color-positive: var(--color-ok);
+  --color-negative: var(--color-bad);
+  --color-accent-green: var(--color-ok);
+  --color-accent-red: var(--color-bad);
+  --color-accent-blue: var(--color-cool);
 }
 
 @layer base {
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; color-scheme: dark; }
-
-  body {
-    background-color: var(--color-cream);
-    color: var(--color-ink);
-    font-family: var(--font-inter), system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
-
-  /* The backdrop the glass sits on: a fixed, soft colour field. Painted once, so the
-     cards can stay translucent without a blur of their own. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background:
-      radial-gradient(70vw 60vh at 92% -12%, rgba(214, 168, 66, 0.26), transparent 62%),
-      radial-gradient(45vw 45vh at 104% 60%, rgba(184, 137, 42, 0.10), transparent 70%),
-      radial-gradient(60vw 60vh at -10% 108%, rgba(214, 168, 66, 0.12), transparent 66%),
-      radial-gradient(50vw 40vh at 30% -5%, rgba(255, 255, 255, 0.05), transparent 70%),
-      linear-gradient(180deg, #0f0f10 0%, #0a0a0b 60%, #080808 100%);
-  }
-
-  h1, h2, h3 {
-    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-  }
-
-  ::selection { background: rgba(214, 168, 66, 0.4); color: #fff; }
-
-  a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
-
-  :focus-visible {
-    outline: 2px solid var(--color-red);
-    outline-offset: 2px;
-    border-radius: 6px;
-  }
-
-  /* Form controls inherit the dark theme */
   select, input, textarea {
-    background-color: var(--color-surface-2);
+    background-color: var(--color-paper-3);
     color: var(--color-ink);
-    border-color: var(--color-border);
-    border-radius: 14px;
-    min-height: 2.5rem;
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: var(--radius-pill);
+    min-height: 2.25rem;
   }
-  select option { background-color: var(--color-solid); color: var(--color-ink); }
+  select:disabled, input:disabled, textarea:disabled, button:disabled { opacity: 0.55; cursor: not-allowed; }
+  select option { background-color: var(--color-paper-2); color: var(--color-ink); }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: -1px; }
 
-  table th { font-weight: 600; }
-
-  button { border-radius: 14px; cursor: pointer; }
-
+  table th { font-weight: 500; color: var(--color-muted); }
+  button { cursor: pointer; }
   td.font-mono { white-space: nowrap; }
+  .font-mono { font-family: var(--font-outlier); font-variant-numeric: tabular-nums slashed-zero; }
 }
 
 @layer components {
-  /* Small accent label above headlines */
-  .kicker {
-    font-family: var(--font-display), var(--font-inter), sans-serif;
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--color-red);
-  }
+  /* A small plain label (the old uppercase kicker): body face, a step smaller, sentence case */
+  .kicker { font-size: var(--text-sm); font-weight: 500; color: var(--color-muted); }
 
-  /* Large headline / big numbers */
+  /* Large heads and big figures: Host Grotesk 500, tight */
   .display-title {
-    font-family: var(--font-display), var(--font-inter), sans-serif;
-    font-weight: 800;
-    letter-spacing: 0.005em;
-    line-height: 1.05;
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.04;
   }
 
-  /* Section header */
   .section-title {
-    font-family: var(--font-display), var(--font-inter), sans-serif;
-    font-weight: 800;
-    font-size: 1.6rem;
-    letter-spacing: 0.01em;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-xl);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
-  /* Condensed uppercase label text */
-  .label-nav {
-    font-family: var(--font-display), var(--font-inter), sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+  /* Formerly tracked capitals; now a plain label */
+  .label-nav { font-weight: 500; }
 
-  /* Card: frosted glass. Translucent fill, light edge on top, soft shadow underneath. */
+  /* A figure an instrument measured: tabular mono */
+  .measured { font-family: var(--font-outlier); font-variant-numeric: tabular-nums slashed-zero; }
+
+  /* Hairline panel: one surface, a 1px rule, no shadow */
   .cell, .cell-hover, .list-card {
-    border: 1px solid var(--color-border);
-    background: linear-gradient(150deg, rgb(255 255 255 / 0.095), rgb(255 255 255 / 0.04));
+    border: var(--rule-hair) solid var(--color-rule);
+    background: var(--color-paper-2);
     border-radius: var(--radius-card);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 10px 30px rgb(0 0 0 / 0.22);
+    color: var(--color-ink);
   }
 
-  /* Clickable card */
   .cell-hover {
-    transition: border-color 0.15s ease, background-color 0.15s ease;
     display: block;
+    transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
   }
-  .cell-hover:hover {
-    border-color: var(--color-border-strong);
-    background: linear-gradient(150deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.07));
-  }
+  .cell-hover:hover { border-color: var(--color-rule-2); background-color: var(--color-surface-2); }
 
-  /* The one highlighted card of a view */
+  /* The lead panel of a view: same surface, the stronger rule */
   .cell-accent {
-    border: 1px solid rgb(255 236 186 / 0.45);
-    background: linear-gradient(135deg, #f1d58a 0%, #d6a842 42%, #a87a22 100%);
+    border: var(--rule-hair) solid var(--color-rule-2);
+    background: var(--color-paper-2);
     border-radius: var(--radius-card);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 18px 44px rgb(214 168 66 / 0.22);
-    color: var(--color-on-accent);
+    color: var(--color-ink);
   }
 
-  /* Cards inside a list share a container — avoid double rounding */
   .list-card { overflow: hidden; }
   .list-card > .cell-hover {
     border-radius: 0;
-    border-width: 0 0 1px 0;
-    border-color: var(--color-border-light);
-    box-shadow: none;
+    border-width: 0 0 var(--rule-hair) 0;
+    border-color: var(--color-rule);
     background: transparent;
   }
-  .list-card > .cell-hover:hover { background: rgb(255 255 255 / 0.05); }
+  .list-card > .cell-hover:hover { background: var(--color-surface-2); }
   .list-card > .cell-hover:last-child { border-bottom: 0; }
 
-  /* Pill / chip */
+  /* Chip: state only, a 1px rule at 4px */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    border-radius: 999px;
-    padding: 0.2rem 0.65rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-secondary);
+    border-radius: 4px;
+    padding: var(--space-3xs) var(--space-xs);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    background: var(--color-paper-3);
+    border: var(--rule-hair) solid var(--color-rule);
+    color: var(--color-ink-2);
   }
 
-  /* Tables: wrap in a card and get subtle row hover */
-  table tbody tr { transition: background-color 0.12s ease; }
-  table tbody tr:hover { background-color: rgba(255, 255, 255, 0.025); }
+  table tbody tr { transition: background-color var(--dur-micro) var(--ease-out); }
+  table tbody tr:hover { background-color: var(--color-paper-3); }
 
-  /* Win / Loss / Tie indicators */
-  .win { color: var(--color-positive); font-weight: 600; }
-  .loss { color: var(--color-negative); }
-  .tie { color: var(--color-text-muted); }
-}
+  .win { color: var(--color-ok); font-weight: 500; }
+  .loss { color: var(--color-bad); }
+  .tie { color: var(--color-muted); }
 
-/*
- * Glass with a real blur: the control layer (sidebar, tab bar, menus, sheets,
- * Tabs). Cards use the cheaper translucent fill above, which looks the same on
- * the soft backdrop and keeps scrolling smooth.
- */
-.glass {
-  background: linear-gradient(150deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.06));
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  backdrop-filter: blur(26px) saturate(180%);
-  border: 1px solid rgb(255 255 255 / 0.14);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 14px 36px rgb(0 0 0 / 0.3);
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass { background: var(--color-solid); }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .glass { background: var(--color-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .cell, .cell-hover, .list-card { background: var(--color-solid); }
-}
+  /* The control layer (sidebar, tab bar, sheets): a solid panel, no blur */
+  .glass {
+    background: var(--color-paper-2);
+    border: var(--rule-hair) solid var(--color-rule);
+  }
 
-/* Buttons: one primary action per section, everything else quiet */
-.btn, .btn-primary {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  min-height: 2.5rem; padding: 0 1rem; border-radius: 999px;
-  font-size: 0.875rem; font-weight: 600; white-space: nowrap;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  /* Buttons: one primary per section, everything else an outline */
+  .btn, .btn-primary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    min-height: 2.25rem; padding: 0 0.875rem; border-radius: var(--radius-pill);
+    font-size: var(--text-sm); font-weight: 500; white-space: nowrap;
+    transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+  }
+  .btn { border: var(--rule-hair) solid var(--color-rule-2); color: var(--color-ink); background: var(--color-paper-2); }
+  .btn:hover { background-color: var(--color-surface-2); }
+  .btn:active { background-color: var(--color-paper-3); }
+  .btn-primary { border: var(--rule-hair) solid var(--color-accent); background-color: var(--color-accent); color: var(--color-accent-ink); }
+  .btn-primary:hover { background-color: var(--color-red-soft); border-color: var(--color-red-soft); }
+  .btn:disabled, .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 }
-.btn { border: 1px solid var(--color-border); color: var(--color-ink); background: transparent; }
-.btn:hover { background-color: var(--color-surface-2); border-color: var(--color-border-strong); }
-.btn-primary { background-color: var(--color-red); color: var(--color-on-accent); }
-.btn-primary:hover { background-color: var(--color-red-soft); }
 
 /* Touch screens: every control at least 44px tall, rows with room for a thumb */
 @media (pointer: coarse) {
@@ -233,12 +164,7 @@
   table tbody td { padding-block: 0.8rem; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+/* Field edges at 3:1 against the ground: unlayered, so a utility border colour on a field cannot dim it */
+select, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+  border-color: color-mix(in oklab, var(--color-muted) 82%, var(--color-paper));
 }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-border-strong); }
