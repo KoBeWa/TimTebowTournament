@@ -264,7 +264,7 @@ function ProspectDetailModal({
                   </div>
                   <div className="h-2 bg-surface-3 w-full" style={{ borderRadius: "2px" }}>
                     {value && (
-                      <div className="h-full transition-all" style={{
+                      <div className="h-full transition-colors" style={{
                         width: `${Math.min((value / max) * 100, 100)}%`,
                         background: value >= 80 ? "#4ade80" : value >= 60 ? "#fbbf24" : "var(--color-red)",
                         borderRadius: "2px",
@@ -589,7 +589,7 @@ export default function MockDraftApp({
               background: userName.trim() ? "var(--color-ink)" : "var(--color-border)",
               color: userName.trim() ? "var(--color-cream)" : "var(--color-text-muted)",
             }}>
-            Mock Draft starten →
+            Mock Draft starten
           </button>
         </div>
       )}
@@ -853,7 +853,7 @@ export default function MockDraftApp({
               <div className="text-text-muted text-sm">Noch keine Mock Drafts erstellt.</div>
               <button onClick={() => setView("edit")}
                 className="mt-4 label-nav text-xs px-5 py-2.5" style={{ background: "var(--color-ink)", color: "var(--color-cream)" }}>
-                Ersten Mock Draft erstellen →</button>
+                Ersten Mock Draft erstellen</button>
             </div>
           ) : (
             <div className="space-y-3">
