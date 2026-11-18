@@ -70,10 +70,10 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={<span className="inline-flex items-center gap-3">
-          <span aria-hidden className="inline-block h-8 w-1.5 rounded-full sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
+          <span aria-hidden className="inline-block h-8 w-[3px] rounded-[2px] sm:h-10" style={{ backgroundColor: MANAGER_COLORS[name] }} />
           {name}
         </span>}
         description={`${numSeasons} Seasons, ${data.championships} Titel, seit 2015`}
@@ -82,7 +82,7 @@ export default async function ManagerPage({ params }: { params: Promise<{ name: 
         <Link href={`/trophies/${name}`} className="btn">Trophäen</Link>
       </PageHeader>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Bilanz" value={record} />
         <StatTile label="Siegquote" value={`${(winPct * 100).toFixed(1)}%`} />
         <StatTile label="Titel" value={data.championships} tone={data.championships > 0 ? "gold" : undefined} />

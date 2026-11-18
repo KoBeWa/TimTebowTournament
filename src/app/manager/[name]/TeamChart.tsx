@@ -13,8 +13,8 @@ export interface TeamCount {
   players: string[];
 }
 
-// Single series: one hue (categorical slot 1, dark step), validated against the page surface
-const BAR = "#3987e5";
+// Single series: one instrument hue
+const BAR = "var(--color-cool)";
 
 export default function TeamChart({ counts, selected, onSelect }: {
   counts: TeamCount[];
@@ -27,7 +27,7 @@ export default function TeamChart({ counts, selected, onSelect }: {
   const zero = counts.filter((c) => c.players.length === 0).length;
 
   return (
-    <div className="cell p-4 sm:p-5 mb-4">
+    <div className="cell p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
         <h3 className="text-sm font-medium text-ink">Spieler pro NFL-Team</h3>
         <div className="text-xs text-text-muted">
@@ -38,7 +38,7 @@ export default function TeamChart({ counts, selected, onSelect }: {
       <div className="h-10 text-sm text-text-secondary overflow-hidden">
         {active ? (
           <>
-            <b className="text-ink">{active.team}</b>, {active.players.length} Spieler
+            <b className="font-medium text-ink">{active.team}</b>, <span className="measured">{active.players.length}</span> Spieler
             {active.players.length > 0 && (
               <span className="block truncate text-xs text-text-muted">
                 {active.players.slice(0, 8).join(", ")}{active.players.length > 8 ? ` +${active.players.length - 8}` : ""}
@@ -86,21 +86,21 @@ function BarRow({ row, max, selected, hover, setHover, onSelect }: {
               aria-pressed={selected === c.team}
               aria-label={`${c.team}: ${n} Spieler`}
               className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end">
-              <span className="mb-0.5 text-[10px] tabular-nums text-text-muted">{n}</span>
+              <span className="mb-0.5 text-[11px] measured text-text-muted">{n}</span>
               <span className="w-full max-w-[1.75rem] rounded-t-[4px] transition-opacity"
                 style={{
                   height: n ? `${Math.max(4, (n / max) * 100)}%` : "2px",
-                  backgroundColor: n ? BAR : "var(--color-border-strong)",
+                  backgroundColor: n ? BAR : "var(--color-rule-2)",
                   opacity: dim ? 0.35 : 1,
                 }} />
             </button>
           );
         })}
       </div>
-      <div className="flex gap-0.5 border-t border-border-strong pt-1">
+      <div className="flex gap-0.5 border-t border-border-light pt-1">
         {row.map((c) => (
           <span key={c.team}
-            className={`min-w-0 flex-1 text-center text-[10px] ${selected === c.team ? "font-semibold text-ink" : "text-text-muted"}`}>
+            className={`min-w-0 flex-1 text-center text-[11px] ${selected === c.team ? "font-medium text-ink" : "text-text-muted"}`}>
             {c.team}
           </span>
         ))}

@@ -16,6 +16,7 @@ const fmt = (n: number) => n.toFixed(1);
 // Win difference as the headline number, the record goes underneath
 const fmtDiff = (d: number) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : "±0");
 const fmtRecord = (w: number, l: number, t = 0) => `${w}–${l}${t ? `–${t}` : ""}`;
+const diffTone = (d: number) => (d > 0 ? "text-positive" : d < 0 ? "text-negative" : "text-text-secondary");
 const when = (m: { season_year: number; week: number }) => `${m.season_year}, W${m.week}`;
 
 const TABS = [
@@ -124,13 +125,13 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
   const pair = m1 !== m2 && loaded;
   const hasGames = pair && matchups.length > 0 && games;
   const skeleton = (
-    <div className="animate-pulse space-y-4" aria-busy="true">
+    <div className="motion-safe:animate-pulse space-y-8" aria-busy="true">
       <div className="cell h-40 bg-surface-2" />
       <div className="cell h-56 bg-surface-2" />
     </div>
   );
   const empty = m1 === m2 || loaded ? (
-    <div className="cell p-5 text-sm text-text-secondary">
+    <div className="cell p-4 text-sm sm:p-5 text-text-secondary">
       {m1 === m2
         ? "Bitte wähle zwei verschiedene Manager aus."
         : "Diese beiden Manager haben noch nie gegeneinander gespielt. Wähle oben ein anderes Duell."}
@@ -138,61 +139,61 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
   ) : skeleton;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader title="Head to Head" description="Wähle zwei Manager für den direkten Vergleich oder klick ein Feld in der Liga-Matrix." />
 
-      <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
         <label className="flex w-full flex-col gap-1 text-sm text-text-muted sm:w-52">
           Manager 1
           <select value={m1} onChange={(e) => setM1(e.target.value as ManagerId)}
-            className="bg-surface border border-border rounded-full px-4 py-3 text-ink text-lg focus:border-red focus:outline-none">
+            className="bg-surface border border-border rounded-lg px-3 py-2.5 text-ink focus:border-red focus:outline-none">
             {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m2}>{m}</option>)}
           </select>
         </label>
-        <span className="text-3xl text-red tracking-wider display-title sm:pb-2">VS</span>
+        <span className="text-sm text-text-muted sm:pb-3">gegen</span>
         <label className="flex w-full flex-col gap-1 text-sm text-text-muted sm:w-52">
           Manager 2
           <select value={m2} onChange={(e) => setM2(e.target.value as ManagerId)}
-            className="bg-surface border border-border rounded-full px-4 py-3 text-ink text-lg focus:border-red focus:outline-none">
+            className="bg-surface border border-border rounded-lg px-3 py-2.5 text-ink focus:border-red focus:outline-none">
             {MANAGERS.map((m) => <option key={m} value={m} disabled={m === m1}>{m}</option>)}
           </select>
         </label>
       </div>
 
       {error ? (
-        <div className="cell flex flex-col items-start gap-3 p-5">
+        <div className="cell flex flex-col items-start gap-3 p-4 sm:p-5">
           <p className="text-sm text-text-secondary">Der Vergleich konnte nicht geladen werden.</p>
           <button type="button" onClick={retry} className="btn">Erneut versuchen</button>
         </div>
       ) : (
-      <div className={`space-y-6 transition-opacity ${loading && loaded ? "opacity-50" : ""}`}>
+      <div className={`space-y-8 transition-opacity ${loading && loaded ? "opacity-50" : ""}`}>
       {pair && (
-      <div className="cell p-6 sm:p-8">
+      <div className="cell-accent p-4 sm:p-5">
         <div className="mb-5 text-center text-sm text-text-muted">Direkter Vergleich, {matchups.length} Matchups</div>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           <div className="text-right">
-            <div className={`display-title text-3xl sm:text-5xl uppercase ${wins > losses ? "text-ink" : "text-text-muted"}`}><ManagerName id={m1} plain /></div>
+            <div className={`display-title text-2xl sm:text-4xl ${wins > losses ? "text-ink" : "text-text-muted"}`}><ManagerName id={m1} plain /></div>
             <div className="text-sm text-text-muted mt-1">{wins > losses ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
           </div>
           <div className="text-center">
-            <div className="display-title text-4xl sm:text-6xl text-ink tabular-nums">{fmtDiff(wins - losses)}</div>
-            <div className="mt-1 text-sm text-text-muted tabular-nums">({fmtRecord(wins, losses, ties)})</div>
+            <div className={`measured text-3xl sm:text-5xl ${diffTone(wins - losses)}`}>{fmtDiff(wins - losses)}</div>
+            <div className="measured mt-1 text-sm text-text-muted">{fmtRecord(wins, losses, ties)}</div>
           </div>
           <div>
-            <div className={`display-title text-3xl sm:text-5xl uppercase ${losses > wins ? "text-ink" : "text-text-muted"}`}><ManagerName id={m2} plain /></div>
+            <div className={`display-title text-2xl sm:text-4xl ${losses > wins ? "text-ink" : "text-text-muted"}`}><ManagerName id={m2} plain /></div>
             <div className="text-sm text-text-muted mt-1">{losses > wins ? "führt" : wins === losses ? "ausgeglichen" : "liegt hinten"}</div>
           </div>
         </div>
         {matchups.length > 0 && (
           <>
-            <div className="mt-6 flex h-2.5 overflow-hidden rounded-full bg-surface-3">
+            <div className="mt-5 flex h-2 overflow-hidden rounded-full bg-surface-3">
               <div style={{ width: `${(wins / matchups.length) * 100}%`, backgroundColor: c1 }} />
               <div className="bg-text-faint" style={{ width: `${(ties / matchups.length) * 100}%` }} />
               <div style={{ width: `${(losses / matchups.length) * 100}%`, backgroundColor: c2 }} />
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-text-secondary">
-              <span>Reguläre Saison <b className="text-ink tabular-nums">{reg.wins}–{reg.losses}</b></span>
-              <span>Playoffs <b className="text-ink tabular-nums">{po.wins}–{po.losses}</b></span>
+              <span>Reguläre Saison <b className="measured font-medium text-ink">{fmtRecord(reg.wins, reg.losses)}</b></span>
+              <span>Playoffs <b className="measured font-medium text-ink">{fmtRecord(po.wins, po.losses)}</b></span>
               <span className="flex items-center gap-1.5">
                 Letzte 5
                 {lastFive.map((m) => {
@@ -227,10 +228,10 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
             aWins={st.longest.me > st.longest.them} bWins={st.longest.them > st.longest.me} />
           <CompareRow label="Bankpunkte gesamt" a={fmt(players.bench1.total)} b={fmt(players.bench2.total)}
             hint="Punkte, die auf der Bank liegen geblieben sind" />
-          <div className="flex flex-wrap justify-between gap-2 px-4 sm:px-5 py-3 text-sm text-text-secondary">
-            <span>Ø Abstand <b className="text-ink">{fmt(sc.avgMargin)}</b></span>
+          <div className="flex flex-wrap justify-between gap-2 border-t border-border-light px-4 py-2.5 text-sm text-text-secondary sm:px-5">
+            <span>Ø Abstand <b className="measured font-medium text-ink">{fmt(sc.avgMargin)}</b></span>
             {st.current.side && st.current.side !== "tie" && (
-              <span>Aktuelle Serie: <b className="text-ink">{nameOf(st.current.side)}</b> {st.current.length} Sieg{st.current.length > 1 ? "e" : ""} in Folge</span>
+              <span>Aktuelle Serie: <b className="font-medium text-ink">{nameOf(st.current.side)}</b> <span className="measured">{st.current.length}</span> Sieg{st.current.length > 1 ? "e" : ""} in Folge</span>
             )}
           </div>
         </div>
@@ -238,7 +239,7 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
 
       <section>
         <h2 className="section-title text-ink mb-4">Rekordspiele</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="cell grid divide-y divide-border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-3">
           {games.biggestMe && <GameCard title={`Höchster Sieg ${m1}`} m={games.biggestMe} m1={m1} m2={m2} />}
           {games.biggestThem && <GameCard title={`Höchster Sieg ${m2}`} m={games.biggestThem} m1={m1} m2={m2} />}
           <GameCard title="Knappstes Spiel" m={games.closest} m1={m1} m2={m2} />
@@ -256,13 +257,12 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
         <div className="flex flex-wrap gap-2">
           {seasons.map((s) => {
             const r = record(bySeason[s]);
-            const leadColor = r.wins > r.losses ? c1 : r.losses > r.wins ? c2 : null;
+            const d = r.wins - r.losses;
             return (
-              <div key={s} className="rounded-lg border border-border bg-surface px-3 py-2 text-center"
-                style={leadColor ? { borderColor: leadColor } : undefined}>
-                <div className="text-xs text-text-muted">{s}</div>
-                <div className="text-sm text-ink tabular-nums">{fmtDiff(r.wins - r.losses)}</div>
-                <div className="text-[10px] text-text-muted tabular-nums">({fmtRecord(r.wins, r.losses, r.ties)})</div>
+              <div key={s} className={`rounded-lg border border-border px-3 py-2 text-center ${d > 0 ? "bg-ok-soft" : d < 0 ? "bg-bad-soft" : "bg-surface"}`}>
+                <div className="measured text-xs text-text-muted">{s}</div>
+                <div className={`measured text-sm ${diffTone(d)}`}>{fmtDiff(d)}</div>
+                <div className="measured text-[11px] text-text-muted">{fmtRecord(r.wins, r.losses, r.ties)}</div>
               </div>
             );
           })}
@@ -275,25 +275,23 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
           {[...seasons].reverse().map((season) => (
             <div key={season}>
               <h3 className="mb-2 text-sm font-medium text-text-muted">{season}</h3>
-              <div className="space-y-2">
+              <div className="cell divide-y divide-border-light">
                 {bySeason[season].map((m) => {
                   const won = m.myScore > m.theirScore;
                   const tied = m.myScore === m.theirScore;
                   return (
-                    <div
-                      key={`${m.season_year}-${m.week}`}
-                      className={`cell px-4 py-3 flex items-center justify-between border-l-4 ${tied ? "border-l-text-faint" : ""}`}
-                      style={tied ? undefined : { borderLeftColor: won ? c1 : c2 }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-text-muted text-sm w-16">Woche {m.week}</span>
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink">{tied ? "Unentschieden" : <>{<ManagerName id={won ? m1 : m2} plain />} gewinnt</>}</span>
+                    <div key={`${m.season_year}-${m.week}`} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="h-4 w-[3px] shrink-0 rounded-sm bg-text-faint"
+                          style={tied ? undefined : { backgroundColor: won ? c1 : c2 }} aria-hidden />
+                        <span className="w-16 shrink-0 text-sm text-text-muted">Woche {m.week}</span>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink">{tied ? "Unentschieden" : <><ManagerName id={won ? m1 : m2} plain /> gewinnt</>}</span>
                         {m.is_playoff && <span className="chip">Playoffs</span>}
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`tabular-nums ${won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.myScore.toFixed(1)}</span>
-                        <span className="text-text-muted">-</span>
-                        <span className={`tabular-nums ${!won ? "text-ink font-semibold" : "text-text-secondary"}`}>{m.theirScore.toFixed(1)}</span>
+                      <div className="measured flex items-center gap-2 text-sm">
+                        <span className={won ? "text-ink font-medium" : "text-text-secondary"}>{m.myScore.toFixed(1)}</span>
+                        <span className="text-text-faint">:</span>
+                        <span className={!won && !tied ? "text-ink font-medium" : "text-text-secondary"}>{m.theirScore.toFixed(1)}</span>
                       </div>
                     </div>
                   );
@@ -315,12 +313,12 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
             <ol className="space-y-2">
               {players.top.map((p, i) => (
                 <li key={`${p.player}-${p.season_year}-${p.week}`} className="flex items-baseline gap-3 text-sm">
-                  <span className="w-4 text-text-faint">{i + 1}</span>
+                  <span className="measured w-4 text-text-faint">{i + 1}</span>
                   <span className="flex-1 min-w-0">
                     <span className="text-ink font-medium">{p.player}</span>
                     <span className="block text-xs text-text-muted">{p.manager}, {when(p)}</span>
                   </span>
-                  <span className="tabular-nums text-ink">{fmt(p.points)}</span>
+                  <span className="measured text-ink">{fmt(p.points)}</span>
                 </li>
               ))}
             </ol>
@@ -335,7 +333,7 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
                       <span className="text-ink font-medium">{p.player}</span>
                       <span className="block text-xs text-text-muted">{p.games} Spiele, Ø {fmt(p.points / p.games)}, Best {fmt(p.best)}</span>
                     </span>
-                    <span className="tabular-nums text-ink">{fmt(p.points)}</span>
+                    <span className="measured text-ink">{fmt(p.points)}</span>
                   </li>
                 ))}
               </ol>
@@ -368,7 +366,7 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
             <div className="space-y-1 text-sm text-text-secondary">
               {[{ m: m1, b: players.bench1.best }, { m: m2, b: players.bench2.best }].map(({ m, b }) => b && (
                 <div key={m}>
-                  <span className="text-ink">{m}</span>: {b.player_name} mit <b className="text-ink">{fmt(b.points)}</b> auf der Bank ({when(b)})
+                  <span className="text-ink">{m}</span>: {b.player_name} mit <b className="measured font-medium text-ink">{fmt(b.points)}</b> auf der Bank ({when(b)})
                 </div>
               ))}
             </div>
@@ -390,10 +388,10 @@ function CompareRow({ label, a, b, aWins, bWins, hint }: {
   label: string; a: string; b: string; aWins?: boolean; bWins?: boolean; hint?: string;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-border-light px-4 sm:px-5 py-3 first:border-t-0">
-      <span className={`text-right tabular-nums ${aWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{a}</span>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-t border-border-light px-4 py-2.5 first:border-t-0 sm:px-5">
+      <span className={`measured text-right ${aWins ? "text-ink font-medium" : "text-text-secondary"}`}>{a}</span>
       <span className="min-w-[9rem] text-center text-xs text-text-muted" title={hint}>{label}</span>
-      <span className={`tabular-nums ${bWins ? "text-ink font-semibold" : "text-text-secondary"}`}>{b}</span>
+      <span className={`measured ${bWins ? "text-ink font-medium" : "text-text-secondary"}`}>{b}</span>
     </div>
   );
 }
@@ -401,17 +399,20 @@ function CompareRow({ label, a, b, aWins, bWins, hint }: {
 function GameCard({ title, m, m1, m2 }: { title: string; m: H2HMatchup; m1: string; m2: string }) {
   const r = resultOf(m);
   return (
-    <div className="cell p-4">
+    <div className="p-4 sm:border-l sm:border-border sm:first:border-l-0">
       <h3 className="mb-2 text-sm font-medium text-text-muted">{title}</h3>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-lg tabular-nums">
-          <span className={r === "me" ? "text-ink font-semibold" : "text-text-secondary"}>{fmt(m.myScore)}</span>
-          <span className="text-text-faint mx-1.5">–</span>
-          <span className={r === "them" ? "text-ink font-semibold" : "text-text-secondary"}>{fmt(m.theirScore)}</span>
+        <span className="measured text-lg">
+          <span className={r === "me" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.myScore)}</span>
+          <span className="mx-1.5 text-text-faint">:</span>
+          <span className={r === "them" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.theirScore)}</span>
         </span>
-        <span className="text-xs text-text-muted">{when(m)}{m.is_playoff ? " · Playoff" : ""}</span>
+        <span className="measured text-xs text-text-muted">{when(m)}</span>
       </div>
-      <div className="mt-1 text-xs text-text-muted">{m1} vs {m2}, Abstand {fmt(Math.abs(m.myScore - m.theirScore))}</div>
+      <div className="mt-1 flex items-center gap-2 text-xs text-text-muted">
+        <span>{m1} vs {m2}, Abstand <span className="measured">{fmt(Math.abs(m.myScore - m.theirScore))}</span></span>
+        {m.is_playoff && <span className="chip">Playoff</span>}
+      </div>
     </div>
   );
 }
@@ -423,7 +424,7 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
   const get = (a: string, b: string) => pairs.find((p) => p.manager_id === a && p.opponent_id === b);
   return (
     <section>
-      <h2 className="section-title text-ink mb-1">Liga-Matrix</h2>
+      <h2 className="section-title mb-1 text-ink">Liga-Matrix</h2>
       <p className="text-sm text-text-muted mb-3">Bilanz der Zeile gegen die Spalte, seit 2015</p>
       <div className="cell overflow-x-auto">
         <table className="w-full text-sm">
@@ -442,22 +443,22 @@ function LeagueMatrix({ pairs, m1, m2, onSelect }: {
                   const p = get(r, c);
                   const pct = p && p.total_games ? (p.wins + p.ties / 2) / p.total_games : 0.5;
                   const selected = r === m1 && c === m2;
-                  // gold = row leads, steel = row trails
-                  const tone = pct > 0.5 ? `rgba(214,168,66,${(pct - 0.5) * 1.1})` : `rgba(143,163,184,${(0.5 - pct) * 1.1})`;
+                  // soft green = row leads, soft red = row trails
+                  const tone = pct > 0.5 ? "bg-ok-soft" : pct < 0.5 ? "bg-bad-soft" : "";
+                  const d = p ? p.wins - p.losses : 0;
                   return (
                     <td key={c} className="p-0.5">
                       <button
                         onClick={() => onSelect(r, c)}
-                        className={`min-h-11 w-full rounded-md px-2 py-1.5 tabular-nums text-ink hover:ring-1 hover:ring-border-strong ${selected ? "ring-2 ring-red" : ""}`}
-                        style={{ backgroundColor: tone }}
+                        className={`min-h-11 w-full rounded-md px-2 py-1.5 hover:ring-1 hover:ring-border-strong ${tone} ${selected ? "ring-2 ring-red" : ""}`}
                         title={`${r} vs ${c}: ${p?.wins ?? 0}–${p?.losses ?? 0}${p?.ties ? `–${p.ties}` : ""}`}
                       >
                         {p ? (
                           <>
-                            <span className="block">{fmtDiff(p.wins - p.losses)}</span>
-                            <span className="block text-[10px] leading-tight text-text-secondary">({fmtRecord(p.wins, p.losses, p.ties)})</span>
+                            <span className={`measured block text-sm ${diffTone(d)}`}>{fmtDiff(d)}</span>
+                            <span className="measured block text-[11px] leading-tight text-text-muted">{fmtRecord(p.wins, p.losses, p.ties)}</span>
                           </>
-                        ) : "–"}
+                        ) : <span className="text-text-faint">n/a</span>}
                       </button>
                     </td>
                   );
