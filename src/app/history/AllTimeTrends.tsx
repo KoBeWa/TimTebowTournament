@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGERS, MANAGER_COLORS } from "@/lib/constants";
 import Tabs from "@/components/ui/Tabs";
 import type { MetricKey, TrendData } from "./trends";
+import { fmtInt, fmtPctPoints } from "@/lib/format";
 
 const COLORS = MANAGER_COLORS;
 
 const METRICS: { key: MetricKey; label: string; hint: string; format: (v: number) => string }[] = [
   { key: "wins", label: "Siege", hint: "Siege insgesamt inkl. Playoffs", format: (v) => `${v}` },
-  { key: "winPct", label: "Siegquote", hint: "Anteil gewonnener Spiele bis zu dieser Woche", format: (v) => `${v.toFixed(1)} %` },
-  { key: "points", label: "Punkte", hint: "Punkte insgesamt", format: (v) => v.toLocaleString("de-DE") },
+  { key: "winPct", label: "Siegquote", hint: "Anteil gewonnener Spiele bis zu dieser Woche", format: (v) => fmtPctPoints(v) },
+  { key: "points", label: "Punkte", hint: "Punkte insgesamt", format: (v) => fmtInt(v) },
   { key: "elo", label: "Elo", hint: "Elo-Rating nach jedem Spiel", format: (v) => `${v}` },
   { key: "titles", label: "Titel", hint: "Meisterschaften insgesamt", format: (v) => `${v}` },
   { key: "rank", label: "Platz", hint: "Platz in der ewigen Tabelle (Siege, dann Punkte)", format: (v) => `${v}.` },

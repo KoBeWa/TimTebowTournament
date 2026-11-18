@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Trophy } from "lucide-react";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtNum, fmtPct } from "@/lib/format";
 
 type Rec = { w: number; l: number; t: number };
 
@@ -34,7 +36,7 @@ const TABS: { key: Tab; label: string }[] = [
 const games = (r: Rec) => r.w + r.l + r.t;
 const pct = (r: Rec) => (games(r) ? (r.w + r.t / 2) / games(r) : 0);
 const fmtRec = (r: Rec) => `${r.w}-${r.l}${r.t > 0 ? `-${r.t}` : ""}`;
-const fmtPct = (r: Rec) => (games(r) ? `${(pct(r) * 100).toFixed(1)}%` : "–");
+const fmtWinPct = (r: Rec) => (games(r) ? fmtPct(pct(r)) : "–");
 
 /** Sorted by the record of the tab: win share, then wins. */
 function byRecord(rows: AllTimeRow[], key: "total" | "regular" | "playoffs") {
@@ -97,14 +99,14 @@ export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
                 <td className="measured px-4 py-2.5 text-xs text-text-faint">{i + 1}</td>
                 <td className="px-4 py-2.5 font-medium text-ink"><ManagerName id={row.manager_id} /></td>
                 <td className={`${TD} text-ink`}>{fmtRec(row[tab])}</td>
-                <td className={`${TD} text-ink`}>{fmtPct(row[tab])}</td>
+                <td className={`${TD} text-ink`}>{fmtWinPct(row[tab])}</td>
                 {tab === "total" && (
                   <>
                     <td className={`${TD} hidden text-text-secondary md:table-cell`}>{fmtRec(row.regular)}</td>
                     <td className={`${TD} hidden text-text-secondary md:table-cell`}>{fmtRec(row.playoffs)}</td>
-                    <td className={`${TD} hidden text-text-secondary md:table-cell`}>{row.ppg.toFixed(1)}</td>
+                    <td className={`${TD} hidden text-text-secondary md:table-cell`}>{fmtNum(row.ppg)}</td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-text-secondary">
-                      {row.gold > 0 ? <span className="font-medium text-gold">{row.gold}× Champion</span> : "–"}
+                      {row.gold > 0 ? <span className="inline-flex items-center gap-1.5 font-medium text-ink"><Trophy size={14} aria-hidden className="text-text-muted" />{row.gold}× Champion</span> : "–"}
                     </td>
                     <td className={`${TD} text-text-secondary`}>{row.elo ?? "–"}</td>
                   </>
@@ -112,7 +114,7 @@ export default function AllTimeRankings({ rows }: { rows: AllTimeRow[] }) {
                 {tab === "regular" && (
                   <>
                     <td className={`${TD} text-text-secondary`}>{fmtRec(row.allPlay)}</td>
-                    <td className={`${TD} text-text-secondary`}>{fmtPct(row.allPlay)}</td>
+                    <td className={`${TD} text-text-secondary`}>{fmtWinPct(row.allPlay)}</td>
                     <td className={`${TD} text-text-secondary`}>{row.elo ?? "–"}</td>
                   </>
                 )}

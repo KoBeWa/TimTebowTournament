@@ -2,6 +2,7 @@
  * nav: kept, a fixed sidebar from lg (13 destinations), a bottom tab bar with sheets below · signature: the record chart, every manager week by week with the holder drawn in amber-weight colour · states: loading, error, full · console: graphite
  * axes: dark/grotesk-sans/chromatic-amber · posture: restrained · contrast: pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P2 H2 E2 S2 R2 V2 · weakest: S, eight manager colours are a data palette (chart series and a 3px name marker), never a fill or a signal */
+/* Hallmark · finish-review: subagent · 8 findings · 8 resolved · gap: none */
 /* Hallmark · reworded "110–76" to "110-76" · 19 names the en dash; every win-loss record takes a hyphen */
 @import "tailwindcss";
 @import "./tokens.css";

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MANAGER_COLORS } from "@/lib/constants";
+import { fmtNum, fmtSigned } from "@/lib/format";
 
 // Data written by scripts/score_timelines/build.py
 interface TimelineFile {
@@ -254,7 +255,7 @@ export default function ScoreTimeline({
           onPointerDown={onMove}
           onPointerLeave={() => setHoverT(null)}
           role="img"
-          aria-label={`Punkteverlauf ${managerA} ${finalA.toFixed(1)} gegen ${managerB} ${finalB.toFixed(1)}`}
+          aria-label={`Punkteverlauf ${managerA} ${fmtNum(finalA)} gegen ${managerB} ${fmtNum(finalB)}`}
         >
           {/* Game windows */}
           {data.windows.map(([a, b], i) => (
@@ -301,10 +302,10 @@ export default function ScoreTimeline({
           <circle cx={x(endT)} cy={y(finalB)} r={4} fill={COLOR_B} stroke="var(--color-paper-2)" strokeWidth={2} />
           <circle cx={x(endT)} cy={y(finalA)} r={4} fill={COLOR_A} stroke="var(--color-paper-2)" strokeWidth={2} />
           <text x={x(endT) + 8} y={labelA + 4} fontSize={12} fontWeight={500} fill="var(--color-ink)" style={{ fontFamily: "var(--font-outlier)" }}>
-            {finalA.toFixed(1)}
+            {fmtNum(finalA)}
           </text>
           <text x={x(endT) + 8} y={labelB + 4} fontSize={12} fontWeight={500} fill="var(--color-ink)" style={{ fontFamily: "var(--font-outlier)" }}>
-            {finalB.toFixed(1)}
+            {fmtNum(finalB)}
           </text>
 
           {/* Crosshair */}
@@ -330,13 +331,13 @@ export default function ScoreTimeline({
               <div key={name} className="mb-1.5 last:mb-0">
                 <div className="flex items-center gap-2">
                   <span className="inline-block h-0.5 w-3 rounded" style={{ background: color }} />
-                  <span className="measured font-medium text-ink">{p.score.toFixed(1)}</span>
+                  <span className="measured font-medium text-ink">{fmtNum(p.score)}</span>
                   <span className="text-text-secondary">{name}</span>
                 </div>
                 {p.plays.length > 0 && (
                   <div className="ml-5 mt-0.5 text-text-faint">
                     {p.plays
-                      .map((pl) => `${pl.player} ${pl.pts > 0 ? "+" : ""}${pl.pts.toFixed(1)}`)
+                      .map((pl) => `${pl.player} ${fmtSigned(pl.pts)}`)
                       .join(", ")}
                   </div>
                 )}
@@ -376,11 +377,10 @@ export default function ScoreTimeline({
                     {row.player}
                   </td>
                   <td className={`measured px-2 py-2.5 text-right ${row.pts < 0 ? "text-negative" : "text-ink"}`}>
-                    {row.pts > 0 ? "+" : ""}
-                    {row.pts.toFixed(2)}
+                    {fmtSigned(row.pts, 2)}
                   </td>
-                  <td className="measured hidden px-2 py-2.5 text-right text-text-muted md:table-cell">{scoreAt(seriesA, row.t).score.toFixed(1)}</td>
-                  <td className="measured hidden py-2.5 pl-2 pr-4 text-right text-text-muted sm:pr-5 md:table-cell">{scoreAt(seriesB, row.t).score.toFixed(1)}</td>
+                  <td className="measured hidden px-2 py-2.5 text-right text-text-muted md:table-cell">{fmtNum(scoreAt(seriesA, row.t).score)}</td>
+                  <td className="measured hidden py-2.5 pl-2 pr-4 text-right text-text-muted sm:pr-5 md:table-cell">{fmtNum(scoreAt(seriesB, row.t).score)}</td>
                 </tr>
               ))}
           </tbody>

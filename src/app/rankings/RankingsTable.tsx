@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtNum, fmtPctPoints, fmtSigned } from "@/lib/format";
 
 export type RankingRow = {
   manager_id: string;
@@ -21,16 +22,16 @@ export type RankingRow = {
 type ColKey = keyof Omit<RankingRow, "manager_id">;
 
 const COLS: { key: ColKey; label: string; format: (v: number) => string; desc: boolean }[] = [
-  { key: "avg_draft",       label: "Draft",         format: (v) => (v >= 0 ? "+" : "") + v.toFixed(2), desc: true  },
-  { key: "avg_manager_pct", label: "Manager",        format: (v) => v.toFixed(2) + "%",                desc: true  },
-  { key: "avg_coach",       label: "Coach",          format: (v) => v.toFixed(1),                      desc: true  },
-  { key: "avg_sos",         label: "SOS",            format: (v) => v.toFixed(2),                      desc: true  },
-  { key: "total_luck",      label: "Luck",           format: (v) => (v >= 0 ? "+" : "") + v.toFixed(2),desc: true  },
-  { key: "top_score_pct",   label: "Top Score %",    format: (v) => v.toFixed(1) + "%",                desc: true  },
+  { key: "avg_draft",       label: "Draft",         format: (v) => fmtSigned(v, 2),                   desc: true  },
+  { key: "avg_manager_pct", label: "Manager-Score",  format: (v) => fmtPctPoints(v, 2),                desc: true  },
+  { key: "avg_coach",       label: "Coach",          format: (v) => fmtNum(v),                          desc: true  },
+  { key: "avg_sos",         label: "SOS",            format: (v) => fmtNum(v, 2),                       desc: true  },
+  { key: "total_luck",      label: "Luck",           format: (v) => fmtSigned(v, 2),                   desc: true  },
+  { key: "top_score_pct",   label: "Top Score %",    format: (v) => fmtPctPoints(v),                    desc: true  },
   { key: "current_records", label: "# Records",      format: (v) => String(v),                         desc: true  },
   { key: "achievements",    label: "# Achievements", format: (v) => String(v),                         desc: true  },
-  { key: "avg_points_share",label: "Pts Share Avg",  format: (v) => v.toFixed(2) + "%",                desc: true  },
-  { key: "avg_season_score",label: "Ø Season Score", format: (v) => v.toFixed(1),                      desc: true  },
+  { key: "avg_points_share",label: "Pts Share Avg",  format: (v) => fmtPctPoints(v, 2),                desc: true  },
+  { key: "avg_season_score",label: "Ø Season Score", format: (v) => fmtNum(v),                          desc: true  },
 ];
 
 export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
@@ -88,7 +89,7 @@ export default function RankingsTable({ rows }: { rows: RankingRow[] }) {
                 return (
                   <td
                     key={c.key}
-                    className={`px-4 py-2.5 text-right tabular-nums ${ci === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${
+                    className={`measured px-4 py-2.5 text-right ${ci === COLS.length - 1 ? "pr-4 sm:pr-5" : ""} ${
                       active ? "font-medium text-ink" : "text-text-secondary"} ${colVis(c.key)}`}
                   >
                     {c.format(val)}

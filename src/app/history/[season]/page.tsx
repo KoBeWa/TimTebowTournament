@@ -7,6 +7,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import { notFound } from "next/navigation";
 import { seasonScores } from "./seasonScore";
+import { fmtNum, fmtPct, fmtSigned } from "@/lib/format";
 
 export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
@@ -130,18 +131,18 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                     </td>
                     <td className="hidden measured whitespace-nowrap px-4 py-2.5 text-center text-text-secondary md:table-cell">
                       {ap ? <>{ap.ap_wins}-{ap.ap_losses}{ap.ap_ties ? `-${ap.ap_ties}` : ""}
-                        <span className="block text-[11px] text-text-muted">{(Number(ap.ap_win_pct) * 100).toFixed(1)}%</span></> : "–"}
+                        <span className="block text-[11px] text-text-muted">{fmtPct(Number(ap.ap_win_pct))}</span></> : "–"}
                     </td>
                     <td className={`measured hidden px-4 py-2.5 text-right md:table-cell ${(lk ?? 0) > 0 ? "text-positive" : (lk ?? 0) < 0 ? "text-negative" : "text-text-secondary"}`}>
-                      {lk !== undefined ? `${lk > 0 ? "+" : ""}${lk.toFixed(1)}` : "–"}
+                      {lk !== undefined ? fmtSigned(lk) : "–"}
                     </td>
-                    <td className="measured px-4 py-2.5 text-right">{Number(r.points_for).toFixed(1)}</td>
-                    <td className="measured hidden px-4 py-2.5 text-right text-text-secondary md:table-cell">{Number(r.points_against).toFixed(1)}</td>
+                    <td className="measured px-4 py-2.5 text-right">{fmtNum(Number(r.points_for))}</td>
+                    <td className="measured hidden px-4 py-2.5 text-right text-text-secondary md:table-cell">{fmtNum(Number(r.points_against))}</td>
                     <td className="measured hidden px-4 py-2.5 text-right text-text-secondary lg:table-cell">
-                      {r.max_points_for ? Number(r.max_points_for).toFixed(1) : "–"}
+                      {r.max_points_for ? fmtNum(Number(r.max_points_for)) : "–"}
                     </td>
                     <td className="measured hidden px-4 py-2.5 text-right lg:table-cell">
-                      {r.lineup_efficiency ? `${(Number(r.lineup_efficiency) * 100).toFixed(1)}%` : "–"}
+                      {r.lineup_efficiency ? fmtPct(Number(r.lineup_efficiency)) : "–"}
                     </td>
                     <td className="measured hidden px-4 py-2.5 text-center text-text-secondary md:table-cell">
                       {finalRank.has(r.manager_id) ? `${finalRank.get(r.manager_id)}.` : "–"}
@@ -171,7 +172,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ season:
                 <ManagerName id={p.manager_id} plain />
               </div>
               <div className="measured mt-1 text-xs text-text-muted">
-                Seed {p.seed}, {Number(p.week15_pts).toFixed(1)} + {Number(p.week16_pts).toFixed(1)} Pkt.
+                Seed {p.seed}, {fmtNum(Number(p.week15_pts))} + {fmtNum(Number(p.week16_pts))} Pkt.
               </div>
             </div>
           ))}

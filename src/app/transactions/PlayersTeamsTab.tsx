@@ -6,6 +6,7 @@ import StatTile from "@/components/ui/StatTile";
 import ManagerName from "@/components/ui/ManagerName";
 import SvgTooltip from "./SvgTooltip";
 import { type VTxRow, type FaTxRow, fmt, valTone, TH } from "./shared";
+import { fmtNum, fmtPctPoints } from "@/lib/format";
 
 type TeamPoint = { team: string; value: number; posValue: number; hitRate: number; count: number };
 type Mode = "value" | "hitrate";
@@ -59,7 +60,7 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
             onMouseEnter={() => setTip({
               x: lx(i), y: ly(v),
               lines: [data[i].team,
-                mode === "hitrate" ? `Trefferquote: ${v.toFixed(1)}%` : `Pos. Wert: ${v.toFixed(1)}`,
+                mode === "hitrate" ? `Trefferquote: ${fmtPctPoints(v)}` : `Pos. Wert: ${fmtNum(v)}`,
                 `Adds: ${data[i].count}`],
             })} />
         ))}
@@ -79,7 +80,7 @@ function TeamChart({ data, mode }: { data: TeamPoint[]; mode: Mode }) {
         {[maxVal, maxVal / 2, 0].map((v, i) => (
           <text key={`lv-${i}`} x={PAD.l - 4} y={ly(v) + 4} textAnchor="end"
             style={{ fontSize: "11px", fill: "var(--color-text-faint)", fontFamily: "var(--font-outlier)" }}>
-            {mode === "hitrate" ? v.toFixed(0) + "%" : v.toFixed(0)}
+            {mode === "hitrate" ? fmtPctPoints(v, 0) : fmtNum(v, 0)}
           </text>
         ))}
         {[maxCount, Math.round(maxCount / 2), 0].map((v, i) => (

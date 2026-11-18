@@ -152,10 +152,10 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
             <thead>
               <tr>
                 <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-text-muted sm:pl-5">Manager</th>
-                <th className={th}>Achievements</th>
-                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
-                <th className={th}>Blunders</th>
-                <th className={`${th} hidden sm:table-cell`}>Anzahl</th>
+                <th className={th}>Achievement-Arten</th>
+                <th className={`${th} hidden sm:table-cell`}>Achievements</th>
+                <th className={th}>Blunder-Arten</th>
+                <th className={`${th} hidden sm:table-cell`}>Blunders</th>
                 <th className={th}>Badges gesamt</th>
                 <th className="w-12 py-3 pr-2 sm:pr-3"><span className="sr-only">Trophäen</span></th>
               </tr>
@@ -167,9 +167,9 @@ export default function TrophyRoom({ initial }: { initial: { achievements: Achie
                     <ManagerName id={row.manager} />
                   </td>
                   <td className="measured px-3 py-2.5 text-right text-ink">{row.achievementTypes}</td>
-                  <td className="hidden measured px-3 py-2.5 text-right text-xs text-text-muted sm:table-cell">{row.achievementTotal}</td>
-                  <td className="measured px-3 py-2.5 text-right text-negative">{row.blunderTypes}</td>
-                  <td className="hidden measured px-3 py-2.5 text-right text-xs text-text-muted sm:table-cell">{row.blunderTotal}</td>
+                  <td className="hidden measured px-3 py-2.5 text-right text-ink sm:table-cell">{row.achievementTotal}</td>
+                  <td className="measured px-3 py-2.5 text-right text-ink">{row.blunderTypes}</td>
+                  <td className="hidden measured px-3 py-2.5 text-right text-ink sm:table-cell">{row.blunderTotal}</td>
                   <td className="measured px-3 py-2.5 text-right text-ink">{row.total}</td>
                   <td className="py-0 pr-2 text-right sm:pr-3">
                     <Link href={`/trophies/${encodeURIComponent(row.manager)}`} aria-label={`Trophäen von ${row.manager}`}

@@ -9,6 +9,7 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 import PageHeader from "@/components/ui/PageHeader";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtNum } from "@/lib/format";
 
 type SortKey = "starter_points" | "avg_start" | "starts" | "managers" | "times_drafted" | "moves" | "player_name";
 
@@ -23,7 +24,7 @@ const COLUMNS: { key: SortKey; label: string; title?: string }[] = [
 ];
 
 // Columns kept on phones; the rest only from lg
-const PHONE = new Set<SortKey>(["player_name", "starter_points", "starts"]);
+const PHONE = new Set<SortKey>(["player_name", "starter_points"]);
 
 const value = (p: PlayerListRow, k: SortKey) => (k === "player_name" ? p.player_name : (p[k] ?? 0));
 
@@ -149,7 +150,7 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
                 <th className="hidden w-10 py-3 pl-4 pr-1 text-left font-medium md:table-cell sm:pl-5">#</th>
                 {COLUMNS.map((c) => (
                   <th key={c.key} title={c.title}
-                    className={`px-3 py-3 font-medium ${c.key === "player_name" ? "pl-4 text-left sm:pl-5 md:pl-3" : "text-right"} ${PHONE.has(c.key) ? "" : "hidden lg:table-cell"}`}>
+                    className={`px-3 py-3 font-medium ${c.key === "player_name" ? "pl-4 text-left sm:pl-5 md:pl-3" : "text-right"} ${PHONE.has(c.key) ? "" : "hidden md:table-cell"}`}>
                     <button onClick={() => setSort(c.key)} className={`inline-flex min-h-11 items-center disabled:opacity-55 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] ${sort === c.key ? "text-red" : "hover:text-ink"}`}>
                       {c.label}
                     </button>
@@ -164,7 +165,7 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
                   <td className="hidden py-2.5 pl-4 pr-1 text-text-faint measured md:table-cell sm:pl-5">{i + 1}</td>
                   <td className="py-2.5 pl-4 pr-3 sm:pl-5 md:pl-3">
                     <Link href={playerHref(p.player_key)} className="group flex items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]">
-                      <PlayerAvatar p={p} />
+                      <span className="hidden sm:block"><PlayerAvatar p={p} /></span>
                       <span>
                         <span className="font-medium text-ink">{p.player_name}</span>
                         <span className="block text-xs text-text-muted">
@@ -173,12 +174,12 @@ export default function PlayersTable({ initialPlayers }: { initialPlayers: Playe
                       </span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2.5 text-right measured text-ink">{p.starter_points.toFixed(1)}</td>
-                  <td className="px-3 py-2.5 text-right measured">{p.starts}</td>
-                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{p.avg_start != null ? p.avg_start.toFixed(1) : "–"}</td>
-                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{p.managers}</td>
-                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{p.times_drafted}</td>
-                  <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{p.moves}</td>
+                  <td className="px-3 py-2.5 text-right measured text-ink">{fmtNum(p.starter_points)}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.starts}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.avg_start != null ? fmtNum(p.avg_start) : "–"}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.managers}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.times_drafted}</td>
+                  <td className="hidden px-3 py-2.5 text-right measured md:table-cell">{p.moves}</td>
                   <td className="whitespace-nowrap py-2.5 pl-3 pr-4 sm:pr-5">
                     {p.top_manager ? <><ManagerName id={p.top_manager} /> <span className="measured hidden text-text-faint md:inline">({p.top_manager_weeks} W)</span></> : "–"}
                   </td>

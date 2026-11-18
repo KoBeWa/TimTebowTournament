@@ -11,6 +11,7 @@ import ManagerName from "@/components/ui/ManagerName";
 import { MANAGER_COLORS } from "@/lib/constants";
 import { loadPlayer, type PlayerData, type PlayerEvent } from "@/lib/players";
 import { timeline } from "./timeline";
+import { fmtNum } from "@/lib/format";
 
 const TABS = [
   { key: "managers", label: "Manager" },
@@ -19,7 +20,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
-const fmt = (n: number | null | undefined, d = 1) => (n == null ? "–" : n.toFixed(d));
+const fmt = (n: number | null | undefined, d = 1) => (n == null ? "–" : fmtNum(n, d));
 
 const byWeeks = (a: PlayerData["managers"][number], b: PlayerData["managers"][number]) =>
   b.weeks_rostered - a.weeks_rostered || (b.starter_points ?? 0) - (a.starter_points ?? 0);

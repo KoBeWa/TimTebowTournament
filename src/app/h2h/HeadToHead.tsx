@@ -11,8 +11,9 @@ import {
   sideSwitchers, streaks, topPerformances,
   type H2HMatchup, type LineupRow, type PairRecord,
 } from "./stats";
+import { fmtNum, fmtSigned } from "@/lib/format";
 
-const fmt = (n: number) => n.toFixed(1);
+const fmt = (n: number) => fmtNum(n);
 // Win difference as the headline number, the record goes underneath
 const fmtDiff = (d: number) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : "±0");
 const fmtRecord = (w: number, l: number, t = 0) => `${w}-${l}${t ? `-${t}` : ""}`;
@@ -220,8 +221,8 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
         <div className="cell overflow-hidden">
           <CompareRow label="Ø Punkte" a={fmt(sc.avgMe)} b={fmt(sc.avgThem)} aWins={sc.avgMe > sc.avgThem} bWins={sc.avgThem > sc.avgMe} />
           <CompareRow label="Ø vs. eigener Schnitt"
-            a={`${sc.avgMe - avg1 >= 0 ? "+" : ""}${fmt(sc.avgMe - avg1)}`}
-            b={`${sc.avgThem - avg2 >= 0 ? "+" : ""}${fmt(sc.avgThem - avg2)}`}
+            a={fmtSigned(sc.avgMe - avg1)}
+            b={fmtSigned(sc.avgThem - avg2)}
             hint="Punkte in diesem Duell minus eigener Karriere-Schnitt" />
           <CompareRow label="Höchster Score" a={fmt(sc.maxMe)} b={fmt(sc.maxThem)} aWins={sc.maxMe > sc.maxThem} bWins={sc.maxThem > sc.maxMe} />
           <CompareRow label="Längste Siegesserie" a={`${st.longest.me}`} b={`${st.longest.them}`}
@@ -239,7 +240,7 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
 
       <section>
         <h2 className="section-title text-ink mb-4">Rekordspiele</h2>
-        <div className="cell grid divide-y divide-border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-3">
+        <div className="cell divide-y divide-border-light">
           {games.biggestMe && <GameCard title={`Höchster Sieg ${m1}`} m={games.biggestMe} m1={m1} m2={m2} />}
           {games.biggestThem && <GameCard title={`Höchster Sieg ${m2}`} m={games.biggestThem} m1={m1} m2={m2} />}
           <GameCard title="Knappstes Spiel" m={games.closest} m1={m1} m2={m2} />
@@ -289,9 +290,9 @@ export default function HeadToHead({ initial }: { initial: InitialH2H }) {
                         {m.is_playoff && <span className="chip">Playoffs</span>}
                       </div>
                       <div className="measured flex items-center gap-2 text-sm">
-                        <span className={won ? "text-ink font-medium" : "text-text-secondary"}>{m.myScore.toFixed(1)}</span>
+                        <span className={won ? "text-ink font-medium" : "text-text-secondary"}>{fmtNum(m.myScore)}</span>
                         <span className="text-text-faint">:</span>
-                        <span className={!won && !tied ? "text-ink font-medium" : "text-text-secondary"}>{m.theirScore.toFixed(1)}</span>
+                        <span className={!won && !tied ? "text-ink font-medium" : "text-text-secondary"}>{fmtNum(m.theirScore)}</span>
                       </div>
                     </div>
                   );
@@ -399,17 +400,15 @@ function CompareRow({ label, a, b, aWins, bWins, hint }: {
 function GameCard({ title, m, m1, m2 }: { title: string; m: H2HMatchup; m1: string; m2: string }) {
   const r = resultOf(m);
   return (
-    <div className="p-4 sm:border-l sm:border-border sm:first:border-l-0">
-      <h3 className="mb-2 text-sm font-medium text-text-muted">{title}</h3>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="measured text-lg">
-          <span className={r === "me" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.myScore)}</span>
-          <span className="mx-1.5 text-text-faint">:</span>
-          <span className={r === "them" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.theirScore)}</span>
-        </span>
-        <span className="measured text-xs text-text-muted">{when(m)}</span>
-      </div>
-      <div className="mt-1 flex items-center gap-2 text-xs text-text-muted">
+    <div className="grid gap-1 p-4 sm:grid-cols-[13rem_auto_1fr] sm:items-baseline sm:gap-x-6 sm:px-5">
+      <h3 className="text-sm font-medium text-text-muted">{title}</h3>
+      <span className="measured text-lg">
+        <span className={r === "me" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.myScore)}</span>
+        <span className="mx-1.5 text-text-faint">:</span>
+        <span className={r === "them" ? "text-ink font-medium" : "text-text-secondary"}>{fmt(m.theirScore)}</span>
+      </span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+        <span className="measured">{when(m)}</span>
         <span>{m1} vs {m2}, Abstand <span className="measured">{fmt(Math.abs(m.myScore - m.theirScore))}</span></span>
         {m.is_playoff && <span className="chip">Playoff</span>}
       </div>

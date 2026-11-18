@@ -7,6 +7,7 @@ import ManagerName from "@/components/ui/ManagerName";
 import DraftBrowser, { type DraftPick } from "./DraftBrowser";
 import PositionStats, { type PositionData } from "./PositionStats";
 import { sign } from "./shared";
+import { fmtPct } from "@/lib/format";
 
 export interface PickRow {
   season_year: number;
@@ -135,7 +136,7 @@ export default function DraftsTabs({ avgPickValue, avgTeamValue, avgSeasonValue,
                       <td className={`px-2 py-2.5 text-right font-semibold measured ${o.avgGrade >= 0 ? "text-positive" : "text-negative"}`}>{sign(o.avgGrade)}</td>
                       <td className="hidden px-2 py-2.5 text-right measured text-text-secondary md:table-cell">{sign(o.avgGrade * o.picks)}</td>
                       <td className="hidden px-2 py-2.5 text-right measured text-text-muted md:table-cell">{o.picks}</td>
-                      <td className="py-2.5 pl-2 pr-4 text-right measured text-text-secondary sm:pr-5">{((o.positive / o.picks) * 100).toFixed(0)}%</td>
+                      <td className="py-2.5 pl-2 pr-4 text-right measured text-text-secondary sm:pr-5">{fmtPct(o.positive / o.picks, 0)}</td>
                     </tr>
                   ))}
                 </tbody>

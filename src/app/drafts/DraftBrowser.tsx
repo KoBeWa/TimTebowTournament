@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
 import { SEASONS, MANAGERS, LEAGUE_FOUNDED } from "@/lib/constants";
 import ManagerName from "@/components/ui/ManagerName";
+import { fmtSigned } from "@/lib/format";
 
 export interface DraftPick {
   season_year: number;
@@ -34,7 +35,7 @@ function gradeStyle(g: number | null): { textColor: string; weight: string } {
 
 function gradeLabel(g: number | null) {
   if (g === null) return "–";
-  return (g >= 0 ? "+" : "") + g.toFixed(2);
+  return fmtSigned(g, 2);
 }
 
 // `hide` marks columns that are dropped on phones
@@ -124,7 +125,7 @@ export default function DraftBrowser({ picks }: { picks: DraftPick[] }) {
         <span className="py-3 text-sm text-text-muted">
           <span className="measured">{filtered.length}</span> Picks
           {avgGrade !== null && (
-            <>, Ø Grade <span className={`measured ${avgGrade >= 0 ? "text-positive" : "text-negative"}`}>{avgGrade >= 0 ? "+" : ""}{avgGrade.toFixed(2)}</span></>
+            <>, Ø Grade <span className={`measured ${avgGrade >= 0 ? "text-positive" : "text-negative"}`}>{fmtSigned(avgGrade, 2)}</span></>
           )}
         </span>
         {season !== "all" && (

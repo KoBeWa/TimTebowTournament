@@ -1,3 +1,4 @@
+import { fmtPct, fmtSigned } from "@/lib/format";
 // Types and helpers shared by the transaction tabs
 export interface VTxRow {
   season_year: number;
@@ -30,13 +31,13 @@ export interface FaTxRow {
 }
 
 export function fmt(v: number, digits = 1) {
-  return (v >= 0 ? "+" : "") + v.toFixed(digits);
+  return fmtSigned(v, digits);
 }
 export function valTone(v: number) {
   return v >= 0 ? "text-positive" : "text-negative";
 }
 export function pct(n: number, d: number) {
-  return d === 0 ? "—" : Math.round((n / d) * 100) + "%";
+  return d === 0 ? "—" : fmtPct(n / d, 0);
 }
 
 export const POS_LIST = ["QB", "RB", "WR", "TE", "K", "DEF"];

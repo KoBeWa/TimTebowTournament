@@ -8,10 +8,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import { loadSeasonWeeks, loadWeek, type MatchupWithStats, type SeasonWeeks } from "@/lib/gamecenter";
+import { fmtNum, fmtPctPoints, fmtSigned, fmtSignedPctPoints } from "@/lib/format";
 
-function sign(n: number) { return n >= 0 ? `+${n.toFixed(1)}` : n.toFixed(1); }
-function signPct(n: number) { return (n >= 0 ? "+" : "") + n.toFixed(1) + "%"; }
-const pts = (n: number) => n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+function sign(n: number) { return fmtSigned(n); }
+function signPct(n: number) { return fmtSignedPctPoints(n); }
+const pts = (n: number) => fmtNum(n);
 const tone = (n: number | null) => (n === null || n === 0 ? "text-text-secondary" : n > 0 ? "text-positive" : "text-negative");
 
 function StatRow({ label, a, b, toneA, toneB }: { label: string; a: string; b: string; toneA?: string; toneB?: string }) {
@@ -53,8 +54,8 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
       <div className="border-t border-border px-4 py-2 sm:px-5">
         <StatRow
           label="Coach-Score"
-          a={a.coach_score !== null ? a.coach_score.toFixed(1) : "–"}
-          b={b.coach_score !== null ? b.coach_score.toFixed(1) : "–"}
+          a={a.coach_score !== null ? fmtNum(a.coach_score) : "–"}
+          b={b.coach_score !== null ? fmtNum(b.coach_score) : "–"}
         />
         <StatRow
           label="Luck"
@@ -68,7 +69,7 @@ function MatchupCard({ m, season, week }: { m: MatchupWithStats; season: number;
             <StatRow label="Coach-Rang" a={a.coach_rank !== null ? `#${a.coach_rank}` : "–"} b={b.coach_rank !== null ? `#${b.coach_rank}` : "–"} />
             <StatRow label="vs Team Ø" a={signPct(a.pts_vs_team_avg_pct)} b={signPct(b.pts_vs_team_avg_pct)} toneA={tone(a.pts_vs_team_avg_pct)} toneB={tone(b.pts_vs_team_avg_pct)} />
             <StatRow label="vs Liga Ø" a={signPct(a.pts_vs_league_avg_pct)} b={signPct(b.pts_vs_league_avg_pct)} toneA={tone(a.pts_vs_league_avg_pct)} toneB={tone(b.pts_vs_league_avg_pct)} />
-            <StatRow label="Punkteanteil" a={`${a.pts_share_pct.toFixed(1)}%`} b={`${b.pts_share_pct.toFixed(1)}%`} />
+            <StatRow label="Punkteanteil" a={fmtPctPoints(a.pts_share_pct)} b={fmtPctPoints(b.pts_share_pct)} />
             <StatRow label="Wochenrang" a={`#${a.pts_rank}`} b={`#${b.pts_rank}`} />
           </>
         )}

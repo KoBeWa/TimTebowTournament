@@ -1,3 +1,4 @@
+import { fmtNum } from "./format";
 // Shared types and formatting for the playoff odds (page /playoffs and the home page tile).
 // Numbers in the database are fractions (0..1); the helpers below format them German style.
 
@@ -33,9 +34,7 @@ export type GameRow = {
 
 const NBSP = " ";
 
-export function fmtNum(v: number, digits = 1) {
-  return v.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits });
-}
+export { fmtNum };
 
 // 0.586 -> "58,6 %", tiny values -> "< 1 %", near-certain -> "> 99 %"
 export function fmtPct(p: number) {

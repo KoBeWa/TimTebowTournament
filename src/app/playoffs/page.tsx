@@ -4,6 +4,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import type { GameRow, OddsRow, TrendRow } from "@/lib/playoffs";
 import OddsTable from "./OddsTable";
 import PlayoffTabs from "./PlayoffTabs";
+import { fmtInt } from "@/lib/format";
 
 // Revalidated hourly with the layout; the numbers change once a week.
 // A failed query throws, so a stale copy of the page stays up instead of an empty one.
@@ -55,7 +56,7 @@ export default async function PlayoffsPage() {
   }
 
   const previous = Object.fromEntries(trend.filter((t) => t.week === week - 1).map((t) => [t.manager_id, t.playoff_pct]));
-  const sims = odds[0].sims.toLocaleString("de-DE");
+  const sims = fmtInt(odds[0].sims);
 
   return (
     <div className="space-y-8">

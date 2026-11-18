@@ -3,6 +3,7 @@
 import { useState } from "react";
 import StatTile from "@/components/ui/StatTile";
 import SvgTooltip from "./SvgTooltip";
+import { fmtInt } from "@/lib/format";
 
 export interface ChartPoint { label: string; transactions: number; trades: number }
 export interface OwnerStats { waiverPct: string; tradePct: string; waiverN: number; tradeN: number }
@@ -92,9 +93,9 @@ export default function OverviewTab({ waiverCount, tradeCount, totalCount, owner
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-        <StatTile label="Waiver-Moves" value={waiverCount.toLocaleString("de-DE")} hint="Adds und Add/Drops" />
-        <StatTile label="Trades" value={tradeCount.toLocaleString("de-DE")} hint="Einzigartige Trades" />
-        <StatTile label="Transaktionen" value={totalCount.toLocaleString("de-DE")} hint="Waiver plus Trades" />
+        <StatTile label="Waiver-Moves" value={fmtInt(waiverCount)} hint="Adds und Add/Drops" />
+        <StatTile label="Trades" value={fmtInt(tradeCount)} hint="Einzigartige Trades" />
+        <StatTile label="Transaktionen" value={fmtInt(totalCount)} hint="Waiver plus Trades" />
       </div>
 
       {ownerStats && (

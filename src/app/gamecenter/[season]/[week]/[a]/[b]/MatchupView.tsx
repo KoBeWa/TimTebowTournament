@@ -7,6 +7,7 @@ import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import ScoreTimeline from "./ScoreTimeline";
 import { loadMatchup, type H2HData, type LineupPlayer, type MatchupData, type TeamWeekStats } from "@/lib/matchup";
+import { fmtNum, fmtPctPoints, fmtSigned, fmtSignedPctPoints } from "@/lib/format";
 
 type TabKey = "lineups" | "verlauf" | "vergleich";
 const TABS: { key: TabKey; label: string }[] = [
@@ -100,7 +101,7 @@ function LineupTable({
         <h3 className="text-base font-medium text-ink">
           <ManagerName id={managerId} />
         </h3>
-        <span className="measured text-sm text-text-muted">{total.toFixed(1)} Punkte</span>
+        <span className="measured text-sm text-text-muted">{fmtNum(total)} Punkte</span>
       </div>
       <div className="cell overflow-x-auto">
         <table className="w-full text-sm">
@@ -145,7 +146,7 @@ function LineupTable({
                   </td>
                   <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
                   <td className="measured whitespace-nowrap py-2 pl-2 pr-4 text-right text-ink sm:pr-5">
-                    <span className="font-medium">{p.points.toFixed(1)}</span>
+                    <span className="font-medium">{fmtNum(p.points)}</span>
                     {wonBattle && (
                       <span className="ml-2 inline-block h-1.5 w-1.5 rounded-[var(--radius-pill)] bg-positive align-middle" title="Position-Battle gewonnen" />
                     )}
@@ -167,7 +168,7 @@ function LineupTable({
                 </td>
                 <td className="hidden px-2 py-2 md:table-cell"><StatLine player={p} /></td>
                 <td className={`measured py-2 pl-2 pr-4 text-right sm:pr-5 ${p.shouldHaveStarted ? "font-medium text-ink" : "text-text-muted"}`}>
-                  {p.points.toFixed(1)}
+                  {fmtNum(p.points)}
                 </td>
               </tr>
             ))}
@@ -181,16 +182,16 @@ function LineupTable({
 // ─── Team stat card ───────────────────────────────────────────────────────────
 
 function TeamStatBar({ stats, managerId, won }: { stats: TeamWeekStats; managerId: string; won: boolean }) {
-  const signPct = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
-  const sign = (n: number) => (n >= 0 ? "+" : "") + n.toFixed(2);
+  const signPct = (n: number) => fmtSignedPctPoints(n);
+  const sign = (n: number) => fmtSigned(n, 2);
   const items = [
-    { label: "Punkteanteil", value: `${stats.pts_share_pct.toFixed(1)}%` },
+    { label: "Punkteanteil", value: fmtPctPoints(stats.pts_share_pct) },
     { label: "Wochenrang", value: `#${stats.pts_rank}` },
     { label: "vs Team Ø", value: signPct(stats.pts_vs_team_avg_pct) },
     { label: "vs Liga Ø", value: signPct(stats.pts_vs_league_avg_pct) },
     { label: "Luck", value: stats.luck !== null ? sign(stats.luck) : "–" },
     { label: "Coach-Rang", value: stats.coach_rank !== null ? `#${stats.coach_rank}` : "–" },
-    { label: "Coach-Score", value: stats.coach_score !== null ? stats.coach_score.toFixed(1) : "–" },
+    { label: "Coach-Score", value: stats.coach_score !== null ? fmtNum(stats.coach_score) : "–" },
   ];
 
   return (
@@ -236,7 +237,7 @@ function H2HSection({ h2h, managerA, managerB }: {
         <div className="cell p-4">
           <div className="text-xs text-text-muted">Ø Punktedifferenz</div>
           <div className={`measured mt-1 text-xl font-medium ${favoredA ? "text-ink" : "text-text-secondary"}`}>
-            {favoredA ? "+" : ""}{Math.abs(margin).toFixed(1)}
+            {favoredA ? "+" : ""}{fmtNum(Math.abs(margin))}
           </div>
           <div className="mt-0.5 text-xs text-text-muted">zugunsten {favoredA ? managerA : managerB}</div>
         </div>
@@ -247,7 +248,7 @@ function H2HSection({ h2h, managerA, managerB }: {
           >
             <div className="text-xs text-text-muted">Letztes Aufeinandertreffen</div>
             <div className="measured mt-1 text-xl font-medium text-ink transition-colors group-hover:text-red">
-              {h2h.prevMatchup.scoreA.toFixed(1)} : {h2h.prevMatchup.scoreB.toFixed(1)}
+              {fmtNum(h2h.prevMatchup.scoreA)} : {fmtNum(h2h.prevMatchup.scoreB)}
             </div>
             <div className="mt-0.5 text-xs text-text-muted">
               Saison {h2h.prevMatchup.season}, Woche {h2h.prevMatchup.week}
@@ -373,9 +374,9 @@ export default function MatchupView({ season, week, a, b, initial }: {
             {aWon && <div className="mt-1 text-xs text-text-muted">Sieger</div>}
           </div>
           <div className="measured shrink-0 whitespace-nowrap text-lg font-medium sm:text-4xl">
-            <span className={aWon ? "text-ink" : "text-text-muted"}>{matchup.score_a.toFixed(1)}</span>
+            <span className={aWon ? "text-ink" : "text-text-muted"}>{fmtNum(matchup.score_a)}</span>
             <span className="mx-1.5 text-text-faint sm:mx-3">:</span>
-            <span className={!aWon ? "text-ink" : "text-text-muted"}>{matchup.score_b.toFixed(1)}</span>
+            <span className={!aWon ? "text-ink" : "text-text-muted"}>{fmtNum(matchup.score_b)}</span>
           </div>
           <div className="min-w-0 flex-1">
             <div className={`flex justify-center text-base font-medium sm:text-2xl ${!aWon ? "text-ink" : "text-text-muted"}`}><ManagerName id={matchup.manager_b} plain /></div>

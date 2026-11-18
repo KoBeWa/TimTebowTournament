@@ -3,6 +3,7 @@ import { SEASONS } from "@/lib/constants";
 import PageHeader from "@/components/ui/PageHeader";
 import ManagerName from "@/components/ui/ManagerName";
 import { notFound } from "next/navigation";
+import { fmtNum, fmtSigned } from "@/lib/format";
 
 export function generateStaticParams() {
   return SEASONS.map((season) => ({ season: String(season) }));
@@ -54,12 +55,12 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ se
                         <td className="hidden py-2.5 pr-3 text-right measured md:table-cell">
                           {p.vorp != null ? (
                             <span className={Number(p.vorp) > 0 ? "text-positive" : Number(p.vorp) < 0 ? "text-negative" : "text-text-muted"}>
-                              {Number(p.vorp) > 0 ? "+" : ""}{Number(p.vorp).toFixed(1)}
+                              {fmtSigned(Number(p.vorp))}
                             </span>
                           ) : "–"}
                         </td>
                         <td className="py-2.5 pl-3 pr-4 text-right measured text-text-secondary sm:pr-5">
-                          {p.grade4 != null ? Number(p.grade4).toFixed(1) : "–"}
+                          {p.grade4 != null ? fmtNum(Number(p.grade4)) : "–"}
                         </td>
                       </tr>
                     ))}

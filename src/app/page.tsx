@@ -6,6 +6,7 @@ import { ChevronRight, Crown } from "lucide-react";
 import ManagerName from "@/components/ui/ManagerName";
 import StatTile from "@/components/ui/StatTile";
 import { closestToHalf, fmtPct } from "@/lib/playoffs";
+import { fmtNum } from "@/lib/format";
 
 type Standing = { manager_id: string; reg_rank: number; wins: number; losses: number; ties: number; points_for: number };
 type Matchup = { week: number; manager_a: string; score_a: number; manager_b: string; score_b: number; is_playoff: boolean };
@@ -45,13 +46,13 @@ async function getRaceOdds() {
   return (data ?? []).filter((r) => r.week === week).map((r) => ({ week: r.week as number, manager_id: r.manager_id as string, playoff_pct: Number(r.playoff_pct) }));
 }
 
-const pts = (n: number) => Number(n).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pts = (n: number) => fmtNum(Number(n));
 
 function Side({ id, score, won, align }: { id: string; score: number; won: boolean; align: "left" | "right" }) {
   return (
     <div className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
       <ManagerName id={id} plain className={`${align === "right" ? "flex-row-reverse" : ""} text-sm sm:text-base ${won ? "font-medium text-ink" : "text-text-muted"}`} />
-      <span className={`measured text-sm sm:text-base ${align === "right" ? "mr-auto" : "ml-auto"} ${won ? "text-ink" : "text-text-muted"}`}>{pts(score)}</span>
+      <span className={`measured text-lg sm:text-xl ${align === "right" ? "mr-auto" : "ml-auto"} ${won ? "font-medium text-ink" : "text-text-muted"}`}>{pts(score)}</span>
     </div>
   );
 }
@@ -175,7 +176,7 @@ export default async function HomePage() {
               <StatTile label="Playoff-Rennen" value={race.manager_id} hint={`${fmtPct(race.playoff_pct)} Playoff-Chance`} />
             </Link>
           ) : bubble && <StatTile label={`Letzter Playoff-Platz (${playoffTeams}.)`} value={bubble.manager_id} hint={`Bilanz ${rec(bubble)}`} />}
-          {reigning && <StatTile label="Titelverteidiger" value={reigning.champion} hint={`Champion ${reigning.year}`} tone="gold" />}
+          {reigning && <StatTile label="Titelverteidiger" value={reigning.champion} hint={`Champion ${reigning.year}`} />}
         </div>
       )}
 
@@ -222,14 +223,16 @@ export default async function HomePage() {
             Zur History <ChevronRight size={15} aria-hidden />
           </Link>
         </div>
-        <div className="grid grid-cols-2 border-l border-t border-border-light sm:grid-cols-4 xl:grid-cols-6">
+        <div className="overflow-hidden">
+        <div className="-ml-px -mt-px grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6">
           {[...finished].reverse().map((s) => (
             <Link key={s.year} href={`/history/${s.year}`}
-              className="flex min-h-11 flex-col gap-0.5 border-b border-r border-border-light px-3 py-2.5 transition-colors hover:bg-surface-2">
+              className="flex min-h-11 flex-col gap-0.5 border-l border-t border-border-light px-3 py-2.5 transition-colors hover:bg-surface-2">
               <span className="measured text-xs text-text-faint">{s.year}</span>
               <ManagerName id={s.champion} plain className="font-medium text-ink" />
             </Link>
           ))}
+        </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-secondary">
           {titles.map(([m, n]) => (

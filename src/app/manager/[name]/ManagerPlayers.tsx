@@ -8,6 +8,7 @@ import Tabs from "@/components/ui/Tabs";
 import TeamChart, { NFL_TEAMS } from "./TeamChart";
 import { loadManagerPlayers, playerHref, POSITIONS } from "@/lib/players";
 import { buildRows, type Row } from "./rows";
+import { fmtNum } from "@/lib/format";
 
 type Filter = "all" | "started" | "drafted" | "waiver" | "trade" | "bench";
 type SortKey = "name" | "position" | "team" | "first" | "weeks" | "starts" | "points" | "avg" | "best" | "drafted" | "adds" | "trades";
@@ -129,7 +130,7 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
     setSort((s) => (s.key === key ? { key, desc: !s.desc } : { key, desc: !TEXT_KEYS.has(key) && key !== "first" }));
   }
 
-  const fmt = (n: number | null) => (n == null ? "–" : n.toFixed(1));
+  const fmt = (n: number | null) => (n == null ? "–" : fmtNum(n));
 
   const thBase = "py-2.5 px-3 text-xs font-medium text-text-muted whitespace-nowrap";
   // Columns kept on phones; the rest only from lg
@@ -218,7 +219,7 @@ export default function ManagerPlayers({ manager, initialRows }: { manager: stri
                   </td>
                   <td className="px-3 py-2.5 text-right measured">{r.weeks}</td>
                   <td className="px-3 py-2.5 text-right measured">{r.starts}</td>
-                  <td className="px-3 py-2.5 text-right measured text-ink">{r.points.toFixed(1)}</td>
+                  <td className="px-3 py-2.5 text-right measured text-ink">{fmtNum(r.points)}</td>
                   <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{fmt(r.avg)}</td>
                   <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{fmt(r.best)}</td>
                   <td className="hidden px-3 py-2.5 text-right measured lg:table-cell">{r.drafted || "–"}</td>

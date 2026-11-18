@@ -7,6 +7,7 @@ import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import ManagerPlayers from "./ManagerPlayers";
 import type { Row } from "./rows";
+import { fmtNum } from "@/lib/format";
 
 type SeasonRow = { season_year: number; reg_rank: number; wins: number; losses: number; ties: number; points_for: number | string };
 type PlayoffRow = { season_year: number; final_rank: number };
@@ -54,7 +55,7 @@ export default function ManagerTabs({ manager, results, playoffs, matchups, seco
                       <td className="py-3 pl-4 sm:pl-5">
                         <Link href={`/history/${s.season_year}`} className="font-medium text-ink hover:text-red transition-colors">
                           <span className="measured">{s.season_year}</span>
-                          {po?.final_rank === 1 && <Trophy size={14} aria-label="Meister" className="ml-2 inline-block align-[-2px] text-gold" />}
+                          {po?.final_rank === 1 && <Trophy size={14} aria-label="Meister" className="ml-2 inline-block align-[-2px] text-text-muted" />}
                         </Link>
                       </td>
                       <td className="px-3 py-3 text-center measured text-text-muted">#{s.reg_rank}</td>
@@ -62,9 +63,9 @@ export default function ManagerTabs({ manager, results, playoffs, matchups, seco
                         <span className="text-positive">{s.wins}</span>-<span className="text-negative">{s.losses}</span>
                         {s.ties > 0 && <>-<span className="text-text-muted">{s.ties}</span></>}
                       </td>
-                      <td className="px-3 py-3 text-right measured">{Number(s.points_for).toFixed(1)}</td>
+                      <td className="px-3 py-3 text-right measured">{fmtNum(Number(s.points_for))}</td>
                       <td className="py-3 pl-3 pr-4 sm:pr-5 text-center measured hidden sm:table-cell">
-                        {po ? <span className={po.final_rank === 1 ? "text-gold" : po.final_rank <= 4 ? "text-ink" : "text-text-muted"}>#{po.final_rank}</span> : "—"}
+                        {po ? <span className={po.final_rank === 1 ? "font-medium text-ink" : po.final_rank <= 4 ? "text-ink" : "text-text-muted"}>#{po.final_rank}</span> : "—"}
                       </td>
                     </tr>
                   );
@@ -116,9 +117,9 @@ export default function ManagerTabs({ manager, results, playoffs, matchups, seco
                         </span>
                       </td>
                       <td className="py-3 pl-3 pr-4 sm:pr-5 text-right measured whitespace-nowrap">
-                        <span className={won ? "text-positive sm:text-ink" : "text-negative sm:text-ink"}>{m.myScore.toFixed(1)}</span>
+                        <span className={won ? "text-positive sm:text-ink" : "text-negative sm:text-ink"}>{fmtNum(m.myScore)}</span>
                         <span className="text-text-muted"> : </span>
-                        <span className="text-text-muted">{m.theirScore.toFixed(1)}</span>
+                        <span className="text-text-muted">{fmtNum(m.theirScore)}</span>
                       </td>
                     </tr>
                   );
