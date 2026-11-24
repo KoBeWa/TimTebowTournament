@@ -20,8 +20,24 @@ export type OddsRow = {
   odds_if_loss: number | null;
   // k more wins -> [chance of exactly k more wins, playoff odds with k more wins]
   odds_by_wins: Record<string, [number, number | null]>;
+  scenarios?: Scenarios | null;
   sims: number;
 };
+
+// Paths to the playoffs, read off the simulation (Scrape playoff_odds.scenarios)
+export type RivalLimit = { rival: string; max_wins: number; games: number };
+export type ScenarioRow = {
+  wins: number;            // own wins in the remaining games
+  share: number;           // how often that happens
+  pct: number | null;      // playoff odds with that many wins (null: too rare to say)
+  status: "in" | "out" | "open" | "rare";
+  needs?: RivalLimit[];    // these rival results settle it ...
+  needs_pct?: number;      // ... to this chance
+  needs_share?: number;    // how often they happen, given the own wins
+  out_if?: { rival: string; min_wins: number; games: number; pct: number };
+};
+export type RivalGrid = { rival: string; games: number; grid: [number | null, number][][] }; // [own wins][rival wins] -> [odds, share]
+export type Scenarios = { games: number; rows: ScenarioRow[]; rivals: RivalGrid[] };
 export type TrendRow = { week: number; manager_id: string; playoff_pct: number };
 export type GameRow = {
   week: number;

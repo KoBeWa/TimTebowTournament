@@ -11,7 +11,7 @@ import { fmtInt } from "@/lib/format";
 async function load() {
   const [latest, trend, schedule] = await Promise.all([
     supabase.from("playoff_odds")
-      .select("week, manager_id, model, wins, losses, ties, points_for, playoff_pct, last_pct, seed_pct, proj_wins, proj_pf, games_left, odds_if_win, odds_if_loss, odds_by_wins, sims")
+      .select("week, manager_id, model, wins, losses, ties, points_for, playoff_pct, last_pct, seed_pct, proj_wins, proj_pf, games_left, odds_if_win, odds_if_loss, odds_by_wins, scenarios, sims")
       .eq("season_year", CURRENT_SEASON).order("week", { ascending: false }).limit(MANAGERS.length),
     supabase.from("playoff_odds").select("week, manager_id, playoff_pct")
       .eq("season_year", CURRENT_SEASON).order("week"),

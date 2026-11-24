@@ -6,10 +6,12 @@ import type { GameRow, OddsRow, TrendRow } from "@/lib/playoffs";
 import PathToPlayoffs from "./PathToPlayoffs";
 import OddsTrend from "./OddsTrend";
 import ScheduleMatrix from "./ScheduleMatrix";
+import ScenarioView from "./ScenarioView";
 
-type Key = "path" | "trend" | "schedule";
+type Key = "path" | "scenarios" | "trend" | "schedule";
 const TABS: { key: Key; label: string }[] = [
   { key: "path", label: "Path to Playoffs" },
+  { key: "scenarios", label: "Szenarien" },
   { key: "trend", label: "Verlauf" },
   { key: "schedule", label: "Restprogramm" },
 ];
@@ -23,6 +25,7 @@ export default function PlayoffTabs({ odds, trend, games, season }: {
     <div>
       <div className="mb-8"><Tabs tabs={TABS} value={tab} onChange={setTab} label="Ansicht" /></div>
       {tab === "path" && <PathToPlayoffs odds={odds} games={games} />}
+      {tab === "scenarios" && <ScenarioView odds={odds} />}
       {tab === "trend" && <OddsTrend trend={trend} season={season} />}
       {tab === "schedule" && <ScheduleMatrix odds={odds} games={games} />}
     </div>
