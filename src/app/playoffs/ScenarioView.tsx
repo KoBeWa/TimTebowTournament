@@ -79,7 +79,8 @@ function PathRow({ row, n }: { row: ScenarioRow; n: number }) {
   );
 }
 
-// Own wins x rival wins -> playoff odds, as a small heatmap in the cool (instrument) colour
+// Own wins x rival wins -> playoff odds, as a small heatmap in the cool (instrument) colour.
+// The fill stays dark enough (at most 45 % cool) that light text reads on every cell.
 function Grid({ me, n, g }: { me: string; n: number; g: RivalGrid }) {
   const rows = Array.from({ length: n + 1 }, (_, i) => n - i);
   return (
@@ -113,8 +114,8 @@ function Grid({ me, n, g }: { me: string; n: number; g: RivalGrid }) {
                         <span aria-label="kommt kaum vor" className="inline-block h-px w-3 bg-border-strong" />
                       </div>
                     ) : (
-                      <div className={`measured flex h-11 min-w-16 items-center justify-center rounded-[4px] text-xs ${pct >= 0.55 ? "text-paper-3" : "text-ink"}`}
-                        style={{ backgroundColor: `color-mix(in oklab, var(--color-cool) ${Math.round(pct * 70)}%, var(--color-paper-3))` }}
+                      <div className="measured flex h-11 min-w-16 items-center justify-center rounded-[4px] text-xs text-ink"
+                        style={{ backgroundColor: `color-mix(in oklab, var(--color-cool) ${Math.round(pct * 45)}%, var(--color-paper-3))` }}
                         title={`${me} ${a} Siege, ${g.rival} ${b} Siege: ${fmtPct(pct)} (in ${fmtPct(share)} der Simulationen)`}>
                         {fmtPct(pct)}
                       </div>
