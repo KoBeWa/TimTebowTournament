@@ -184,8 +184,9 @@ export async function liveOdds(): Promise<LiveOdds | null> {
       const team = pj?.team ?? (/^[A-Z]{2,3}$/.test(pid) ? pid : null);
       const status = team ? gameStatus.get(team) : undefined;
       full += pts;
+      // "pre_game" and "complete" are certain; any other status ("in_game", "in_progress") means running
       if (status === "pre_game") { rest += pts; left++; }
-      else if (status === "in_progress") { rest += pts * IN_PROGRESS_SHARE; left++; }
+      else if (status && status !== "complete") { rest += pts * IN_PROGRESS_SHARE; left++; }
     });
     now[m] = { live: Number(e.points ?? 0), rest, full, left, starters: n };
   }
