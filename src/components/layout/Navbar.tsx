@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight, Award, CalendarDays, ChartNoAxesColumn, History, House, ListOrdered, Percent, Shirt, Swords,
-  Table2, Target, Trophy, Tv, Users, type LucideIcon,
+  Activity, Table2, Target, Trophy, Tv, Users, type LucideIcon,
 } from "lucide-react";
 import {
   MANAGER_COLORS, NAV_GROUPS, CURRENT_SEASON, type NavGroup, type NavIconName, type NavLink,
@@ -14,7 +14,7 @@ import {
 const GROUP_ICONS = { calendar: CalendarDays, trophy: Trophy, users: Users, shirt: Shirt } as const;
 const LINK_ICONS: Record<NavIconName, LucideIcon> = {
   home: House, tv: Tv, table: Table2, history: History, ranking: ChartNoAxesColumn, award: Award, target: Target,
-  swords: Swords, players: Shirt, draft: ListOrdered, moves: ArrowLeftRight, odds: Percent,
+  swords: Swords, players: Shirt, draft: ListOrdered, moves: ArrowLeftRight, odds: Percent, live: Activity,
 };
 
 const isManager = (l: NavLink) => l.href.startsWith("/manager/");
@@ -23,7 +23,10 @@ const isManager = (l: NavLink) => l.href.startsWith("/manager/");
 function linkActive(l: NavLink, pathname: string) {
   const season = `/history/${CURRENT_SEASON}`;
   if (l.href === "/history") return pathname.startsWith("/history") && !pathname.startsWith(season);
-  return pathname === l.href || pathname.startsWith(`${l.href}/`);
+  const hit = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  // A deeper destination of its own (/playoffs/live) wins over its parent (/playoffs)
+  const deeper = NAV_GROUPS.some((g) => g.links.some((o) => o.href.startsWith(`${l.href}/`) && hit(o.href)));
+  return hit(l.href) && !deeper;
 }
 const groupActive = (g: NavGroup, pathname: string) => g.links.some((l) => linkActive(l, pathname));
 

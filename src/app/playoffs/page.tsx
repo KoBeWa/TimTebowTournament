@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { CURRENT_SEASON, MANAGERS } from "@/lib/constants";
+import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 import type { GameRow, OddsRow, TrendRow } from "@/lib/playoffs";
 import OddsTable from "./OddsTable";
@@ -60,7 +61,9 @@ export default async function PlayoffsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Playoff-Chancen" description={`Stand nach Woche ${week}, berechnet aus ${sims} simulierten Saisonverläufen.`} />
+      <PageHeader title="Playoff-Chancen" description={`Stand nach Woche ${week}, berechnet aus ${sims} simulierten Saisonverläufen.`}>
+        <Link href="/playoffs/live" className="btn">Live-Prognose</Link>
+      </PageHeader>
       <OddsTable rows={odds} previous={previous} />
       <PlayoffTabs odds={odds} trend={trend} games={games} season={CURRENT_SEASON} />
       <details className="cell group">
