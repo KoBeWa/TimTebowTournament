@@ -129,16 +129,16 @@ function Games({ d }: { d: LiveOdds }) {
             <div className="pt-7 text-xs text-text-faint">gegen</div>
             <Side t={b} align="right" />
           </div>
-          {a.win_prob != null && (
+          {a.win_prob != null && b.win_prob != null && (
             <div>
               <div className="flex h-1.5 overflow-hidden rounded-full bg-paper-3" role="img"
-                aria-label={`Siegchance ${a.manager} ${fmtPct(a.win_prob)}, ${b.manager} ${fmtPct(1 - a.win_prob)}`}>
+                aria-label={`Siegchance ${a.manager} ${fmtPct(a.win_prob)}, ${b.manager} ${fmtPct(b.win_prob)}`}>
                 <div className="h-full bg-ink-2" style={{ width: `${a.win_prob * 100}%` }} />
               </div>
               <div className="mt-1 flex justify-between text-xs text-text-muted">
                 <span className="measured">{fmtPct(a.win_prob)}</span>
                 <span>Siegchance</span>
-                <span className="measured">{fmtPct(1 - a.win_prob)}</span>
+                <span className="measured">{fmtPct(b.win_prob)}</span>
               </div>
             </div>
           )}

@@ -30,7 +30,7 @@ export type LiveTeam = {
   projected: number;       // live + projected points still to come
   left: number;            // starters whose game has not finished
   starters: number;
-  win_prob: number | null; // of this week's game
+  win_prob: number | null; // of this week's game (a tie counts for neither side)
   playoff_pct: number;     // live
   before_pct: number | null; // after the last completed week (weekly sync)
   if_win: number | null;   // playoff odds if this week's game is won / lost
@@ -198,8 +198,9 @@ export async function liveOdds(): Promise<LiveOdds | null> {
   const normal = rng(week * 7919 + Math.round(Object.values(now).reduce((s, t) => s + t.live * 10, 0)));
   const madeCount = new Array(T).fill(0);
   const seedCount = Array.from({ length: T }, () => new Array(T).fill(0));
-  const wonThis = new Array(T).fill(0), madeIfWin = new Array(T).fill(0), madeIfLoss = new Array(T).fill(0);
-  const wins = new Float64Array(T), pf = new Float64Array(T), won = new Uint8Array(T);
+  const wonThis = new Array(T).fill(0), lostThis = new Array(T).fill(0), madeIfWin = new Array(T).fill(0), madeIfLoss = new Array(T).fill(0);
+  // this week's result per team: 1 won, -1 lost, 0 tie or no game
+  const wins = new Float64Array(T), pf = new Float64Array(T), won = new Int8Array(T);
   const baseRec = new Map(base.map((o) => [o.manager_id, o]));
 
   for (let s = 0; s < SIMS; s++) {
@@ -218,14 +219,15 @@ export async function liveOdds(): Promise<LiveOdds | null> {
       // A tie (possible once both teams are final) counts half a win each and is no win this week
       if (sa > sb) wins[a]++; else if (sb > sa) wins[b]++; else { wins[a] += 0.5; wins[b] += 0.5; }
       pf[a] += sa; pf[b] += sb;
-      if (g.week === week) { if (sa > sb) won[a] = 1; else if (sb > sa) won[b] = 1; }
+      if (g.week === week) { if (sa > sb) { won[a] = 1; won[b] = -1; } else if (sb > sa) { won[b] = 1; won[a] = -1; } }
     }
     const order = managers.map((_, i) => i).sort((x, y) => (wins[y] - wins[x]) || (pf[y] - pf[x]));
     order.forEach((i, rank) => {
       seedCount[i][rank]++;
       const made = rank < PLAYOFF_TEAMS;
       if (made) madeCount[i]++;
-      if (won[i]) { wonThis[i]++; if (made) madeIfWin[i]++; } else if (made) madeIfLoss[i]++;
+      if (won[i] === 1) { wonThis[i]++; if (made) madeIfWin[i]++; }
+      else if (won[i] === -1) { lostThis[i]++; if (made) madeIfLoss[i]++; }
     });
   }
 
@@ -233,7 +235,7 @@ export async function liveOdds(): Promise<LiveOdds | null> {
   const teams: LiveTeam[] = managers.map((m, i) => {
     const o = baseRec.get(m)!;
     const t = now[m] ?? { live: 0, rest: 0, full: 0, left: 0, starters: 0 };
-    const w = wonThis[i];
+    const w = wonThis[i], l = lostThis[i];
     return {
       manager: m, opponent: opp.get(m) ?? null,
       wins: o.wins, losses: o.losses, ties: o.ties, points_for: Number(o.points_for),
@@ -242,7 +244,7 @@ export async function liveOdds(): Promise<LiveOdds | null> {
       playoff_pct: round(madeCount[i] / SIMS, 4),
       before_pct: o.playoff_pct == null ? null : Number(o.playoff_pct),
       if_win: w > 0 ? round(madeIfWin[i] / w, 4) : null,
-      if_loss: SIMS - w > 0 ? round(madeIfLoss[i] / (SIMS - w), 4) : null,
+      if_loss: l > 0 ? round(madeIfLoss[i] / l, 4) : null,
       seed_pct: seedCount[i].map((c) => round(c / SIMS, 4)),
     };
   }).sort((a, b) => b.playoff_pct - a.playoff_pct || b.wins - a.wins);
