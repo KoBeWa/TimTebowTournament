@@ -128,23 +128,36 @@ export async function liveOdds(): Promise<LiveOdds | null> {
 
   // Sleeper: this week's matchups, last week's (to map rosters to managers), NFL schedule, projections
   const pos = ["QB", "RB", "WR", "TE", "K", "DEF"].map((p) => `position[]=${p}`).join("&");
-  const [entries, lastEntries, nfl, proj] = await Promise.all([
+  const [entries, nfl, proj] = await Promise.all([
     sleeper<MatchupEntry[]>(`${SLEEPER}/league/${LEAGUE_ID}/matchups/${week}`),
-    sleeper<MatchupEntry[]>(`${SLEEPER}/league/${LEAGUE_ID}/matchups/${done}`),
-    sleeper<NflGame[]>(`${SLEEPER_API}/schedule/nfl/regular/${season}`),
+    sleeper<Sleeper[]>(`${SLEEPER_API}/schedule/nfl/regular/${season}`).then((g) => g as unknown as NflGame[]),
     sleeper<Sleeper[]>(`${SLEEPER_API}/projections/nfl/${season}/${week}?season_type=regular&${pos}`),
   ]);
 
-  // roster -> manager: last week's points in Sleeper match the stored scores
-  const scoreOf: Record<string, number> = {};
-  for (const g of playedQ.data ?? []) if (g.week === done) { scoreOf[g.manager_a] = Number(g.score_a); scoreOf[g.manager_b] = Number(g.score_b); }
-  const rosterManager = new Map<number, string>();
-  for (const e of lastEntries) {
-    const pts = Number(e.points ?? 0);
-    const hit = managers.filter((m) => !Array.from(rosterManager.values()).includes(m) && Math.abs((scoreOf[m] ?? -1) - pts) < 0.011);
-    if (hit.length === 1) rosterManager.set(e.roster_id, hit[0]);
+  // roster -> manager: a roster's points in Sleeper match one manager's stored score, week after week.
+  // Go back week by week until every roster has exactly one candidate (two equal scores in one week
+  // are settled by the next).
+  const scores = new Map<number, Record<string, number>>();
+  for (const g of playedQ.data ?? []) {
+    const w = scores.get(g.week) ?? {};
+    w[g.manager_a] = Number(g.score_a); w[g.manager_b] = Number(g.score_b);
+    scores.set(g.week, w);
   }
-  if (rosterManager.size !== managers.length) throw new Error("Rosters could not be matched to managers");
+  const candidates = new Map<number, Set<string>>();
+  for (let w = done; w >= Math.max(1, done - 4); w--) {
+    const stored = scores.get(w);
+    if (!stored) continue;
+    const ws = await sleeper<MatchupEntry[]>(`${SLEEPER}/league/${LEAGUE_ID}/matchups/${w}`);
+    for (const e of ws) {
+      const fit = new Set(managers.filter((m) => Math.abs((stored[m] ?? -1) - Number(e.points ?? 0)) < 0.011));
+      const prev = candidates.get(e.roster_id);
+      candidates.set(e.roster_id, prev ? new Set([...prev].filter((m) => fit.has(m))) : fit);
+    }
+    if ([...candidates.values()].every((c) => c.size === 1)) break;
+  }
+  const rosterManager = new Map<number, string>();
+  for (const [r, c] of candidates) if (c.size === 1) rosterManager.set(r, [...c][0]);
+  if (new Set(rosterManager.values()).size !== managers.length) throw new Error("Rosters could not be matched to managers");
 
   const projOf = new Map<string, { pts: number; team: string | null }>();
   for (const p of proj) {
@@ -202,9 +215,10 @@ export async function liveOdds(): Promise<LiveOdds | null> {
         return (expected.get(`${g.week}:${m}`) ?? 110) + sd[m] * normal();
       };
       const sa = score(g.manager_id), sb = score(g.opponent_id);
-      if (sa > sb) wins[a]++; else wins[b]++;
+      // A tie (possible once both teams are final) counts half a win each and is no win this week
+      if (sa > sb) wins[a]++; else if (sb > sa) wins[b]++; else { wins[a] += 0.5; wins[b] += 0.5; }
       pf[a] += sa; pf[b] += sb;
-      if (g.week === week) { if (sa > sb) won[a] = 1; else won[b] = 1; }
+      if (g.week === week) { if (sa > sb) won[a] = 1; else if (sb > sa) won[b] = 1; }
     }
     const order = managers.map((_, i) => i).sort((x, y) => (wins[y] - wins[x]) || (pf[y] - pf[x]));
     order.forEach((i, rank) => {
