@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { ArrowDown, ArrowUp, RefreshCw } from "lucide-react";
+import Tabs from "@/components/ui/Tabs";
 import ManagerName from "@/components/ui/ManagerName";
 import { fmtNum } from "@/lib/format";
 import { fmtPct } from "@/lib/playoffs";
-import type { LiveOdds, LiveTeam } from "@/lib/liveOdds";
+import type { LiveOdds, LiveTeam, StandingRow } from "@/lib/liveOdds";
 
 const REFRESH_MS = 60_000;
 type Payload = LiveOdds | { status: "off" } | { status: "error"; message: string };
@@ -83,6 +84,75 @@ function Table({ d }: { d: LiveOdds }) {
       <p className="border-t border-border-light px-4 py-2.5 text-xs text-text-faint sm:px-5">
         Die Linie nach Platz 4 trennt die Playoff-Plätze. Δ Pp.: Veränderung gegenüber dem Stand vor dem Spieltag, in Prozentpunkten.
       </p>
+    </div>
+  );
+}
+
+function Move({ r }: { r: StandingRow }) {
+  const d = r.rank_now - r.rank;
+  if (d === 0) return <span className="sr-only">unverändert</span>;
+  const Icon = d > 0 ? ArrowUp : ArrowDown;
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-xs ${d > 0 ? "text-positive" : "text-negative"}`}
+      aria-label={`${Math.abs(d)} ${Math.abs(d) === 1 ? "Platz" : "Plätze"} ${d > 0 ? "hoch" : "runter"}`}>
+      <Icon size={12} aria-hidden /><span className="measured">{Math.abs(d)}</span>
+    </span>
+  );
+}
+
+function Standings({ d }: { d: LiveOdds }) {
+  const [mode, setMode] = useState<"week" | "season">("week");
+  const rows = d.standings?.[mode] ?? [];
+  const tabs = [
+    { key: "week" as const, label: `Nach Woche ${d.week}` },
+    { key: "season" as const, label: "Saisonende" },
+  ];
+  return (
+    <div className="space-y-4">
+      <Tabs tabs={tabs} value={mode} onChange={setMode} size="sm" label="Zeitpunkt der Tabelle" />
+      <div className="cell overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs font-medium text-text-muted">
+              <th className="w-16 py-3 pl-4 text-left font-medium sm:pl-5">Platz</th>
+              <th className="px-3 py-3 text-left font-medium">Manager</th>
+              {mode === "week" && <th className="px-3 py-3 text-left font-medium">Woche {d.week}</th>}
+              <th className="px-3 py-3 text-right font-medium">Bilanz</th>
+              <th className="px-3 py-3 text-right font-medium">Punkte</th>
+              <th className="hidden py-3 pl-3 pr-4 text-right font-medium sm:table-cell sm:pr-5">Platz jetzt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.manager} className={`border-t ${i === 4 ? "border-border-strong" : "border-border-light"}`}>
+                <td className="py-3 pl-4 sm:pl-5">
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`measured ${i < 4 ? "text-ink" : "text-text-muted"}`}>{r.rank}</span>
+                    <Move r={r} />
+                  </span>
+                </td>
+                <td className="px-3 py-3"><ManagerName id={r.manager} className="font-medium text-ink" /></td>
+                {mode === "week" && (
+                  <td className="px-3 py-3">
+                    {r.result === "W" && <span className="text-positive"><span aria-hidden className="sm:hidden">S</span><span className="max-sm:sr-only">Sieg</span></span>}
+                    {r.result === "L" && <span className="text-negative"><span aria-hidden className="sm:hidden">N</span><span className="max-sm:sr-only">Niederlage</span></span>}
+                    {r.result === "T" && <span className="text-text-muted"><span aria-hidden className="sm:hidden">U</span><span className="max-sm:sr-only">Unentschieden</span></span>}
+                  </td>
+                )}
+                <td className="measured px-3 py-3 text-right text-ink">{r.wins}-{r.losses}{r.ties ? `-${r.ties}` : ""}</td>
+                <td className="measured px-3 py-3 text-right text-text-secondary">{fmtNum(r.points_for)}</td>
+                <td className="measured hidden py-3 pl-3 pr-4 text-right text-text-muted sm:table-cell sm:pr-5">{r.rank_now}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="border-t border-border-light px-4 py-2.5 text-xs text-text-faint sm:px-5">
+          {mode === "week"
+            ? `Jedes Spiel endet mit dem projizierten Endstand: Live-Punkte plus die Projektion der Spieler, die noch spielen.`
+            : `Zusätzlich gewinnt in jeder restlichen Woche das Team mit der höheren Projektion.`}{" "}
+          Sortiert nach Siegen, dann Punkten; die Linie nach Platz 4 trennt die Playoff-Plätze.
+        </p>
+      </div>
     </div>
   );
 }
@@ -232,6 +302,12 @@ export default function LiveOddsView() {
         <h2 className="section-title mb-1">Playoff-Chancen live</h2>
         <p className="mb-4 text-sm text-text-muted">Alle Teams im Vergleich, neu gerechnet aus den aktuellen Punkten und den Projektionen der noch offenen Spieler.</p>
         <Table d={live} />
+      </section>
+
+      <section>
+        <h2 className="section-title mb-1">Live-Tabelle</h2>
+        <p className="mb-4 text-sm text-text-muted">So stünde die Tabelle, wenn alles nach Projektion ausgeht. Pfeile zeigen die Bewegung gegenüber jetzt.</p>
+        <Standings d={live} />
       </section>
 
       <section>
