@@ -45,6 +45,16 @@ export type LiveOdds = {
   updated_at: string;
   sims: number;
   teams: LiveTeam[];       // sorted by live playoff odds, best first
+  // The table if every game ends as projected: after this week, and after the regular season
+  standings: { week: StandingRow[]; season: StandingRow[] };
+};
+export type StandingRow = {
+  manager: string;
+  rank: number;            // projected rank
+  rank_now: number;        // rank in the table before this week
+  wins: number; losses: number; ties: number;
+  points_for: number;
+  result: "W" | "L" | "T" | null; // this week's projected result (week table only)
 };
 
 type Sleeper = Record<string, unknown>;
@@ -232,6 +242,35 @@ export async function liveOdds(): Promise<LiveOdds | null> {
     });
   }
 
+  // Deterministic tables: every game goes to the higher projection (this week: live + still to come)
+  const projectedScore = (w: number, m: string) =>
+    w === week && now[m] ? now[m].live + now[m].rest : (expected.get(`${w}:${m}`) ?? 0);
+  const table = (upTo: number) => {
+    const rec = new Map(managers.map((m) => {
+      const o = baseRec.get(m)!;
+      return [m, { wins: o.wins, losses: o.losses, ties: o.ties, pf: Number(o.points_for), result: null as StandingRow["result"] }];
+    }));
+    for (const g of games) {
+      if (g.week > upTo) continue;
+      const a = rec.get(g.manager_id)!, b = rec.get(g.opponent_id)!;
+      const sa = projectedScore(g.week, g.manager_id), sb = projectedScore(g.week, g.opponent_id);
+      a.pf += sa; b.pf += sb;
+      const r: StandingRow["result"] = sa > sb ? "W" : sb > sa ? "L" : "T";
+      if (r === "W") { a.wins++; b.losses++; } else if (r === "L") { b.wins++; a.losses++; } else { a.ties++; b.ties++; }
+      if (g.week === week) { a.result = r; b.result = r === "W" ? "L" : r === "L" ? "W" : "T"; }
+    }
+    const key = (x: { wins: number; ties: number; pf: number }) => [x.wins + x.ties / 2, x.pf] as const;
+    const order = [...rec.entries()].sort(([, x], [, y]) => key(y)[0] - key(x)[0] || key(y)[1] - key(x)[1]);
+    return order.map(([m, x], i) => ({
+      manager: m, rank: i + 1, rank_now: rankNow.get(m)!, wins: x.wins, losses: x.losses, ties: x.ties,
+      points_for: round(x.pf, 1), result: upTo === week ? x.result : null,
+    }));
+  };
+  const rankNow = new Map([...base].sort((x, y) => (y.wins + y.ties / 2) - (x.wins + x.ties / 2) || Number(y.points_for) - Number(x.points_for))
+    .map((o, i) => [o.manager_id, i + 1]));
+  const lastWeek = Math.max(...sched.map((g) => g.week));
+  const standings = { week: table(week), season: table(lastWeek) };
+
   const opp = new Map(thisWeek.map((g) => [g.manager_id, g.opponent_id]));
   const teams: LiveTeam[] = managers.map((m, i) => {
     const o = baseRec.get(m)!;
@@ -257,6 +296,7 @@ export async function liveOdds(): Promise<LiveOdds | null> {
     updated_at: new Date().toISOString(),
     sims: SIMS,
     teams,
+    standings,
   };
 }
 
